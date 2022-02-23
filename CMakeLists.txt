@@ -30,7 +30,7 @@ set(math_flags
 -freciprocal-math
 -fno-signed-zeros
 -fno-trapping-math
--march=native
+-march=skylake
 -mfpmath=sse)
 
 # spice (snn simulation library)
