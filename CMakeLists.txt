@@ -6,11 +6,8 @@ project(spice VERSION 0.1 DESCRIPTION "Spice SNN Simulator")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# spice (snn simulation library)
-add_library(spice SHARED spice/spice.h)
-set_target_properties(spice PROPERTIES LINKER_LANGUAGE CXX CXX_STANDARD 20)
-target_compile_options(spice PRIVATE
--march=native
+# Common compile options shared by multiple projects
+set(warning_flags
 -Werror
 -Wall
 -Wextra
@@ -26,6 +23,20 @@ target_compile_options(spice PRIVATE
 -Wsign-conversion
 -Wnull-dereference
 -Wuseless-cast)
+
+set(math_flags
+-ffast-math #-fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fno-rounding-math -fno-signaling-nans -fcx-limited-range -fexcess-precision=fast
+-fassociative-math
+-freciprocal-math
+-fno-signed-zeros
+-fno-trapping-math
+-march=native
+-mfpmath=sse)
+
+# spice (snn simulation library)
+add_library(spice SHARED spice/spice.h)
+set_target_properties(spice PROPERTIES LINKER_LANGUAGE CXX CXX_STANDARD 20)
+target_compile_options(spice PRIVATE ${warning_flags} ${math_flags})
 
 # test (unit test suite)
 set(spice_build_tests FALSE CACHE BOOL "Build unit tests? (optional, for developers only)")
@@ -45,6 +56,7 @@ endif()
 
 # lamodel (sample application using spice)
 add_executable(lamodel lamodel/main.cpp)
-target_compile_options(lamodel PRIVATE -march=native)
+set_target_properties(lamodel PROPERTIES LINKER_LANGUAGE CXX CXX_STANDARD 20)
+target_compile_options(lamodel PRIVATE ${warning_flags} ${math_flags})
 target_include_directories(lamodel PRIVATE .)
 target_link_libraries(lamodel PRIVATE spice Threads::Threads)
