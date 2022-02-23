@@ -1,7 +1,6 @@
 #include "spice/spice.h"
 
-int main()
-{
+int main() {
 	spice::say_hello();
 	return 0;
 }
