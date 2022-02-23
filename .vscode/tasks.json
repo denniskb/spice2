@@ -27,7 +27,7 @@
 		},{
             "label": "Release",
             "type": "shell",
-            "command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make VERBOSE=1 -j 8",
+            "command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make -j 8",
             "group": "build",
             "problemMatcher": "[]",
             "presentation": {
