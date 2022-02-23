@@ -2,6 +2,8 @@
 
 #include <cstdio>
 
+#include "stdint.h"
+
 namespace spice
 {
 	inline void say_hello()
