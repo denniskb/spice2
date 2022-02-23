@@ -7,7 +7,7 @@
 		{
 			"label": "Third Party",
 			"type": "shell",
-			"command": "mkdir -p third_party/googletest/build && cd third_party/googletest/build && cmake -Dgtest_disable_pthreads:BOOL=ON .. && make",
+			"command": "chmod 700 build_third_party.sh && ./build_third_party.sh",
 			"group": "build",
 			"problemMatcher": "[]",
 			"presentation": {
@@ -27,7 +27,7 @@
 		},{
             "label": "Release",
             "type": "shell",
-            "command": "mkdir -p build/release && cd build/release && cmake ../.. && make -j 8",
+            "command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make VERBOSE=1 -j 8",
             "group": "build",
             "problemMatcher": "[]",
             "presentation": {
@@ -40,6 +40,17 @@
 			"label": "Unit Tests",
             "type": "shell",
             "command": "./build/release/test",
+            "group": "test",
+			"dependsOn": "Release",
+            "problemMatcher": "[]",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
+		},{
+			"label": "Benchmarks",
+            "type": "shell",
+            "command": "./build/release/bench",
             "group": "test",
 			"dependsOn": "Release",
             "problemMatcher": "[]",
