@@ -2,7 +2,29 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
-    "tasks": [{
+    "tasks": [
+		// build tasks
+		{
+			"label": "Third Party",
+			"type": "shell",
+			"command": "mkdir -p third_party/googletest/build && cd third_party/googletest/build && cmake -Dgtest_disable_pthreads:BOOL=ON .. && make",
+			"group": "build",
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},{
+			"label": "Clean",
+			"type": "shell",
+			"command": "rm -r build",
+			"group": "build",
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},{
             "label": "Release",
             "type": "shell",
             "command": "mkdir -p build/release && cd build/release && cmake ../.. && make -j 8",
@@ -12,10 +34,23 @@
                 "focus": true,
                 "clear": true
             }
-        },{
-			"label": "Run",
+        },
+		// test/run tasks
+		{
+			"label": "Unit Tests",
             "type": "shell",
-            "command": "./build/release/spice",
+            "command": "./build/release/test",
+            "group": "test",
+			"dependsOn": "Release",
+            "problemMatcher": "[]",
+            "presentation": {
+                "focus": true,
+                "clear": true
+            }
+		},{
+			"label": "Lamodel",
+            "type": "shell",
+            "command": "./build/release/lamodel",
             "group": "test",
 			"dependsOn": "Release",
             "problemMatcher": "[]",
