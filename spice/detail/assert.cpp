@@ -5,19 +5,14 @@
 #include <stdexcept>
 
 namespace spice::detail {
-void spice_assert(std::string const& file, int const line, bool const condition,
-                  std::string const& message) {
+void assert_failed(char const* _file, int const line, char const* condition) {
 	using std::string;
 
-	if (!condition) {
-		std::stringstream error;
-		error << "Assertion failed (" << file.substr(file.find_last_of('/') + 1, file.length())
-		      << ":" << line << ")";
+	const string file(_file);
+	std::stringstream error;
+	error << "Assertion failed (" << file.substr(file.find_last_of('/') + 1, file.length()) << ":"
+	      << line << "): " << condition;
 
-		if (!message.empty())
-			error << ": " << message;
-
-		throw std::logic_error(error.str());
-	}
+	throw std::logic_error(error.str());
 }
 }
