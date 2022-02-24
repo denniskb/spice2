@@ -1,8 +1,8 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
 		// build tasks
 		{
 			"label": "Third Party",
@@ -14,7 +14,8 @@
 				"focus": true,
 				"clear": true
 			}
-		},{
+		},
+		{
 			"label": "Clean",
 			"type": "shell",
 			"command": "rm -r build",
@@ -24,51 +25,65 @@
 				"focus": true,
 				"clear": true
 			}
-		},{
-            "label": "Release",
-            "type": "shell",
-            "command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make -j 8",
-            "group": "build",
-            "problemMatcher": "[]",
-            "presentation": {
-                "focus": true,
-                "clear": true
-            }
-        },
+		},
+		{
+			"label": "Debug",
+			"type": "shell",
+			"command": "mkdir -p build/debug && cd build/debug && cmake -DCMAKE_BUILD_TYPE=Debug ../.. && make -j 8",
+			"group": "build",
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},
+		{
+			"label": "Release",
+			"type": "shell",
+			"command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make -j 8",
+			"group": "build",
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},
 		// test/run tasks
 		{
 			"label": "Unit Tests",
-            "type": "shell",
-            "command": "./build/release/test",
-            "group": "test",
+			"type": "shell",
+			"command": "./build/release/test",
+			"group": "test",
 			"dependsOn": "Release",
-            "problemMatcher": "[]",
-            "presentation": {
-                "focus": true,
-                "clear": true
-            }
-		},{
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},
+		{
 			"label": "Benchmarks",
-            "type": "shell",
-            "command": "./build/release/bench",
-            "group": "test",
+			"type": "shell",
+			"command": "./build/release/bench",
+			"group": "test",
 			"dependsOn": "Release",
-            "problemMatcher": "[]",
-            "presentation": {
-                "focus": true,
-                "clear": true
-            }
-		},{
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},
+		{
 			"label": "Lamodel",
-            "type": "shell",
-            "command": "./build/release/lamodel",
-            "group": "test",
+			"type": "shell",
+			"command": "./build/release/lamodel",
+			"group": "test",
 			"dependsOn": "Release",
-            "problemMatcher": "[]",
-            "presentation": {
-                "focus": true,
-                "clear": true
-            }
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
 		}
-    ]
+	]
 }

@@ -1,6 +1,6 @@
-#include "spice/spice.h"
+#include "spice/detail/assert.h"
 
 int main() {
-	spice::say_hello();
+	SPICE_ASSERT(false, "This should crash");
 	return 0;
 }
