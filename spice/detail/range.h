@@ -14,8 +14,7 @@ public:
 		constexpr operator Int&() { return i; }
 	};
 
-	template <class Container,
-	          typename std::enable_if<!std::is_integral<Container>::value>::type* = nullptr>
+	template <class Container, typename std::enable_if_t<!std::is_integral_v<Container>>* = nullptr>
 	constexpr explicit range(Container const& container) : range(container.size()) {}
 	constexpr explicit range(Int max) : range(0, max) {}
 	constexpr range(Int min, Int max) : _min(min), _max(std::max(min, max)) {}
