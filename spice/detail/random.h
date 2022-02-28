@@ -1,21 +1,23 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <limits>
+#include <numbers>
 #include <random>
 #include <type_traits>
 
+#include "assert.h"
 #include "stdint.h"
 
 namespace spice::detail {
-template <class Integer>
+template <std::integral Integer>
 inline Integer rotl(Integer const x, Int const k) {
-	static_assert(std::is_integral_v<Integer>);
-
 	return (x << k) | (x >> ((sizeof(Integer) * 8) - k));
 }
 
-template <class Integer, int Period, class Next>
+template <std::integral Integer, int Period, class Next>
 class xoroshiro {
 public:
 	using result_type = Integer;
@@ -68,11 +70,95 @@ using xoroshiro64_128p = xoroshiro<UInt, 128, decltype([](auto& state) {
 	                                   return result;
                                    })>;
 
-constexpr float uniform_left_inc(auto& rng) { return (rng() >> 8) / 16777216.0f; }
+template <std::floating_point Real, bool LeftOpen = false>
+class uniform_real_distribution {
+public:
+	constexpr explicit uniform_real_distribution(Real const a = 0, Real const b = 1) :
+	_offset(a), _scale(b - a) {}
 
-constexpr float uniform_right_inc(auto& rng) { return ((rng() >> 8) + 1.0f) / 16777216.0f; }
+	constexpr Real operator()(auto& rng) const {
+		constexpr std::size_t rng_size = sizeof(decltype(rng()));
+		constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
 
-constexpr float exprnd(auto& rng, float const lambda = 1.0f) {
-	return -lambda * std::log(uniform_right_inc(rng));
-}
+		UInt iid = rng();
+		if (rng_size < sizeof(Real))
+			iid = (iid << (8 * rng_size)) | rng();
+
+		return std::fma(((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
+		                    Real(Int(1) << digits),
+		                _scale, _offset);
+	}
+
+private:
+	Real const _offset = 0;
+	Real const _scale  = 1;
+};
+
+template <std::floating_point Real>
+class exponential_distribution {
+public:
+	constexpr explicit exponential_distribution(Real const lambda) : _lambda(1 / lambda) {
+		SPICE_ASSERT(lambda >= 0);
+	}
+	constexpr Real operator()(auto& rng) const { return -_lambda * std::log(_iid(rng)); }
+
+private:
+	Real const _lambda;
+	uniform_real_distribution<Real, true> _iid;
+};
+
+template <std::floating_point Real>
+class normal_distribution {
+public:
+	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) :
+	_mu(mu), _sigma(sigma) {
+		SPICE_ASSERT(sigma >= 0);
+	}
+
+	constexpr Real operator()(auto& rng) {
+		using namespace std::numbers;
+
+		switch (_state) {
+			case 0: {
+				_state           = 1;
+				Real const R     = std::sqrt(-2 * std::log(_iid(rng)));
+				Real const Theta = 2 * pi * _iid(rng);
+				_z0              = std::fma(R * std::cos(Theta), _sigma, _mu);
+				_z1              = std::fma(R * std::sin(Theta), _sigma, _mu);
+				return _z0;
+			}
+			case 1: _state = 0; return _z1;
+		}
+		__builtin_unreachable();
+	}
+
+private:
+	bool _state = false;
+	Real _z0;
+	Real _z1;
+
+	Real const _mu;
+	Real const _sigma;
+	uniform_real_distribution<Real, true> _iid;
+};
+
+template <std::integral Integer>
+class binomial_distribution {
+public:
+	using Real = std::conditional_t<sizeof(Integer) == 8, double, float>;
+
+	constexpr explicit binomial_distribution(Integer const N, Real const p) :
+	_N(N), _norm(N * p, std::sqrt(N * p * (1 - p))) {
+		SPICE_ASSERT(N >= 0);
+		SPICE_ASSERT(0 <= p && p <= 1);
+	}
+
+	constexpr Integer operator()(auto& rng) {
+		return std::min(_N, static_cast<Integer>(std::max(Real(0), std::round(_norm(rng)))));
+	}
+
+private:
+	Integer const _N;
+	normal_distribution<Real> _norm;
+};
 }
