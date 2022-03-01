@@ -12,7 +12,7 @@ namespace spice {
 template <class Neuron>
 class neuron_pool {
 public:
-	neuron_pool(Size const size, Size const max_delay) : _neurons(size), _history(size) {
+	neuron_pool(Int const size, Int const max_delay) : _neurons(size), _history(size) {
 		SPICE_ASSERT(size >= 0);
 		SPICE_ASSERT(max_delay >= 1);
 
@@ -20,7 +20,7 @@ public:
 		_spikes.reserve(size * max_delay / 100);
 	}
 
-	void update(Size const max_delay) {
+	void update(Int const max_delay) {
 		SPICE_ASSERT(max_delay >= 1);
 
 		if (_spike_counts.size() == max_delay) {
@@ -28,8 +28,8 @@ public:
 			_spike_counts.erase(_spike_counts.begin());
 		}
 
-		Size const spike_count = _spikes.size();
-		for (Size const i : util::range(_neurons)) {
+		Int const spike_count = _spikes.size();
+		for (Int const i : util::range(_neurons)) {
 			bool const spiked = _neurons[i].update();
 			_history[i]       = (_history[i] << 1) | spiked;
 			if (spiked)
@@ -41,7 +41,7 @@ public:
 	std::span<Int32 const> spikes(Int age) const {
 		SPICE_ASSERT(age < _spike_counts.size());
 
-		Size const offset = std::accumulate(_spike_counts.end() - 1 - age, _spike_counts.end(), 0);
+		Int const offset = std::accumulate(_spike_counts.end() - 1 - age, _spike_counts.end(), 0);
 		return {_spikes.data() + _spikes.size() - offset,
 		        static_cast<UInt>(_spike_counts.rbegin()[age])};
 	}
