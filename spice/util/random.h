@@ -97,13 +97,13 @@ private:
 template <std::floating_point Real>
 class exponential_distribution {
 public:
-	constexpr explicit exponential_distribution(Real const lambda) : _lambda(1 / lambda) {
-		SPICE_ASSERT(lambda >= 0);
+	constexpr explicit exponential_distribution(Real const scale = 1) : _scale(scale) {
+		SPICE_ASSERT(scale >= 0);
 	}
-	constexpr Real operator()(auto& rng) const { return -_lambda * std::log(_iid(rng)); }
+	constexpr Real operator()(auto& rng) const { return -_scale * std::log(_iid(rng)); }
 
 private:
-	Real const _lambda;
+	Real const _scale;
 	uniform_real_distribution<Real, true> _iid;
 };
 

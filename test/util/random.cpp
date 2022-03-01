@@ -100,7 +100,7 @@ TEST(Random, Xoroshiro64_128_UniformRealDistributionDoubleTrue) {
 
 TEST(Random, ExponentialDistribution) {
 	test_random_number_distribution<xoroshiro64_128p>([](double x) { return 1 - std::exp(-5 * x); },
-	                                                  exponential_distribution<double>(5), 0, 1);
+	                                                  exponential_distribution<double>(0.2), 0, 1);
 }
 
 TEST(Random, NormalDistribution) {
