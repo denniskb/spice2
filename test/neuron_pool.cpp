@@ -27,7 +27,7 @@ TEST(NeuronPool, Update) {
 		neuron_pool<manual_fire_neuron> pool(5, 1);
 		pool.update(1);
 		ASSERT_EQ(pool.spikes(0).size(), 5);
-		for (int i : range(5))
+		for (Int i : range(5))
 			ASSERT_EQ(pool.spikes(0)[i], i);
 
 		for (UInt hist : pool.history())
@@ -46,7 +46,7 @@ TEST(NeuronPool, Update) {
 		pool.update(2);
 		ASSERT_EQ(pool.spikes(1).size(), 0);
 		ASSERT_EQ(pool.spikes(0).size(), 5);
-		for (int i : range(5))
+		for (Int i : range(5))
 			ASSERT_EQ(pool.spikes(0)[i], i);
 
 		for (UInt hist : pool.history())
@@ -55,7 +55,7 @@ TEST(NeuronPool, Update) {
 		manual_fire_neuron::fire = false;
 		pool.update(2);
 		ASSERT_EQ(pool.spikes(1).size(), 5);
-		for (int i : range(5))
+		for (Int i : range(5))
 			ASSERT_EQ(pool.spikes(1)[i], i);
 
 		ASSERT_EQ(pool.spikes(0).size(), 0);

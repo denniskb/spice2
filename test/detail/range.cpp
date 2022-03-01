@@ -12,8 +12,8 @@ TEST(Detail, Range) {
 		ASSERT_EQ(*r.end(), 0);
 
 		int count = 0;
-		for (int i : r)
-			count++;
+		for (Int i : r)
+			count++, (void)i;
 
 		ASSERT_EQ(count, 0);
 	}
@@ -24,7 +24,7 @@ TEST(Detail, Range) {
 		ASSERT_EQ(*r.end(), 10);
 
 		int count = 0;
-		for (int i : r)
+		for (Int i : r)
 			ASSERT_EQ(i, count++);
 
 		ASSERT_EQ(count, 10);
@@ -36,7 +36,7 @@ TEST(Detail, Range) {
 		ASSERT_EQ(*r.end(), 7);
 
 		int count = 0;
-		for (int i : r)
+		for (Int i : r)
 			ASSERT_EQ(i, count++ + 2);
 
 		ASSERT_EQ(count, 5);
@@ -48,8 +48,8 @@ TEST(Detail, Range) {
 		ASSERT_EQ(*r.end(), 7);
 
 		int count = 0;
-		for (int i : r)
-			count++;
+		for (Int i : r)
+			count++, (void)i;
 
 		ASSERT_EQ(count, 0);
 	}

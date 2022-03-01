@@ -20,10 +20,18 @@ set(warning_flags
 -Wcast-align
 -Wunused
 -Woverloaded-virtual
--Wconversion
--Wsign-conversion
 -Wnull-dereference
--Wuseless-cast)
+-Wuseless-cast
+-Wno-error=conversion
+-Wno-error=float-conversion
+-Wno-error=sign-conversion
+-Wno-error=sign-compare
+-Wno-sign-compare
+# Optional, additional (noisy) warnings (won't affect compilation):
+#-Wsign-compare
+#-Wconversion
+#-Wsign-conversion
+)
 
 set(math_flags
 -ffast-math #-fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fno-rounding-math -fno-signaling-nans -fcx-limited-range -fexcess-precision=fast
@@ -51,6 +59,7 @@ set(spice_build_tests FALSE CACHE BOOL "Build unit tests? (optional, for develop
 if(spice_build_tests)
 	file(GLOB_RECURSE test_sources test/*.h test/*.cpp)
 	add_executable(test ${test_sources})
+	target_compile_options(test PRIVATE ${warning_flags} ${math_flags})
 	target_include_directories(test PRIVATE . third_party/googletest/googletest/include)
 	target_link_libraries(test PRIVATE spice Threads::Threads ${CMAKE_SOURCE_DIR}/third_party/googletest/build/lib/libgtest.a ${CMAKE_SOURCE_DIR}/third_party/googletest/build/lib/libgtest_main.a)
 endif()

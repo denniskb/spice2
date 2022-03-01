@@ -13,6 +13,7 @@ template <class Neuron>
 class neuron_pool {
 public:
 	neuron_pool(Size const size, Size const max_delay) : _neurons(size), _history(size) {
+		SPICE_ASSERT(size >= 0);
 		SPICE_ASSERT(max_delay >= 1);
 
 		_spike_counts.reserve(max_delay);

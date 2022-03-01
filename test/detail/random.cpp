@@ -50,12 +50,13 @@ void test_random_number_distribution(auto&& cdf, auto&& dist, double const a, do
 	RNG rng({seed});
 
 	double kolmogorov_smirnov = 0.0;
-	for (int i : range(100)) {
-		double const x = a + i * 0.01 * (b - a);
+	for (Int i : range(100)) {
+		double const x = std::lerp(a, b, i * 0.01);
 		Int is         = 0;
-		for (int i : range(1000))
+		for (Int j : range(1000)) {
 			is += (dist(rng) <= x);
-
+			(void)j;
+		}
 		kolmogorov_smirnov = std::max(kolmogorov_smirnov, std::abs(1e-3 * is - cdf(x)));
 	}
 
