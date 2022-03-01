@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 
-#include "spice/detail/range.h"
+#include "spice/util/range.h"
 
 using namespace spice;
-using namespace spice::detail;
+using namespace spice::util;
 
 TEST(Detail, Range) {
 	{

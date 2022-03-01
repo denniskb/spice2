@@ -11,7 +11,7 @@
 #include "assert.h"
 #include "stdint.h"
 
-namespace spice::detail {
+namespace spice::util {
 template <std::integral Integer>
 inline Integer rotl(Integer const x, Int const k) {
 	return (x << k) | (x >> ((sizeof(Integer) * 8) - k));

@@ -5,7 +5,7 @@
 
 #include "stdint.h"
 
-namespace spice::detail {
+namespace spice::util {
 class range {
 public:
 	struct int_iterator {

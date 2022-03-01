@@ -4,9 +4,9 @@
 #include <span>
 #include <vector>
 
-#include "detail/assert.h"
-#include "detail/range.h"
-#include "detail/stdint.h"
+#include "util/assert.h"
+#include "util/range.h"
+#include "util/stdint.h"
 
 namespace spice {
 template <class Neuron>
@@ -29,7 +29,7 @@ public:
 		}
 
 		Size const spike_count = _spikes.size();
-		for (Size const i : detail::range(_neurons)) {
+		for (Size const i : util::range(_neurons)) {
 			bool const spiked = _neurons[i].update();
 			_history[i]       = (_history[i] << 1) | spiked;
 			if (spiked)

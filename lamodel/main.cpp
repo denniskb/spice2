@@ -1,4 +1,4 @@
-#include "spice/detail/assert.h"
+#include "spice/util/assert.h"
 
 int main() {
 	SPICE_ASSERT(false);

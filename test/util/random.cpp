@@ -2,11 +2,11 @@
 
 #include <numbers>
 
-#include "spice/detail/random.h"
-#include "spice/detail/range.h"
+#include "spice/util/random.h"
+#include "spice/util/range.h"
 
 using namespace spice;
-using namespace spice::detail;
+using namespace spice::util;
 
 static constexpr Int n_choose_k(Int const n, Int const k) {
 	SPICE_ASSERT(0 <= k && k <= n);

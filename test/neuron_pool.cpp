@@ -3,7 +3,7 @@
 #include "spice/neuron_pool.h"
 
 using namespace spice;
-using namespace spice::detail;
+using namespace spice::util;
 
 struct manual_fire_neuron {
 	static bool fire;
