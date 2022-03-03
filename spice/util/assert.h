@@ -1,7 +1,7 @@
 #pragma once
 
-#define SPICE_ASSERT(X)                                  \
-	if (__builtin_expect_with_probability(!(X), 0, 1.0)) \
+#define SPICE_ASSERT(X)            \
+	if (__builtin_expect(!(X), 0)) \
 		::spice::util::assert_failed(__FILE__, __LINE__, #X);
 
 namespace spice::util {
