@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <initializer_list>
 #include <limits>
 #include <numbers>
 #include <random>
@@ -12,17 +13,44 @@
 #include "stdint.h"
 
 namespace spice::util {
+namespace detail {
 template <std::integral Integer>
 inline Integer rotl(Integer const x, Int const k) {
 	return (x << k) | (x >> ((sizeof(Integer) * 8) - k));
 }
+}
+
+// Copy-able, fixed-size (128bit) seed_seq
+class seed_seq {
+public:
+	static constexpr Int SIZE = 4;
+
+	seed_seq(std::initializer_list<UInt> il) { std::seed_seq(il).generate(_seed, _seed + SIZE); }
+
+	template <class RandomIt>
+	void generate(RandomIt first, RandomIt last) {
+		Int i = 0;
+		while (first != last)
+			*first++ = _seed[i++ % SIZE];
+	}
+
+	Int size() const { return SIZE; }
+
+	template <class OutputIt>
+	void param(OutputIt it) {
+		std::copy(_seed, _seed + SIZE, it);
+	}
+
+private:
+	UInt32 _seed[SIZE];
+};
 
 template <std::integral Integer, int Period, class Next>
 class xoroshiro {
 public:
 	using result_type = Integer;
 
-	explicit xoroshiro(std::seed_seq sequence) {
+	explicit xoroshiro(seed_seq sequence) {
 		auto* const ptr = reinterpret_cast<UInt32*>(&_state);
 		sequence.generate(ptr, ptr + Period / 32);
 	}
@@ -55,7 +83,7 @@ using xoroshiro32_128p = xoroshiro<UInt32, 128, decltype([](auto& state) {
 	                                   state.s0 ^= state.s3;
 
 	                                   state.s2 ^= t;
-	                                   state.s3 = rotl(state.s3, 11);
+	                                   state.s3 = detail::rotl(state.s3, 11);
 
 	                                   return result;
                                    })>;
@@ -64,8 +92,8 @@ using xoroshiro64_128p = xoroshiro<UInt, 128, decltype([](auto& state) {
 	                                   UInt const result = state.s0 + state.s1;
 
 	                                   UInt const tmp = state.s0 ^ state.s1;
-	                                   state.s0       = rotl(state.s0, 24) ^ tmp ^ (tmp << 16);
-	                                   state.s1       = rotl(tmp, 37);
+	                                   state.s0 = detail::rotl(state.s0, 24) ^ tmp ^ (tmp << 16);
+	                                   state.s1 = detail::rotl(tmp, 37);
 
 	                                   return result;
                                    })>;
@@ -81,7 +109,7 @@ public:
 		constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
 
 		UInt iid = rng();
-		if (rng_size < sizeof(Real))
+		if constexpr (rng_size < sizeof(Real))
 			iid = (iid << (8 * rng_size)) | rng();
 
 		return std::fma(((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
