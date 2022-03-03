@@ -63,3 +63,22 @@ TEST(AdjList, Ctor) {
 		}
 	}
 }
+
+TEST(AdjList, Distr) {
+	std::random_device rd;
+	UInt const seed = rd();
+	adj_list<void> adj(1, 100'000, 0.1, {seed});
+
+	auto const neighbors = adj.neighbors(0);
+	EXPECT_TRUE(9900 <= neighbors.size() && neighbors.size() <= 10100)
+	    << "neighbors.size(): " << neighbors.size() << ", seed: " << seed;
+
+	double kolmogorov_smirnov = 0;
+	for (UInt x = 1000; x <= 99'000; x += 1000) {
+		double const cdf =
+		    (std::lower_bound(neighbors.begin(), neighbors.end(), x) - neighbors.begin()) / 1e4;
+		kolmogorov_smirnov = std::max(kolmogorov_smirnov, cdf - x / 1e5);
+	}
+
+	EXPECT_LT(kolmogorov_smirnov, 0.01) << "seed: " << seed;
+}

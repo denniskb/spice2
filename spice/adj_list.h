@@ -34,13 +34,11 @@ public:
 		util::exponential_distribution<double> exprnd(1 / p - 1);
 
 		for (UInt const src : util::range(src_count)) {
-			double energy = 0;
-			Int dst       = -1;
+			Int index    = 0;
+			double noise = 0;
 			for (;;) {
-				energy += exprnd(rng);
-				double const surplus = std::round(energy);
-				dst += 1 + static_cast<Int>(surplus);
-				energy -= surplus;
+				noise += exprnd(rng);
+				Int const dst = index++ + std::round(noise);
 
 				if (__builtin_expect(dst >= dst_count, 0))
 					break;

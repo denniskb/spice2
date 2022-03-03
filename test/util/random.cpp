@@ -49,7 +49,7 @@ void test_random_number_distribution(auto&& cdf, auto&& dist, double const a, do
 	auto const seed = std::random_device()();
 	RNG rng({seed});
 
-	double kolmogorov_smirnov = 0.0;
+	double kolmogorov_smirnov = 0;
 	for (Int i : range(100)) {
 		double const x = std::lerp(a, b, i * 0.01);
 		Int is         = 0;
