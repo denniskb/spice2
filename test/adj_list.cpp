@@ -51,13 +51,15 @@ TEST(AdjList, Empty) {
 
 TEST(AdjList, Ctor) {
 	{
-		adj_list<void> adj(1, 5, 1);
-		ASSERT_EQ(adj.size(), 5);
+		adj_list<void> adj(2, 5, 1);
+		ASSERT_EQ(adj.size(), 10);
 		ASSERT_EQ(adj.neighbors(0).size(), 5);
-		ASSERT_EQ(adj.neighbors(1).size(), 0);
+		ASSERT_EQ(adj.neighbors(1).size(), 5);
+		ASSERT_EQ(adj.neighbors(2).size(), 0);
 
-		UInt i = 0;
-		for (UInt n : adj.neighbors(0))
-			ASSERT_EQ(n, i++);
+		for (Int i : range(5)) {
+			ASSERT_EQ(adj.neighbors(0)[i], i);
+			ASSERT_EQ(adj.neighbors(1)[i], (Int(1) << 32) + i);
+		}
 	}
 }
