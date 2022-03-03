@@ -113,3 +113,31 @@ TEST(Random, BinomialDistribution) {
 	test_random_number_distribution<xoroshiro64_128p>([](double x) { return bino_cdf(x, 10, 0.7); },
 	                                                  binomial_distribution<Int>(10, 0.7), 0, 14);
 }
+
+template <class RNG, std::floating_point Real>
+void test_uniform_interval() {
+	std::random_device rd;
+	UInt const seed = rd();
+	RNG rng({seed});
+	uniform_real_distribution<Real, false> right_open;
+	uniform_real_distribution<Real, true> left_open;
+
+	for (Int i : range(1000'000)) {
+		{
+			// [0,1)
+			Real const x = right_open(rng);
+			ASSERT_TRUE(0 <= x && x < 1) << "seed: " << seed;
+		}
+		{
+			// (0,1]
+			Real const x = left_open(rng);
+			ASSERT_TRUE(0 < x && x <= 1) << "seed: " << seed;
+		}
+		(void)i;
+	}
+}
+
+TEST(Random, Xoroshiro32_128UniformFloat) { test_uniform_interval<xoroshiro32_128p, float>(); }
+TEST(Random, Xoroshiro32_128UniformDouble) { test_uniform_interval<xoroshiro32_128p, double>(); }
+TEST(Random, Xoroshiro64_128UniformFloat) { test_uniform_interval<xoroshiro64_128p, float>(); }
+TEST(Random, Xoroshiro64_128UniformDouble) { test_uniform_interval<xoroshiro64_128p, double>(); }

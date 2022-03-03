@@ -69,6 +69,14 @@ TEST(AdjList, Distr) {
 	UInt const seed = rd();
 	adj_list<void> adj(1, 100'000, 0.1, {seed});
 
+	{
+		Int previous = -1;
+		for (UInt neighbor : adj.neighbors(0)) {
+			ASSERT_NE(previous, neighbor) << "seed: " << seed;
+			previous = neighbor;
+		}
+	}
+
 	auto const neighbors = adj.neighbors(0);
 	EXPECT_TRUE(9900 <= neighbors.size() && neighbors.size() <= 10100)
 	    << "neighbors.size(): " << neighbors.size() << ", seed: " << seed;
@@ -81,4 +89,16 @@ TEST(AdjList, Distr) {
 	}
 
 	EXPECT_LT(kolmogorov_smirnov, 0.01) << "seed: " << seed;
+}
+
+TEST(AdjList, Collisions) {
+	std::random_device rd;
+	UInt const seed = rd();
+	adj_list<void> adj(1, 10'000, 0.99, {seed});
+
+	Int previous = -1;
+	for (Int neighbor : adj.neighbors(0)) {
+		ASSERT_LT(previous, neighbor) << "seed: " << seed;
+		previous = neighbor;
+	}
 }
