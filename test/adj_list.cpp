@@ -8,7 +8,7 @@ using namespace spice;
 using namespace spice::util;
 
 TEST(AdjList, Empty) {
-	auto assert_empty = [](auto&& adj) {
+	auto assert_empty = [](auto const& adj) {
 		ASSERT_EQ(adj.size(), 0);
 		ASSERT_EQ(std::distance(adj.neighbors(0).begin(), adj.neighbors(0).end()), 0);
 		ASSERT_EQ(std::distance(adj.neighbors(1).begin(), adj.neighbors(1).end()), 0);

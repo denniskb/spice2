@@ -45,7 +45,7 @@ static constexpr double bino_cdf(Int const x, Int const n, double const p) {
 }
 
 template <class RNG>
-void test_random_number_distribution(auto&& cdf, auto&& dist, double const a, double const b) {
+void test_random_number_distribution(auto const& cdf, auto&& dist, double const a, double const b) {
 	auto const seed = std::random_device()();
 	RNG rng({seed});
 
