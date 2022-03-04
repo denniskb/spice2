@@ -92,8 +92,8 @@ using xoroshiro64_128p = xoroshiro<UInt, 128, decltype([](auto& state) {
 	                                   UInt const result = state.s0 + state.s1;
 
 	                                   UInt const tmp = state.s0 ^ state.s1;
-	                                   state.s0 = detail::rotl(state.s0, 24) ^ tmp ^ (tmp << 16);
-	                                   state.s1 = detail::rotl(tmp, 37);
+	                                   state.s0       = detail::rotl(state.s0, 24) ^ tmp ^ (tmp << 16);
+	                                   state.s1       = detail::rotl(tmp, 37);
 
 	                                   return result;
                                    })>;

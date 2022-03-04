@@ -58,14 +58,12 @@ public:
 		synapse_t* _synapse = nullptr;
 		UInt _sentinel      = 0;
 
-		iterator_t(UInt const* e, synapse_t* syn, UInt sent) :
-		_edge(e), _synapse(syn), _sentinel(sent){};
+		iterator_t(UInt const* e, synapse_t* syn, UInt sent) : _edge(e), _synapse(syn), _sentinel(sent){};
 	};
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	adj_list(Int const src_count, Int const dst_count, double const p,
-	         util::seed_seq seed = {1337}) {
+	adj_list(Int const src_count, Int const dst_count, double const p, util::seed_seq seed = {1337}) {
 		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= p && p <= 1);
@@ -112,10 +110,9 @@ public:
 	util::range_t<const_iterator> neighbors(Int const src) const {
 		SPICE_ASSERT(0 <= src && src < std::numeric_limits<Int32>::max());
 
-		Int const index =
-		    (std::lower_bound(_edges.begin(), _edges.end(), src << 32) - _edges.begin());
+		Int const index = (std::lower_bound(_edges.begin(), _edges.end(), src << 32) - _edges.begin());
 		return {{_edges.data() + index, _synapses.data() + index, 0},
-		        {nullptr, nullptr, (UInt(src) + 1) << 32}};
+		        {nullptr, nullptr, UInt(src + 1) << 32}};
 	}
 
 private:

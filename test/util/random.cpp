@@ -68,34 +68,32 @@ TEST(Random, Xoroshiro32_128_UniformRealDistributionFloat) {
 	                                                  uniform_real_distribution<float>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro32_128_UniformRealDistributionFloatTrue) {
-	test_random_number_distribution<xoroshiro32_128p>(
-	    [](double x) { return 0.5 * x - 0.5; }, uniform_real_distribution<float, true>(1, 3), 1, 3);
+	test_random_number_distribution<xoroshiro32_128p>([](double x) { return 0.5 * x - 0.5; },
+	                                                  uniform_real_distribution<float, true>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro32_128_UniformRealDistributionDouble) {
-	test_random_number_distribution<xoroshiro32_128p>(
-	    [](double x) { return 0.5 * x - 0.5; }, uniform_real_distribution<double>(1, 3), 1, 3);
+	test_random_number_distribution<xoroshiro32_128p>([](double x) { return 0.5 * x - 0.5; },
+	                                                  uniform_real_distribution<double>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro32_128_UniformRealDistributionDoubleTrue) {
 	test_random_number_distribution<xoroshiro32_128p>([](double x) { return 0.5 * x - 0.5; },
-	                                                  uniform_real_distribution<double, true>(1, 3),
-	                                                  1, 3);
+	                                                  uniform_real_distribution<double, true>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro64_128_UniformRealDistributionFloat) {
 	test_random_number_distribution<xoroshiro64_128p>([](double x) { return 0.5 * x - 0.5; },
 	                                                  uniform_real_distribution<float>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro64_128_UniformRealDistributionFloatTrue) {
-	test_random_number_distribution<xoroshiro64_128p>(
-	    [](double x) { return 0.5 * x - 0.5; }, uniform_real_distribution<float, true>(1, 3), 1, 3);
+	test_random_number_distribution<xoroshiro64_128p>([](double x) { return 0.5 * x - 0.5; },
+	                                                  uniform_real_distribution<float, true>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro64_128_UniformRealDistributionDouble) {
-	test_random_number_distribution<xoroshiro64_128p>(
-	    [](double x) { return 0.5 * x - 0.5; }, uniform_real_distribution<double>(1, 3), 1, 3);
+	test_random_number_distribution<xoroshiro64_128p>([](double x) { return 0.5 * x - 0.5; },
+	                                                  uniform_real_distribution<double>(1, 3), 1, 3);
 }
 TEST(Random, Xoroshiro64_128_UniformRealDistributionDoubleTrue) {
 	test_random_number_distribution<xoroshiro64_128p>([](double x) { return 0.5 * x - 0.5; },
-	                                                  uniform_real_distribution<double, true>(1, 3),
-	                                                  1, 3);
+	                                                  uniform_real_distribution<double, true>(1, 3), 1, 3);
 }
 
 TEST(Random, ExponentialDistribution) {
@@ -138,22 +136,13 @@ void test_uniform_interval(auto&& rng) {
 	}
 }
 
+static constexpr UInt32 const MAX = std::numeric_limits<UInt32>::max();
 TEST(Random, UniformIntervalFloatUInt320) { test_uniform_interval<float>(constant_rng<UInt32>(0)); }
-TEST(Random, UniformIntervalDoubleUInt320) {
-	test_uniform_interval<double>(constant_rng<UInt32>(0));
-}
-TEST(Random, UniformIntervalFloatUInt32Max) {
-	test_uniform_interval<float>(constant_rng<UInt32>(std::numeric_limits<UInt32>::max()));
-}
-TEST(Random, UniformIntervalDoubleUInt32Max) {
-	test_uniform_interval<double>(constant_rng<UInt32>(std::numeric_limits<UInt32>::max()));
-}
+TEST(Random, UniformIntervalDoubleUInt320) { test_uniform_interval<double>(constant_rng<UInt32>(0)); }
+TEST(Random, UniformIntervalFloatUInt32Max) { test_uniform_interval<float>(constant_rng<UInt32>(MAX)); }
+TEST(Random, UniformIntervalDoubleUInt32Max) { test_uniform_interval<double>(constant_rng<UInt32>(MAX)); }
 
 TEST(Random, UniformIntervalFloatUInt0) { test_uniform_interval<float>(constant_rng<UInt>(0)); }
 TEST(Random, UniformIntervalDoubleUInt0) { test_uniform_interval<double>(constant_rng<UInt>(0)); }
-TEST(Random, UniformIntervalFloatUIntMax) {
-	test_uniform_interval<float>(constant_rng<UInt>(std::numeric_limits<UInt>::max()));
-}
-TEST(Random, UniformIntervalDoubleUIntMax) {
-	test_uniform_interval<double>(constant_rng<UInt>(std::numeric_limits<UInt>::max()));
-}
+TEST(Random, UniformIntervalFloatUIntMax) { test_uniform_interval<float>(constant_rng<UInt>(MAX)); }
+TEST(Random, UniformIntervalDoubleUIntMax) { test_uniform_interval<double>(constant_rng<UInt>(MAX)); }

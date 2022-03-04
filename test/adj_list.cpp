@@ -73,8 +73,7 @@ TEST(AdjList, Distr) {
 	auto const neighbors = adj.neighbors(0);
 	EXPECT_TRUE(9850 <= std::distance(neighbors.begin(), neighbors.end()) &&
 	            std::distance(neighbors.begin(), neighbors.end()) <= 10150)
-	    << "neighbors.size(): " << std::distance(neighbors.begin(), neighbors.end())
-	    << ", seed: " << seed;
+	    << "neighbors.size(): " << std::distance(neighbors.begin(), neighbors.end()) << ", seed: " << seed;
 
 	double kolmogorov_smirnov = 0;
 	for (Int x = 1000; x <= 99'000; x += 1000) {
