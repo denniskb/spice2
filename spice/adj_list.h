@@ -10,6 +10,7 @@
 #include "util/assert.h"
 #include "util/random.h"
 #include "util/range.h"
+#include "util/scope.h"
 #include "util/stdint.h"
 
 namespace spice {
@@ -68,34 +69,35 @@ public:
 		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= p && p <= 1);
 
-		if (p > 0) {
-			_edges.reserve(src_count * dst_count * p);
+		util::scope_exit _{[this] { _edges.push_back(std::numeric_limits<UInt>::max()); }};
 
-			if constexpr (!std::is_void_v<Synapse>)
-				_synapses.reserve(src_count * dst_count * p);
+		if (p == 0)
+			return;
 
-			util::xoroshiro64_128p rng(seed);
-			util::exponential_distribution<double> exprnd(1 / p - 1);
+		_edges.reserve(src_count * dst_count * p);
 
-			for (UInt const src : util::range(src_count)) {
-				Int index    = 0;
-				double noise = 0;
-				for (;;) {
-					noise += exprnd(rng);
-					Int const dst = index++ + std::round(noise);
+		if constexpr (!std::is_void_v<Synapse>)
+			_synapses.reserve(src_count * dst_count * p);
 
-					if (__builtin_expect(dst >= dst_count, 0))
-						break;
+		util::xoroshiro64_128p rng(seed);
+		util::exponential_distribution<double> exprnd(1 / p - 1);
 
-					_edges.push_back((src << 32) | dst);
+		for (UInt const src : util::range(src_count)) {
+			Int index    = 0;
+			double noise = 0;
+			for (;;) {
+				noise += exprnd(rng);
+				Int const dst = index++ + std::round(noise);
 
-					if constexpr (!std::is_void_v<Synapse>)
-						_synapses.push_back({});
-				}
+				if (__builtin_expect(dst >= dst_count, 0))
+					break;
+
+				_edges.push_back((src << 32) | dst);
+
+				if constexpr (!std::is_void_v<Synapse>)
+					_synapses.push_back({});
 			}
 		}
-		// Add sentinel so as to avoid range checks
-		_edges.push_back(std::numeric_limits<UInt>::max());
 	}
 
 	Int size() const { return _edges.size() - 1; }
