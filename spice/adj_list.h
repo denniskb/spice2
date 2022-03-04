@@ -16,6 +16,52 @@ namespace spice {
 template <class Synapse>
 class adj_list {
 public:
+	template <bool Const>
+	class iterator_t {
+	public:
+		using synapse_t = std::conditional_t<Const, Synapse const*, Synapse*>;
+		struct edge {
+			Int src;
+			Int dst;
+			synapse_t syn;
+		};
+
+		using iterator_category = std::input_iterator_tag;
+		using difference_type   = std::ptrdiff_t;
+		using value_type        = edge;
+
+		iterator_t() = default;
+		iterator_t(const iterator_t<false>& other) : _edge(other._edge), _synapse(other._synapse) {}
+
+		edge operator*() const { return {Int(*_edge >> 32), Int(*_edge & 0xffffffff), _synapse}; }
+
+		bool operator==(const iterator_t& other) const { return _edge == other._edge; }
+		bool operator!=(const iterator_t& other) const { return _edge != other._edge; }
+
+		iterator_t& operator++() {
+			_edge++;
+			if constexpr (!std::is_void_v<Synapse>)
+				_synapse++;
+
+			return *this;
+		}
+		iterator_t operator++(int) {
+			auto result = *this;
+			operator++();
+			return result;
+		}
+
+	private:
+		friend class adj_list;
+
+		UInt const* _edge  = nullptr;
+		synapse_t _synapse = nullptr;
+
+		iterator_t(UInt const* e, synapse_t syn) : _edge(e), _synapse(syn){};
+	};
+	using iterator       = iterator_t<false>;
+	using const_iterator = iterator_t<true>;
+
 	adj_list(Int const src_count, Int const dst_count, double const p,
 	         util::seed_seq seed = {1337}) {
 		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
@@ -57,16 +103,30 @@ public:
 
 	Int size() const { return std::max(Int(0), static_cast<Int>(_edges.size()) - 1); }
 
+	iterator begin() { return {_edges.data(), _synapses.data()}; }
+	const_iterator begin() const { return {_edges.data(), _synapses.data()}; }
+	const_iterator cbegin() const { return {_edges.data(), _synapses.data()}; }
+	iterator end() { return {_edges.data() + _edges.size(), _synapses.data() + _synapses.size()}; }
+	// TODO: clang-format line length
+	const_iterator end() const {
+		return {_edges.data() + _edges.size(), _synapses.data() + _synapses.size()};
+	}
+	const_iterator cend() const {
+		return {_edges.data() + _edges.size(), _synapses.data() + _synapses.size()};
+	}
+
 	// TODO: Provide custom iterator that can iterate both IDs and synapses
 	// (will also be able to avoid 2nd lower_bound by checking for a changing src ID instead)
-	std::span<UInt const> neighbors(Int const src) const {
+	util::range_t<const_iterator> neighbors(Int const src) const {
 		SPICE_ASSERT(0 <= src && src < std::numeric_limits<Int32>::max());
 
-		UInt first = src << 32;
-		UInt last  = (src + 1) << 32;
+		UInt const first = src << 32;
+		UInt const last  = (src + 1) << 32;
 
-		return {std::lower_bound(_edges.begin(), _edges.end(), first),
-		        std::lower_bound(_edges.begin(), _edges.end(), last)};
+		return {std::next(begin(),
+		                  std::lower_bound(_edges.begin(), _edges.end(), first) - _edges.begin()),
+		        std::next(begin(),
+		                  std::lower_bound(_edges.begin(), _edges.end(), last) - _edges.begin())};
 	}
 
 private:

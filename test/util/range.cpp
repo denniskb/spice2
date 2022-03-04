@@ -7,7 +7,7 @@ using namespace spice::util;
 
 TEST(Detail, Range) {
 	{
-		range r(0);
+		auto r = range(0);
 		ASSERT_EQ(*r.begin(), 0);
 		ASSERT_EQ(*r.end(), 0);
 
@@ -19,7 +19,7 @@ TEST(Detail, Range) {
 	}
 
 	{
-		range r(10);
+		auto r = range(10);
 		ASSERT_EQ(*r.begin(), 0);
 		ASSERT_EQ(*r.end(), 10);
 
@@ -31,7 +31,7 @@ TEST(Detail, Range) {
 	}
 
 	{
-		range r(2, 7);
+		auto r = range(2, 7);
 		ASSERT_EQ(*r.begin(), 2);
 		ASSERT_EQ(*r.end(), 7);
 
@@ -43,7 +43,7 @@ TEST(Detail, Range) {
 	}
 
 	{
-		range r(7, -3);
+		auto r = range(7, -3);
 		ASSERT_EQ(*r.begin(), 7);
 		ASSERT_EQ(*r.end(), 7);
 

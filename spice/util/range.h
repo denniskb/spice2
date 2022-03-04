@@ -1,29 +1,39 @@
 #pragma once
 
 #include <algorithm>
+#include <iterator>
 #include <type_traits>
 
 #include "stdint.h"
 
 namespace spice::util {
-class range {
+template <class It>
+struct range_t {
 public:
-	struct int_iterator {
-		Int i;
-		constexpr Int operator*() const { return i; }
-		constexpr operator Int&() { return i; }
-	};
+	It first;
+	It last;
 
-	template <class Container, typename std::enable_if_t<!std::is_integral_v<Container>>* = nullptr>
-	constexpr explicit range(Container const& container) : range(container.size()) {}
-	constexpr explicit range(Int max) : range(0, max) {}
-	constexpr range(Int min, Int max) : _min(min), _max(std::max(min, max)) {}
+	constexpr It begin() const { return first; }
+	constexpr It end() const { return last; }
 
-	constexpr int_iterator begin() const { return _min; }
-	constexpr int_iterator end() const { return _max; }
-
-private:
-	int_iterator const _min;
-	int_iterator const _max;
+	constexpr Int size() const {
+		if constexpr (std::is_integral_v<It>)
+			return end() - begin();
+		else
+			return std::distance(begin(), end());
+	}
 };
+
+struct int_iterator {
+	Int i;
+	constexpr Int operator*() const { return i; }
+	constexpr operator Int&() { return i; }
+};
+
+inline constexpr range_t<int_iterator> range(Int min, Int max) { return {min, std::max(min, max)}; }
+inline constexpr range_t<int_iterator> range(Int max) { return range(0, max); }
+
+template <class Container>
+requires requires(Container c) { c.size(); }
+inline constexpr auto range(Container const& c) { return range(c.size()); }
 }
