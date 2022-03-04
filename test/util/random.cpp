@@ -114,30 +114,46 @@ TEST(Random, BinomialDistribution) {
 	                                                  binomial_distribution<Int>(10, 0.7), 0, 14);
 }
 
-template <class RNG, std::floating_point Real>
-void test_uniform_interval() {
-	std::random_device rd;
-	UInt const seed = rd();
-	RNG rng({seed});
+template <std::integral Integer>
+struct constant_rng {
+	Integer x;
+	constexpr explicit constant_rng(Integer xx) : x(xx) {}
+	constexpr Integer operator()() { return x; }
+};
+
+template <std::floating_point Real>
+void test_uniform_interval(auto&& rng) {
 	uniform_real_distribution<Real, false> right_open;
 	uniform_real_distribution<Real, true> left_open;
 
-	for (Int i : range(1000'000)) {
-		{
-			// [0,1)
-			Real const x = right_open(rng);
-			ASSERT_TRUE(0 <= x && x < 1) << "seed: " << seed;
-		}
-		{
-			// (0,1]
-			Real const x = left_open(rng);
-			ASSERT_TRUE(0 < x && x <= 1) << "seed: " << seed;
-		}
-		(void)i;
+	{
+		// [0,1)
+		Real const x = right_open(rng);
+		ASSERT_TRUE(0 <= x && x < 1);
+	}
+	{
+		// (0,1]
+		Real const x = left_open(rng);
+		ASSERT_TRUE(0 < x && x <= 1);
 	}
 }
 
-TEST(Random, Xoroshiro32_128UniformFloat) { test_uniform_interval<xoroshiro32_128p, float>(); }
-TEST(Random, Xoroshiro32_128UniformDouble) { test_uniform_interval<xoroshiro32_128p, double>(); }
-TEST(Random, Xoroshiro64_128UniformFloat) { test_uniform_interval<xoroshiro64_128p, float>(); }
-TEST(Random, Xoroshiro64_128UniformDouble) { test_uniform_interval<xoroshiro64_128p, double>(); }
+TEST(Random, UniformIntervalFloatUInt320) { test_uniform_interval<float>(constant_rng<UInt32>(0)); }
+TEST(Random, UniformIntervalDoubleUInt320) {
+	test_uniform_interval<double>(constant_rng<UInt32>(0));
+}
+TEST(Random, UniformIntervalFloatUInt32Max) {
+	test_uniform_interval<float>(constant_rng<UInt32>(std::numeric_limits<UInt32>::max()));
+}
+TEST(Random, UniformIntervalDoubleUInt32Max) {
+	test_uniform_interval<double>(constant_rng<UInt32>(std::numeric_limits<UInt32>::max()));
+}
+
+TEST(Random, UniformIntervalFloatUInt0) { test_uniform_interval<float>(constant_rng<UInt>(0)); }
+TEST(Random, UniformIntervalDoubleUInt0) { test_uniform_interval<double>(constant_rng<UInt>(0)); }
+TEST(Random, UniformIntervalFloatUIntMax) {
+	test_uniform_interval<float>(constant_rng<UInt>(std::numeric_limits<UInt>::max()));
+}
+TEST(Random, UniformIntervalDoubleUIntMax) {
+	test_uniform_interval<double>(constant_rng<UInt>(std::numeric_limits<UInt>::max()));
+}
