@@ -10,10 +10,10 @@ using namespace spice::util;
 TEST(AdjList, Empty) {
 	auto assert_empty = [](auto&& adj) {
 		ASSERT_EQ(adj.size(), 0);
-		ASSERT_EQ(adj.neighbors(0).size(), 0);
-		ASSERT_EQ(adj.neighbors(1).size(), 0);
-		ASSERT_EQ(adj.neighbors(2).size(), 0);
-		ASSERT_EQ(adj.neighbors(5).size(), 0);
+		ASSERT_EQ(std::distance(adj.neighbors(0).begin(), adj.neighbors(0).end()), 0);
+		ASSERT_EQ(std::distance(adj.neighbors(1).begin(), adj.neighbors(1).end()), 0);
+		ASSERT_EQ(std::distance(adj.neighbors(2).begin(), adj.neighbors(2).end()), 0);
+		ASSERT_EQ(std::distance(adj.neighbors(5).begin(), adj.neighbors(5).end()), 0);
 		ASSERT_EQ(adj.begin(), adj.end());
 		ASSERT_EQ(adj.cbegin(), adj.end());
 		ASSERT_EQ(std::distance(adj.begin(), adj.end()), 0);
@@ -33,9 +33,9 @@ TEST(AdjList, Ctor) {
 	{
 		adj_list<void> adj(2, 5, 1);
 		ASSERT_EQ(adj.size(), 10);
-		ASSERT_EQ(adj.neighbors(0).size(), 5);
-		ASSERT_EQ(adj.neighbors(1).size(), 5);
-		ASSERT_EQ(adj.neighbors(2).size(), 0);
+		ASSERT_EQ(std::distance(adj.neighbors(0).begin(), adj.neighbors(0).end()), 5);
+		ASSERT_EQ(std::distance(adj.neighbors(1).begin(), adj.neighbors(1).end()), 5);
+		ASSERT_EQ(std::distance(adj.neighbors(2).begin(), adj.neighbors(2).end()), 0);
 
 		{
 			Int i = 0;
@@ -71,8 +71,10 @@ TEST(AdjList, Distr) {
 	}
 
 	auto const neighbors = adj.neighbors(0);
-	EXPECT_TRUE(9850 <= neighbors.size() && neighbors.size() <= 10150)
-	    << "neighbors.size(): " << neighbors.size() << ", seed: " << seed;
+	EXPECT_TRUE(9850 <= std::distance(neighbors.begin(), neighbors.end()) &&
+	            std::distance(neighbors.begin(), neighbors.end()) <= 10150)
+	    << "neighbors.size(): " << std::distance(neighbors.begin(), neighbors.end())
+	    << ", seed: " << seed;
 
 	double kolmogorov_smirnov = 0;
 	for (Int x = 1000; x <= 99'000; x += 1000) {

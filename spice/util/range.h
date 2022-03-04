@@ -15,13 +15,6 @@ public:
 
 	constexpr It begin() const { return first; }
 	constexpr It end() const { return last; }
-
-	constexpr Int size() const {
-		if constexpr (std::is_integral_v<It>)
-			return end() - begin();
-		else
-			return std::distance(begin(), end());
-	}
 };
 
 struct int_iterator {
