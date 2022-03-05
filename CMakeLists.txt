@@ -9,7 +9,6 @@ find_package(Threads REQUIRED)
 
 # Common compile options shared by multiple projects
 set(warning_flags
--Werror
 -Wall
 -Wextra
 -Wshadow
@@ -22,6 +21,7 @@ set(warning_flags
 -Woverloaded-virtual
 -Wnull-dereference
 -Wuseless-cast
+-Werror
 -Wno-error=conversion
 -Wno-error=float-conversion
 -Wno-error=sign-conversion
