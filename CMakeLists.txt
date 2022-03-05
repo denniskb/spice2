@@ -34,13 +34,17 @@ set(warning_flags
 )
 
 set(math_flags
--ffast-math #-fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fno-rounding-math -fno-signaling-nans -fcx-limited-range -fexcess-precision=fast
+-ffast-math # Enables: -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fno-rounding-math -fno-signaling-nans -fcx-limited-range -fexcess-precision=fast
 -fassociative-math
 -freciprocal-math
 -fno-signed-zeros
 -fno-trapping-math
 -march=skylake
--mfpmath=sse)
+-mfpmath=sse
+# TODO: Try these
+# -mavx
+# -funroll-loops
+)
 
 # spice (snn simulation library)
 file(GLOB_RECURSE spice_sources spice/*.h spice/*.cpp)
