@@ -27,6 +27,8 @@ inline constexpr range_t<int_iterator> range(Int min, Int max) { return {min, st
 inline constexpr range_t<int_iterator> range(Int max) { return range(0, max); }
 
 template <class Container>
-requires requires(Container c) { c.size(); }
+requires requires(Container c) {
+	{ c.size() } -> std::integral;
+}
 inline constexpr auto range(Container const& c) { return range(c.size()); }
 }
