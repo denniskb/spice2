@@ -2,25 +2,28 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <span>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "concepts.h"
 #include "util/assert.h"
 #include "util/random.h"
 #include "util/range.h"
 #include "util/scope.h"
 #include "util/stdint.h"
+#include "util/type_traits.h"
 
 namespace spice {
-template <class Synapse>
+template <class Syn>
 class adj_list {
 public:
 	template <bool Const>
 	class iterator_t {
 	public:
-		using synapse_t = std::conditional_t<Const, Synapse const, Synapse>;
+		using synapse_t = std::conditional_t<Const, Syn const, Syn>;
 		struct edge {
 			Int src;
 			Int dst;
@@ -41,7 +44,7 @@ public:
 
 		iterator_t& operator++() {
 			_edge++;
-			if constexpr (!std::is_void_v<Synapse>)
+			if constexpr (!std::is_void_v<Syn>)
 				_synapse++;
 
 			return *this;
@@ -76,7 +79,7 @@ public:
 
 		_edges.reserve(src_count * dst_count * p);
 
-		if constexpr (!std::is_void_v<Synapse>)
+		if constexpr (!std::is_void_v<Syn>)
 			_synapses.reserve(src_count * dst_count * p);
 
 		util::xoroshiro64_128p rng(seed);
@@ -94,7 +97,7 @@ public:
 
 				_edges.push_back((src << 32) | dst);
 
-				if constexpr (!std::is_void_v<Synapse>)
+				if constexpr (!std::is_void_v<Syn>)
 					_synapses.push_back({});
 			}
 		}
@@ -117,10 +120,39 @@ public:
 		        {nullptr, nullptr, UInt(src + 1) << 32}};
 	}
 
-private:
-	struct empty_synapse {};
+	template <Neuron Neur>
+	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool) const {
+		static_assert(!std::is_void_v<Syn>,
+		              "An adjacency list of void synapses must specify a deliver() function.");
+		static_assert(Synapse<Syn, Neur>, "This synapse type cannot deliver to this neuron type.");
 
+		deliver_impl(spikes, pool, [](Neur&) {});
+	}
+
+	template <Neuron Neur>
+	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool,
+	             std::function<void(Neur&)> deliver_op) const {
+		static_assert(std::is_void_v<Syn>,
+		              "Only an adjacency list of void synapses may specify a deliver() function.");
+
+		deliver_impl(spikes, pool, std::move(deliver_op));
+	}
+
+private:
 	std::vector<UInt> _edges;
-	std::vector<std::conditional_t<std::is_void_v<Synapse>, empty_synapse, Synapse>> _synapses;
+	std::vector<util::nonvoid_or_empty_t<Syn>> _synapses;
+
+	template <Neuron Neur>
+	void deliver_impl(std::span<Int32 const> spikes, std::span<Neur> pool,
+	                  std::function<void(Neur&)> deliver_op) const {
+		for (auto spike : spikes)
+			for (auto edge : neighbors(spike)) {
+				SPICE_ASSERT(edge.dst < pool.size());
+				if constexpr (std::is_void_v<Syn>)
+					deliver_op(pool[edge.dst]);
+				else
+					edge.syn->deliver(pool[edge.dst]);
+			}
+	}
 };
 }

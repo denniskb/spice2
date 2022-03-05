@@ -11,6 +11,20 @@ struct manual_fire_neuron {
 };
 bool manual_fire_neuron::fire = false;
 
+TEST(NeuronPool, Concepts) {
+	{
+		neuron_pool<void> pool(5, 1, [] { return false; });
+		pool.update(1);
+		ASSERT_EQ(pool.spikes(0).size(), 0);
+	}
+
+	{
+		neuron_pool<void> pool(5, 1, [] { return true; });
+		pool.update(1);
+		ASSERT_EQ(pool.spikes(0).size(), 5);
+	}
+}
+
 TEST(NeuronPool, Update) {
 	{ //never
 		manual_fire_neuron::fire = false;
