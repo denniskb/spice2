@@ -1,0 +1,18 @@
+{
+	"configurations": [
+		{
+			"name": "Spice",
+			"compilerPath": "/usr/bin/g++",
+			"includePath": [
+				"${workspaceRoot}",
+				"${workspaceRoot}/third_party/benchmark/include",
+				"${workspaceRoot}/third_party/googletest/googletest/include",
+				"${workspaceRoot}/third_party/matplot/source"
+			],
+			"defines": [],
+			"cppStandard": "c++20",
+			"intelliSenseMode": "clang-x64"
+		}
+	],
+	"version": 4
+}
