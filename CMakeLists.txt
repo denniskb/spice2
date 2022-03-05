@@ -73,6 +73,7 @@ set(spice_build_benchmarks FALSE CACHE BOOL "Build performance benchmarks? (opti
 if(spice_build_benchmarks)
 	file(GLOB_RECURSE bench_sources bench/*.h bench/*.cpp)
 	add_executable(bench ${bench_sources})
+	target_compile_options(bench PRIVATE ${math_flags})
 	target_include_directories(bench PRIVATE . third_party/benchmark/include)
 	target_link_libraries(bench PRIVATE spice Threads::Threads ${CMAKE_SOURCE_DIR}/third_party/benchmark/build/src/libbenchmark.a ${CMAKE_SOURCE_DIR}/third_party/benchmark/build/src/libbenchmark_main.a)
 endif()
