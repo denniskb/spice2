@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-#include "spice/adj_list.h"
+#include "spice/synapse_population.h"
 
 using namespace spice;
 using namespace spice::util;
@@ -20,18 +20,18 @@ TEST(AdjList, Empty) {
 		ASSERT_EQ(std::distance(adj.cbegin(), adj.cend()), 0);
 	};
 
-	assert_empty(adj_list<void>(0, 0, 0));
-	assert_empty(adj_list<void>(0, 0, 0.5));
-	assert_empty(adj_list<void>(0, 13, 0));
-	assert_empty(adj_list<void>(0, 13, 0.5));
-	assert_empty(adj_list<void>(11, 0, 0));
-	assert_empty(adj_list<void>(11, 0, 0.5));
-	assert_empty(adj_list<void>(11, 13, 0));
+	assert_empty(synapse_population<void>(0, 0, 0));
+	assert_empty(synapse_population<void>(0, 0, 0.5));
+	assert_empty(synapse_population<void>(0, 13, 0));
+	assert_empty(synapse_population<void>(0, 13, 0.5));
+	assert_empty(synapse_population<void>(11, 0, 0));
+	assert_empty(synapse_population<void>(11, 0, 0.5));
+	assert_empty(synapse_population<void>(11, 13, 0));
 }
 
 TEST(AdjList, Ctor) {
 	{
-		adj_list<void> adj(2, 5, 1);
+		synapse_population<void> adj(2, 5, 1);
 		ASSERT_EQ(adj.size(), 10);
 		ASSERT_EQ(std::distance(adj.neighbors(0).begin(), adj.neighbors(0).end()), 5);
 		ASSERT_EQ(std::distance(adj.neighbors(1).begin(), adj.neighbors(1).end()), 5);
@@ -57,7 +57,7 @@ TEST(AdjList, Ctor) {
 TEST(AdjList, Distr) {
 	std::random_device rd;
 	UInt const seed = rd();
-	adj_list<void> adj(1, 100'000, 0.1, {seed});
+	synapse_population<void> adj(1, 100'000, 0.1, {seed});
 
 	{
 		Int prev_src = -1;
@@ -77,7 +77,7 @@ TEST(AdjList, Distr) {
 
 	double kolmogorov_smirnov = 0;
 	for (Int x = 1000; x <= 99'000; x += 1000) {
-		adj_list<void>::iterator::edge e{0, x, nullptr};
+		synapse_population<void>::iterator::edge e{0, x, nullptr};
 		double const cdf =
 		    std::distance(neighbors.begin(),
 		                  std::lower_bound(neighbors.begin(), neighbors.end(), e,
@@ -95,7 +95,7 @@ TEST(AdjList, Distr) {
 TEST(AdjList, Collisions) {
 	std::random_device rd;
 	UInt const seed = rd();
-	adj_list<void> adj(1, 10'000, 0.99, {seed});
+	synapse_population<void> adj(1, 10'000, 0.99, {seed});
 
 	Int prev_src = -1;
 	Int prev_dst = -1;
@@ -110,8 +110,8 @@ TEST(AdjList, Collisions) {
 template <std::input_iterator It>
 void test_iterator_requirements() {}
 TEST(AdjList, IteratorRequirements) {
-	test_iterator_requirements<adj_list<void>::iterator>();
-	test_iterator_requirements<adj_list<void>::const_iterator>();
-	test_iterator_requirements<adj_list<int>::iterator>();
-	test_iterator_requirements<adj_list<int>::const_iterator>();
+	test_iterator_requirements<synapse_population<void>::iterator>();
+	test_iterator_requirements<synapse_population<void>::const_iterator>();
+	test_iterator_requirements<synapse_population<int>::iterator>();
+	test_iterator_requirements<synapse_population<int>::const_iterator>();
 }

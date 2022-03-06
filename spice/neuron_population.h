@@ -16,18 +16,18 @@
 namespace spice {
 template <class Neur>
 requires Neuron<Neur> || std::same_as<Neur, void>
-class neuron_pool {
+class neuron_population {
 public:
-	neuron_pool(Int const size, Int const max_delay, std::function<bool()> update) {
+	neuron_population(Int const size, Int const max_delay, std::function<bool()> update) {
 		static_assert(std::is_void_v<Neur>, "An update function may only be provided for void neurons.");
 
 		init(size, max_delay);
 		_neurons = std::move(update);
 	}
 
-	neuron_pool(Int const size, Int const max_delay) {
+	neuron_population(Int const size, Int const max_delay) {
 		static_assert(!std::is_void_v<Neur>,
-		              "A neuron_pool of void neurons must be initialized with an update() function.");
+		              "A neuron_population of void neurons must be initialized with an update() function.");
 
 		init(size, max_delay);
 		_neurons = std::vector<util::nonvoid_or_empty_t<Neur>>(size);

@@ -18,7 +18,7 @@
 
 namespace spice {
 template <class Syn>
-class adj_list {
+class synapse_population {
 public:
 	template <bool Const>
 	class iterator_t {
@@ -56,7 +56,7 @@ public:
 		}
 
 	private:
-		friend class adj_list;
+		friend class synapse_population;
 
 		UInt const* _edge   = nullptr;
 		synapse_t* _synapse = nullptr;
@@ -67,7 +67,8 @@ public:
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	adj_list(Int const src_count, Int const dst_count, double const p, util::seed_seq seed = {1337}) {
+	synapse_population(Int const src_count, Int const dst_count, double const p,
+	                   util::seed_seq seed = {1337}) {
 		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= p && p <= 1);

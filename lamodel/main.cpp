@@ -2,8 +2,8 @@
 
 #include "matplot.h"
 
-#include "spice/adj_list.h"
-#include "spice/neuron_pool.h"
+#include "spice/neuron_population.h"
+#include "spice/synapse_population.h"
 #include "spice/util/random.h"
 
 using namespace spice;
@@ -40,22 +40,22 @@ struct lif {
 };
 
 int main() {
-	neuron_pool<void> poisson(N / 2, 1, [] {
+	neuron_population<void> poisson(N / 2, 1, [] {
 		static xoroshiro32_128p rng({1337});
 		static uniform_real_distribution<float> iid;
 
 		float const firing_rate = 20; //Hz
 		return iid(rng) < (firing_rate * dt);
 	});
-	neuron_pool<lif> excitatory(N * 4 / 10, d);
-	neuron_pool<lif> inhibitory(N / 10, d);
+	neuron_population<lif> excitatory(N * 4 / 10, d);
+	neuron_population<lif> inhibitory(N / 10, d);
 
-	adj_list<void> PE(poisson.size(), excitatory.size(), 0.1, {1212321});
-	adj_list<void> PI(poisson.size(), inhibitory.size(), 0.1, {8304294});
-	adj_list<void> EE(excitatory.size(), excitatory.size(), 0.1, {2141241});
-	adj_list<void> EI(excitatory.size(), inhibitory.size(), 0.1, {419240124});
-	adj_list<void> IE(inhibitory.size(), excitatory.size(), 0.1, {912412421});
-	adj_list<void> II(inhibitory.size(), inhibitory.size(), 0.1, {41092312});
+	synapse_population<void> PE(poisson.size(), excitatory.size(), 0.1, {1212321});
+	synapse_population<void> PI(poisson.size(), inhibitory.size(), 0.1, {8304294});
+	synapse_population<void> EE(excitatory.size(), excitatory.size(), 0.1, {2141241});
+	synapse_population<void> EI(excitatory.size(), inhibitory.size(), 0.1, {419240124});
+	synapse_population<void> IE(inhibitory.size(), excitatory.size(), 0.1, {912412421});
+	synapse_population<void> II(inhibitory.size(), inhibitory.size(), 0.1, {41092312});
 
 	auto deliver_from_excitatory = [](lif& to) { to.V += (0.0001f * 20'000) / N; };
 	auto deliver_from_inhibitory = [](lif& to) { to.V -= (0.0005f * 20'000) / N; };
