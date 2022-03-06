@@ -10,6 +10,7 @@ concept StatelessNeuron = requires(double dt) {
 
 template <class T>
 concept StatefulNeuron = requires(T t, double dt) {
+	requires !StatelessNeuron<T>;
 	requires std::default_initializable<T>;
 	{ t.update(dt) } -> std::same_as<bool>;
 };
@@ -25,6 +26,7 @@ concept StatelessSynapse = requires(Neur& n) {
 
 template <class T, class Neur>
 concept StatefulSynapse = requires(T t, Neur& n) {
+	requires !StatelessSynapse<T, Neur>;
 	requires StatefulNeuron<Neur>;
 	requires std::default_initializable<T>;
 	t.deliver(n);
