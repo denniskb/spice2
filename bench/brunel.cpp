@@ -66,9 +66,6 @@ static void brunel(benchmark::State& state) {
 	synapse_population<SynI, lif> IE(I.size(), E.size(), 0.1, {912412421});
 	synapse_population<SynI, lif> II(I.size(), I.size(), 0.1, {41092312});
 
-	auto deliver_from_excitatory = [](lif& to) { to.V += (0.0001f * 20'000) / N; };
-	auto deliver_from_inhibitory = [](lif& to) { to.V -= (0.0005f * 20'000) / N; };
-
 	Int i = 0;
 	for (auto _ : state) {
 		if (i >= d) {
