@@ -32,7 +32,7 @@ public:
 
 	Int size() const { return _history.size(); }
 
-	void update(Int const max_delay) {
+	void update(Int const max_delay, double const dt) {
 		SPICE_ASSERT(max_delay >= 1);
 
 		if (_spike_counts.size() == max_delay) {
@@ -44,9 +44,9 @@ public:
 		for (Int const i : util::range(_history)) {
 			bool spiked;
 			if constexpr (StatelessNeuron<Neur>)
-				spiked = Neur::update();
+				spiked = Neur::update(dt);
 			else
-				spiked = _neurons[i].update();
+				spiked = _neurons[i].update(dt);
 
 			_history[i] = (_history[i] << 1) | spiked;
 			if (spiked)

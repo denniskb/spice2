@@ -7,12 +7,12 @@
 using namespace spice;
 using namespace spice::util;
 
-int const N    = 20000;
-int const d    = 15;
-float const dt = 1e-4;
+int const N     = 20000;
+int const d     = 15;
+double const DT = 1e-4;
 
 struct poisson {
-	static bool update() {
+	static bool update(double dt) {
 		static xoroshiro64_128p rng({1337});
 		static uniform_real_distribution<double> iid;
 
@@ -27,7 +27,7 @@ struct lif {
 
 	lif() : V(0), Twait(0) {}
 
-	bool update() {
+	bool update(double dt) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
@@ -80,9 +80,9 @@ static void brunel(benchmark::State& state) {
 			IE.deliver(I.spikes(14), E.neurons());
 		}
 
-		P.update(d);
-		E.update(d);
-		I.update(d);
+		P.update(d, DT);
+		E.update(d, DT);
+		I.update(d, DT);
 		i++;
 	}
 }

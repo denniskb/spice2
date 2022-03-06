@@ -12,10 +12,10 @@ using namespace matplot;
 
 int const N    = 10000;
 int const d    = 15;
-float const dt = 1e-4;
+float const DT = 1e-4;
 
 struct poisson {
-	static bool update() {
+	static bool update(double const dt) {
 		static xoroshiro64_128p rng({1337});
 		static uniform_real_distribution<double> iid;
 
@@ -30,7 +30,7 @@ struct lif {
 
 	lif() : V(0), Twait(0) {}
 
-	bool update() {
+	bool update(double const dt) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
@@ -84,9 +84,9 @@ int main() {
 			IE.deliver(I.spikes(14), E.neurons());
 		}
 
-		P.update(d);
-		E.update(d);
-		I.update(d);
+		P.update(d, DT);
+		E.update(d, DT);
+		I.update(d, DT);
 
 		x.clear();
 		y.clear();

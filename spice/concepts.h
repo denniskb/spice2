@@ -4,14 +4,14 @@
 
 namespace spice {
 template <class T>
-concept StatelessNeuron = requires {
-	{ T::update() } -> std::same_as<bool>;
+concept StatelessNeuron = requires(double dt) {
+	{ T::update(dt) } -> std::same_as<bool>;
 };
 
 template <class T>
-concept StatefulNeuron = requires(T t) {
+concept StatefulNeuron = requires(T t, double dt) {
 	requires std::default_initializable<T>;
-	{ t.update() } -> std::same_as<bool>;
+	{ t.update(dt) } -> std::same_as<bool>;
 };
 
 template <class T>
