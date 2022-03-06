@@ -93,7 +93,7 @@ public:
 			double noise = 0;
 			for (;;) {
 				noise += exprnd(rng);
-				Int const dst = index++ + std::round(noise);
+				Int const dst = index++ + static_cast<Int>(std::round(noise));
 
 				if (__builtin_expect(dst >= dst_count, 0))
 					break;
