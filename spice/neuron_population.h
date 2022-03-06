@@ -32,7 +32,7 @@ public:
 
 	Int size() const { return _history.size(); }
 
-	void update(Int const max_delay, double const dt) {
+	void update(Int const max_delay, float const dt) {
 		SPICE_ASSERT(max_delay >= 1);
 
 		if (_spike_counts.size() == max_delay) {

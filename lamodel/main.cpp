@@ -15,7 +15,7 @@ int const d    = 15;
 float const DT = 1e-4;
 
 struct poisson {
-	static bool update(double const dt) {
+	static bool update(float const dt) {
 		static xoroshiro64_128p rng({1337});
 		static uniform_real_distribution<double> iid;
 
@@ -30,7 +30,7 @@ struct lif {
 
 	lif() : V(0), Twait(0) {}
 
-	bool update(double const dt) {
+	bool update(float const dt) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
