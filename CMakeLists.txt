@@ -39,11 +39,11 @@ set(math_flags
 -freciprocal-math
 -fno-signed-zeros
 -fno-trapping-math
--march=skylake
+-march=haswell
 -mfpmath=sse
 # TODO: Try these
-# -mavx
-# -funroll-loops
+#-mavx
+#-funroll-loops
 )
 
 # spice (snn simulation library)

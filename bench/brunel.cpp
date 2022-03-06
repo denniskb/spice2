@@ -1,6 +1,4 @@
-#include <algorithm>
-
-#include "matplot.h"
+#include "benchmark/benchmark.h"
 
 #include "spice/neuron_population.h"
 #include "spice/synapse_population.h"
@@ -8,9 +6,8 @@
 
 using namespace spice;
 using namespace spice::util;
-using namespace matplot;
 
-int const N    = 10000;
+int const N    = 20000;
 int const d    = 15;
 float const dt = 1e-4;
 
@@ -57,7 +54,7 @@ struct SynI {
 	static void deliver(lif& to) { to.V -= (0.0005f * 20'000) / N; }
 };
 
-int main() {
+static void brunel(benchmark::State& state) {
 	neuron_population<poisson> P(N / 2, d);
 	neuron_population<lif> E(N * 4 / 10, d);
 	neuron_population<lif> I(N / 10, d);
@@ -69,12 +66,11 @@ int main() {
 	synapse_population<SynI, lif> IE(I.size(), E.size(), 0.1, {912412421});
 	synapse_population<SynI, lif> II(I.size(), I.size(), 0.1, {41092312});
 
-	std::vector<double> x(N);
-	std::vector<double> y(N);
-	figure();
-	xlim({0, 100});
-	ylim({0, 100});
-	for (Int i : range(100)) {
+	auto deliver_from_excitatory = [](lif& to) { to.V += (0.0001f * 20'000) / N; };
+	auto deliver_from_inhibitory = [](lif& to) { to.V -= (0.0005f * 20'000) / N; };
+
+	Int i = 0;
+	for (auto _ : state) {
 		if (i >= d) {
 			PI.deliver(P.spikes(14), I.neurons());
 			PE.deliver(P.spikes(14), E.neurons());
@@ -87,25 +83,7 @@ int main() {
 		P.update(d);
 		E.update(d);
 		I.update(d);
-
-		x.clear();
-		y.clear();
-		for (auto s : P.spikes(0)) {
-			x.push_back(s % 100);
-			y.push_back(s / 100);
-		}
-		for (auto s : E.spikes(0)) {
-			x.push_back((s + N / 2) % 100);
-			y.push_back((s + N / 2) / 100);
-		}
-		for (auto s : I.spikes(0)) {
-			x.push_back((s + 9 * N / 10) % 100);
-			y.push_back((s + 9 * N / 10) / 100);
-		}
-		scatter(x, y);
-		pause(0.1);
-
-		(void)i;
+		i++;
 	}
-	return 0;
 }
+BENCHMARK(brunel)->Unit(benchmark::kMicrosecond);

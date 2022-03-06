@@ -17,7 +17,9 @@
 #include "util/type_traits.h"
 
 namespace spice {
-template <class Syn>
+// TODO: Can this be written shorter?
+template <class Syn, StatefulNeuron TargetNeuron>
+requires Synapse<Syn, TargetNeuron>
 class synapse_population {
 public:
 	template <bool Const>
@@ -80,7 +82,7 @@ public:
 
 		_edges.reserve(src_count * dst_count * p);
 
-		if constexpr (!std::is_void_v<Syn>)
+		if (StatefulSynapse<Syn, TargetNeuron>)
 			_synapses.reserve(src_count * dst_count * p);
 
 		util::xoroshiro64_128p rng(seed);
@@ -98,7 +100,7 @@ public:
 
 				_edges.push_back((src << 32) | dst);
 
-				if constexpr (!std::is_void_v<Syn>)
+				if (StatefulSynapse<Syn, TargetNeuron>)
 					_synapses.push_back({});
 			}
 		}
@@ -121,39 +123,19 @@ public:
 		        {nullptr, nullptr, UInt(src + 1) << 32}};
 	}
 
-	template <Neuron Neur>
-	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool) const {
-		static_assert(!std::is_void_v<Syn>,
-		              "An adjacency list of void synapses must specify a deliver() function.");
-		static_assert(Synapse<Syn, Neur>, "This synapse type cannot deliver to this neuron type.");
-
-		deliver_impl(spikes, pool, [](Neur&) {});
-	}
-
-	template <Neuron Neur>
-	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool,
-	             std::function<void(Neur&)> deliver_op) const {
-		static_assert(std::is_void_v<Syn>,
-		              "Only an adjacency list of void synapses may specify a deliver() function.");
-
-		deliver_impl(spikes, pool, std::move(deliver_op));
-	}
-
-private:
-	std::vector<UInt> _edges;
-	std::vector<util::nonvoid_or_empty_t<Syn>> _synapses;
-
-	template <Neuron Neur>
-	void deliver_impl(std::span<Int32 const> spikes, std::span<Neur> pool,
-	                  std::function<void(Neur&)> deliver_op) const {
+	void deliver(std::span<Int32 const> spikes, std::span<TargetNeuron> pool) const {
 		for (auto spike : spikes)
 			for (auto edge : neighbors(spike)) {
 				SPICE_ASSERT(edge.dst < pool.size());
-				if constexpr (std::is_void_v<Syn>)
-					deliver_op(pool[edge.dst]);
+				if constexpr (StatelessSynapse<Syn, TargetNeuron>)
+					Syn::deliver(pool[edge.dst]);
 				else
 					edge.syn->deliver(pool[edge.dst]);
 			}
 	}
+
+private:
+	std::vector<UInt> _edges;
+	std::vector<Syn> _synapses;
 };
 }
