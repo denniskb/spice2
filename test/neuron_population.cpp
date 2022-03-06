@@ -5,6 +5,19 @@
 using namespace spice;
 using namespace spice::util;
 
+struct stateless_neuron {
+	static bool update(double) { return false; }
+};
+struct stateful_neuron {
+	bool update(double) { return false; }
+};
+static_assert(StatelessNeuron<stateless_neuron>);
+static_assert(!StatefulNeuron<stateless_neuron>);
+static_assert(StatefulNeuron<stateful_neuron>);
+static_assert(!StatelessNeuron<stateful_neuron>);
+static_assert(Neuron<stateless_neuron>);
+static_assert(Neuron<stateful_neuron>);
+
 struct manual_fire_neuron {
 	static bool fire;
 	bool update() { return fire; }

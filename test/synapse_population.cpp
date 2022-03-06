@@ -7,6 +7,22 @@
 using namespace spice;
 using namespace spice::util;
 
+struct stateful_neuron {
+	bool update(double) { return false; }
+};
+struct stateless_synapse {
+	static void deliver(stateful_neuron&) {}
+};
+struct stateful_synapse {
+	void deliver(stateful_neuron&) {}
+};
+static_assert(StatelessSynapse<stateless_synapse, stateful_neuron>);
+static_assert(!StatefulSynapse<stateless_synapse, stateful_neuron>);
+static_assert(StatefulSynapse<stateful_synapse, stateful_neuron>);
+static_assert(!StatelessSynapse<stateful_synapse, stateful_neuron>);
+static_assert(Synapse<stateless_synapse, stateful_neuron>);
+static_assert(Synapse<stateful_synapse, stateful_neuron>);
+
 #if 0
 TEST(AdjList, Empty) {
 	auto assert_empty = [](auto const& adj) {
