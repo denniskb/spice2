@@ -48,6 +48,17 @@
 				"clear": true
 			}
 		},
+		{
+			"label": "Perf",
+			"type": "shell",
+			"command": "mkdir -p build/perf && cd build/perf && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2 -ggdb -D SPICE_NO_ASSERT\" ../.. && make -j 8",
+			"group": "build",
+			"problemMatcher": "[]",
+			"presentation": {
+				"focus": true,
+				"clear": true
+			}
+		},
 		// test/run tasks
 		{
 			"label": "Unit Tests",
