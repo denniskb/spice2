@@ -76,6 +76,9 @@
 			"label": "Benchmarks",
 			"type": "shell",
 			"command": "./build/release/bench",
+			"args": [
+				"--benchmark_filter=${input:bench_filter}"
+			],
 			"group": "test",
 			"dependsOn": "Release",
 			"problemMatcher": "[]",
@@ -95,6 +98,14 @@
 				"focus": true,
 				"clear": true
 			}
+		}
+	],
+	"inputs": [
+		{
+			"id": "bench_filter",
+			"type": "promptString",
+			"default": "",
+			"description": "run only those benchmarks that match regex"
 		}
 	]
 }
