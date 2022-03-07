@@ -45,7 +45,7 @@ public:
 
 		iterator_t& operator++() {
 			_edge++;
-			if (StatefulSynapse<Syn, TargetNeuron>)
+			if constexpr (StatefulSynapse<Syn, TargetNeuron>)
 				_synapse++;
 
 			return *this;

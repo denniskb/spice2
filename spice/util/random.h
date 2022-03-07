@@ -109,7 +109,7 @@ public:
 		constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
 
 		UInt iid = rng();
-		if (rng_size < sizeof(Real))
+		if constexpr (rng_size < sizeof(Real))
 			iid = (iid << (8 * rng_size)) | rng();
 
 		return std::fma(((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
