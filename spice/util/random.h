@@ -109,7 +109,7 @@ public:
 		constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
 
 		UInt iid = rng();
-		if constexpr (rng_size < sizeof(Real))
+		if (rng_size < sizeof(Real))
 			iid = (iid << (8 * rng_size)) | rng();
 
 		return std::fma(((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
@@ -138,8 +138,7 @@ private:
 template <std::floating_point Real>
 class normal_distribution {
 public:
-	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) :
-	_mu(mu), _sigma(sigma) {
+	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) : _mu(mu), _sigma(sigma) {
 		SPICE_ASSERT(sigma >= 0);
 	}
 

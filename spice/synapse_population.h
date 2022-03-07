@@ -27,7 +27,6 @@ public:
 	public:
 		using synapse_t = std::conditional_t<Const, Syn const, Syn>;
 		struct edge {
-			Int src;
 			Int dst;
 			synapse_t* syn;
 		};
@@ -39,14 +38,14 @@ public:
 		iterator_t() = default;
 		iterator_t(const iterator_t<false>& other) : _edge(other._edge), _synapse(other._synapse) {}
 
-		edge operator*() const { return {Int(*_edge >> 32), Int(*_edge & 0xffffffff), _synapse}; }
+		edge operator*() const { return {*_edge, _synapse}; }
 
-		bool operator==(const iterator_t& other) const { return *_edge >= other._sentinel; }
-		bool operator!=(const iterator_t& other) const { return *_edge < other._sentinel; }
+		bool operator==(const iterator_t& other) const { return _edge == other._edge; }
+		bool operator!=(const iterator_t& other) const { return _edge != other._edge; }
 
 		iterator_t& operator++() {
 			_edge++;
-			if constexpr (!std::is_void_v<Syn>)
+			if (StatefulSynapse<Syn, TargetNeuron>)
 				_synapse++;
 
 			return *this;
@@ -60,67 +59,68 @@ public:
 	private:
 		friend class synapse_population;
 
-		UInt const* _edge   = nullptr;
+		Int32 const* _edge  = nullptr;
 		synapse_t* _synapse = nullptr;
-		UInt _sentinel      = 0;
 
-		iterator_t(UInt const* e, synapse_t* syn, UInt sent) : _edge(e), _synapse(syn), _sentinel(sent){};
+		iterator_t(Int32 const* e, synapse_t* syn) : _edge(e), _synapse(syn){};
 	};
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
 	synapse_population(Int const src_count, Int const dst_count, double const p,
-	                   util::seed_seq seed = {1337}) {
+	                   util::seed_seq seed = {1337}) :
+	_offsets(src_count + 1) {
 		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= p && p <= 1);
 
-		util::scope_exit _{[this] { _edges.push_back(std::numeric_limits<UInt>::max()); }};
-
 		if (p == 0)
 			return;
 
-		_edges.reserve(src_count * dst_count * p);
+		// Allocate enough space for 3std
+		Int const max_degree =
+		    std::max<Int>(0, std::round(dst_count * p + 3 * std::sqrt(dst_count * p * (1 - p))));
+		_edges.resize(src_count * max_degree);
 
-		if (StatefulSynapse<Syn, TargetNeuron>)
-			_synapses.reserve(src_count * dst_count * p);
+		if constexpr (StatefulSynapse<Syn, TargetNeuron>)
+			_synapses.resize(src_count * max_degree);
 
 		util::xoroshiro64_128p rng(seed);
 		util::exponential_distribution<double> exprnd(1 / p - 1);
 
+		Int count = 0;
 		for (UInt const src : util::range(src_count)) {
-			Int index    = 0;
+			_offsets[src] = count;
+
+			Int32 index  = 0;
 			double noise = 0;
 			for (;;) {
 				noise += exprnd(rng);
-				Int const dst = index++ + static_cast<Int>(std::round(noise));
+				Int32 const dst = index + static_cast<Int32>(std::round(noise));
 
-				if (__builtin_expect(dst >= dst_count, 0))
+				if (__builtin_expect((dst >= dst_count) | (index >= max_degree), 0))
 					break;
 
-				_edges.push_back((src << 32) | dst);
+				_edges[count] = dst;
 
-				if (StatefulSynapse<Syn, TargetNeuron>)
-					_synapses.push_back({});
+				if constexpr (StatefulSynapse<Syn, TargetNeuron>)
+					_synapses[count] = {};
+
+				index++;
+				count++;
 			}
 		}
+		_offsets.back() = count;
 	}
 
-	Int size() const { return _edges.size() - 1; }
-
-	iterator begin() { return {_edges.data(), _synapses.data(), _edges.front()}; }
-	const_iterator begin() const { return {_edges.data(), _synapses.data(), _edges.front()}; }
-	const_iterator cbegin() const { return begin(); }
-	iterator end() { return {nullptr, nullptr, std::numeric_limits<UInt>::max()}; }
-	const_iterator end() const { return {nullptr, nullptr, std::numeric_limits<UInt>::max()}; }
-	const_iterator cend() const { return end(); }
-
 	util::range_t<const_iterator> neighbors(Int const src) const {
-		SPICE_ASSERT(0 <= src && src < std::numeric_limits<Int32>::max());
+		SPICE_ASSERT(0 <= src && src < _offsets.size() - 1);
 
-		Int const index = (std::lower_bound(_edges.begin(), _edges.end(), src << 32) - _edges.begin());
-		return {{_edges.data() + index, _synapses.data() + index, 0},
-		        {nullptr, nullptr, UInt(src + 1) << 32}};
+		Int const first = _offsets[src];
+		Int const last  = _offsets[src + 1];
+
+		return {{_edges.data() + first, _synapses.data() + first},
+		        {_edges.data() + last, _synapses.data() + last}};
 	}
 
 	void deliver(std::span<Int32 const> spikes, std::span<TargetNeuron> pool) const {
@@ -135,7 +135,8 @@ public:
 	}
 
 private:
-	std::vector<UInt> _edges;
+	std::vector<Int> _offsets;
+	std::vector<Int32> _edges;
 	std::vector<Syn> _synapses;
 };
 }

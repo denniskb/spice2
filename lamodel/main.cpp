@@ -74,7 +74,7 @@ int main() {
 	figure();
 	xlim({0, 100});
 	ylim({0, 100});
-	for (Int i : range(100)) {
+	for (Int i : range(200)) {
 		if (i >= d) {
 			PI.deliver(P.spikes(14), I.neurons());
 			PE.deliver(P.spikes(14), E.neurons());
@@ -103,7 +103,7 @@ int main() {
 			y.push_back((s + 9 * N / 10) / 100);
 		}
 		scatter(x, y);
-		pause(0.1);
+		pause(0.05);
 
 		(void)i;
 	}

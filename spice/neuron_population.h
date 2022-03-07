@@ -26,7 +26,7 @@ public:
 		_spike_counts.reserve(max_delay);
 		_spikes.reserve(size * max_delay / 100);
 
-		if (StatefulNeuron<Neur>)
+		if constexpr (StatefulNeuron<Neur>)
 			_neurons.resize(size);
 	}
 
