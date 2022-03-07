@@ -118,8 +118,8 @@ public:
 	}
 
 private:
-	Real const _offset = 0;
-	Real const _scale  = 1;
+	Real _offset = 0;
+	Real _scale  = 1;
 };
 
 template <std::floating_point Real>
@@ -131,7 +131,7 @@ public:
 	constexpr Real operator()(auto& rng) const { return -_scale * std::log(_iid(rng)); }
 
 private:
-	Real const _scale;
+	Real _scale;
 	uniform_real_distribution<Real, true> _iid;
 };
 
@@ -164,8 +164,8 @@ private:
 	Real _z0;
 	Real _z1;
 
-	Real const _mu;
-	Real const _sigma;
+	Real _mu;
+	Real _sigma;
 	uniform_real_distribution<Real, true> _iid;
 };
 
@@ -185,7 +185,7 @@ public:
 	}
 
 private:
-	Integer const _N;
+	Integer _N;
 	normal_distribution<Real> _norm;
 };
 }
