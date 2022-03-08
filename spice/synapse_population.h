@@ -86,7 +86,7 @@ public:
 			_synapses.resize(src_count * max_degree);
 
 		util::xoroshiro64_128p rng(seed);
-		util::exponential_distribution<double> exprnd(1 / p - 1);
+		util::exponential_distribution<float> exprnd(1 / p - 1);
 
 		Int count = 0;
 		for (UInt const src : util::range(src_count)) {
