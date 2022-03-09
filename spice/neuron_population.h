@@ -14,14 +14,14 @@
 #include "util/type_traits.h"
 
 namespace spice {
-template <Neuron Neur>
-class neuron_population {
+template <Neuron Neur, class Params = void>
+requires(std::is_void_v<Params> ? NeuronWithoutParams<Neur> :
+                                  NeuronWithParams<Neur, Params>) class neuron_population {
 public:
-	neuron_population(Int const size, Int const max_delay) {
+	neuron_population(Int const size, Int const max_delay, util::nonvoid_or_empty_t<Params> params = {}) :
+	_history(size), _params(std::move(params)) {
 		SPICE_ASSERT(size >= 0);
 		SPICE_ASSERT(max_delay >= 1);
-
-		_history.resize(size);
 
 		_spike_counts.reserve(max_delay);
 		_spikes.reserve(size * max_delay / 100);
@@ -43,10 +43,14 @@ public:
 		Int const spike_count = _spikes.size();
 		for (Int const i : util::range(_history)) {
 			bool spiked;
-			if constexpr (StatelessNeuron<Neur>)
+			if constexpr (StatelessNeuronWithoutParams<Neur>)
 				spiked = Neur::update(dt);
-			else
+			else if constexpr (StatelessNeuronWithParams<Neur, Params>)
+				spiked = Neur::update(dt, _params);
+			else if constexpr (StatefulNeuronWithoutParams<Neur>)
 				spiked = _neurons[i].update(dt);
+			else
+				spiked = _neurons[i].update(dt, _params);
 
 			_history[i] = (_history[i] << 1) | spiked;
 			if (spiked)
@@ -55,7 +59,7 @@ public:
 		_spike_counts.push_back(_spikes.size() - spike_count);
 	}
 
-	std::span<util::nonvoid_or_empty_t<Neur>> neurons() {
+	std::span<Neur> neurons() {
 		static_assert(StatefulNeuron<Neur>, "Can't return collection of stateless neurons.");
 		return _neurons;
 	}
@@ -74,5 +78,6 @@ private:
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;
 	std::vector<UInt> _history;
+	util::nonvoid_or_empty_t<Params> _params;
 };
 }

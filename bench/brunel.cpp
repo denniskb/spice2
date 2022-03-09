@@ -14,10 +14,9 @@ float const DT = 1e-4;
 struct poisson {
 	static bool update(float const dt) {
 		static xoroshiro64_128p rng({1337});
-		static uniform_real_distribution<double> iid;
 
-		double const firing_rate = 20; //Hz
-		return iid(rng) < (firing_rate * dt);
+		float const firing_rate = 20; //Hz
+		return util::generate_canonical<float>(rng) < (firing_rate * dt);
 	}
 };
 

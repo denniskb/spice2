@@ -27,6 +27,7 @@ set(warning_flags
 -Wno-error=sign-conversion
 -Wno-error=sign-compare
 -Wno-sign-compare
+-fconcepts-diagnostics-depth=2
 # Optional, additional (noisy) warnings (won't affect compilation):
 #-Wsign-compare
 #-Wconversion
