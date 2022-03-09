@@ -78,3 +78,10 @@ static_assert(!SynapseWithoutParams<stateful_synapse_with_params, stateful_neuro
 static_assert(SynapseWithParams<stateful_synapse_with_params, stateful_neuron, any_t>);
 static_assert(SynapseWithParams<stateful_synapse_with_params, stateful_neuron, int>);
 static_assert(Synapse<stateful_synapse_with_params, stateful_neuron>);
+
+static_assert(std::input_iterator<synapse_population<stateless_synapse, stateful_neuron>::iterator>);
+static_assert(std::input_iterator<synapse_population<stateful_synapse, stateful_neuron>::const_iterator>);
+static_assert(
+    std::input_iterator<synapse_population<stateless_synapse_with_params, stateful_neuron, int>::iterator>);
+static_assert(std::input_iterator<
+              synapse_population<stateful_synapse_with_params, stateful_neuron, int>::const_iterator>);
