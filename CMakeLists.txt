@@ -42,7 +42,8 @@ set(math_flags
 -march=haswell
 -mfpmath=sse
 # TODO: Try these
-#-mavx
+#-mfma
+#-mavx(2)
 #-funroll-loops
 )
 

@@ -99,22 +99,25 @@ using xoroshiro64_128p = xoroshiro<UInt, 128, decltype([](auto& state) {
                                    })>;
 
 template <std::floating_point Real, bool LeftOpen = false>
+constexpr Real generate_canonical(auto& rng) {
+	constexpr std::size_t rng_size = sizeof(decltype(rng()));
+	constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
+
+	UInt iid = rng();
+	if constexpr (rng_size < sizeof(Real))
+		iid = (iid << (8 * rng_size)) | rng();
+
+	return ((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) / Real(Int(1) << digits);
+}
+
+template <std::floating_point Real, bool LeftOpen = false>
 class uniform_real_distribution {
 public:
 	constexpr explicit uniform_real_distribution(Real const a = 0, Real const b = 1) :
 	_offset(a), _scale(b - a) {}
 
 	constexpr Real operator()(auto& rng) const {
-		constexpr std::size_t rng_size = sizeof(decltype(rng()));
-		constexpr std::size_t digits   = std::numeric_limits<Real>::digits;
-
-		UInt iid = rng();
-		if constexpr (rng_size < sizeof(Real))
-			iid = (iid << (8 * rng_size)) | rng();
-
-		return std::fma(((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
-		                    Real(Int(1) << digits),
-		                _scale, _offset);
+		return std::fma(generate_canonical<Real, LeftOpen>(rng), _scale, _offset);
 	}
 
 private:
@@ -128,11 +131,12 @@ public:
 	constexpr explicit exponential_distribution(Real const scale = 1) : _scale(scale) {
 		SPICE_ASSERT(scale >= 0);
 	}
-	constexpr Real operator()(auto& rng) const { return -_scale * std::log(_iid(rng)); }
+	constexpr Real operator()(auto& rng) const {
+		return -_scale * std::log(generate_canonical<Real, true>(rng));
+	}
 
 private:
 	Real _scale;
-	uniform_real_distribution<Real, true> _iid;
 };
 
 template <std::floating_point Real>
@@ -148,8 +152,8 @@ public:
 		switch (_state) {
 			case 0: {
 				_state           = 1;
-				Real const R     = std::sqrt(-2 * std::log(_iid(rng)));
-				Real const Theta = 2 * pi * _iid(rng);
+				Real const R     = std::sqrt(-2 * std::log(generate_canonical<Real, true>(rng)));
+				Real const Theta = 2 * pi * generate_canonical<Real, false>(rng);
 				_z0              = std::fma(R * std::cos(Theta), _sigma, _mu);
 				_z1              = std::fma(R * std::sin(Theta), _sigma, _mu);
 				return _z0;
@@ -166,7 +170,6 @@ private:
 
 	Real _mu;
 	Real _sigma;
-	uniform_real_distribution<Real, true> _iid;
 };
 
 template <std::integral Integer>
