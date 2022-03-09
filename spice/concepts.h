@@ -48,18 +48,50 @@ template <class T>
 concept Neuron = StatelessNeuron<T> || StatefulNeuron<T>;
 
 template <class T, class Neur>
-concept StatelessSynapse = requires(Neur& n) {
+concept StatelessSynapseWithoutParams = requires(Neur& n) {
 	requires StatefulNeuron<Neur>;
 	T::deliver(n);
 };
 
+template <class T, class Neur, class Params>
+concept StatelessSynapseWithParams = requires(Neur& n, Params params) {
+	requires std::default_initializable<Params>;
+	requires StatefulNeuron<Neur>;
+	T::deliver(n, params);
+};
+
 template <class T, class Neur>
-concept StatefulSynapse = requires(T t, Neur& n) {
+concept StatelessSynapse =
+    StatelessSynapseWithoutParams<T, Neur> || StatelessSynapseWithParams<T, Neur, util::any_t>;
+
+template <class T, class Neur>
+concept StatefulSynapseWithoutParams = requires(T t, Neur& n) {
 	requires StatefulNeuron<Neur>;
 	requires !StatelessSynapse<T, Neur>;
 	requires std::default_initializable<T>;
 	t.deliver(n);
 };
+
+template <class T, class Neur, class Params>
+concept StatefulSynapseWithParams = requires(T t, Neur& n, Params params) {
+	requires std::default_initializable<Params>;
+	requires StatefulNeuron<Neur>;
+	requires !StatelessSynapse<T, Neur>;
+	requires std::default_initializable<T>;
+	t.deliver(n, params);
+};
+
+template <class T, class Neur>
+concept StatefulSynapse =
+    StatefulSynapseWithoutParams<T, Neur> || StatefulSynapseWithParams<T, Neur, util::any_t>;
+
+template <class T, class Neur>
+concept SynapseWithoutParams =
+    StatelessSynapseWithoutParams<T, Neur> || StatefulSynapseWithoutParams<T, Neur>;
+
+template <class T, class Neur, class Params>
+concept SynapseWithParams =
+    StatelessSynapseWithParams<T, Neur, Params> || StatefulSynapseWithParams<T, Neur, Params>;
 
 template <class T, class Neur>
 concept Synapse = StatelessSynapse<T, Neur> || StatefulSynapse<T, Neur>;

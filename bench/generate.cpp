@@ -13,7 +13,7 @@ struct stateless_synapse {
 
 static void generate(benchmark::State& state) {
 	for (auto _ : state) {
-		synapse_population<stateless_synapse, stateful_neuron> pop(10'000, 10'000, 0.1);
+		synapse_population<stateless_synapse, stateful_neuron> pop(10'000, 10'000, 0.1, {1337});
 	}
 }
 BENCHMARK(generate)->Unit(benchmark::kMillisecond);

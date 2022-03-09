@@ -7,10 +7,6 @@
 using namespace spice;
 using namespace spice::util;
 
-int const N    = 20000;
-int const d    = 15;
-float const DT = 1e-4;
-
 struct poisson {
 	static bool update(float const dt) {
 		static xoroshiro64_128p rng({1337});
@@ -46,24 +42,28 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to) { to.V += (0.0001f * 20'000) / N; }
+	static void deliver(lif& to, Int n) { to.V += (0.0001f * 20'000) / n; }
 };
 
 struct SynI {
-	static void deliver(lif& to) { to.V -= (0.0005f * 20'000) / N; }
+	static void deliver(lif& to, Int n) { to.V -= (0.0005f * 20'000) / n; }
 };
 
 static void brunel(benchmark::State& state) {
+	int const N    = 20000;
+	int const d    = 15;
+	float const DT = 1e-4;
+
 	neuron_population<poisson> P(N / 2, d);
 	neuron_population<lif> E(N * 4 / 10, d);
 	neuron_population<lif> I(N / 10, d);
 
-	synapse_population<SynE, lif> PE(P.size(), E.size(), 0.1, {1212321});
-	synapse_population<SynE, lif> PI(P.size(), I.size(), 0.1, {8304294});
-	synapse_population<SynE, lif> EE(E.size(), E.size(), 0.1, {2141241});
-	synapse_population<SynE, lif> EI(E.size(), I.size(), 0.1, {419240124});
-	synapse_population<SynI, lif> IE(I.size(), E.size(), 0.1, {912412421});
-	synapse_population<SynI, lif> II(I.size(), I.size(), 0.1, {41092312});
+	synapse_population<SynE, lif, Int> PE(P.size(), E.size(), 0.1, {1212321}, N);
+	synapse_population<SynE, lif, Int> PI(P.size(), I.size(), 0.1, {8304294}, N);
+	synapse_population<SynE, lif, Int> EE(E.size(), E.size(), 0.1, {2141241}, N);
+	synapse_population<SynE, lif, Int> EI(E.size(), I.size(), 0.1, {419240124}, N);
+	synapse_population<SynI, lif, Int> IE(I.size(), E.size(), 0.1, {912412421}, N);
+	synapse_population<SynI, lif, Int> II(I.size(), I.size(), 0.1, {41092312}, N);
 
 	Int i = 0;
 	for (auto _ : state) {

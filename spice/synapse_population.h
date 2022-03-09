@@ -17,17 +17,16 @@
 #include "util/type_traits.h"
 
 namespace spice {
-// TODO: Can this be written shorter?
-template <class Syn, StatefulNeuron TargetNeuron>
-requires Synapse<Syn, TargetNeuron>
-class synapse_population {
+template <class Syn, StatefulNeuron Neur, class Params = void>
+requires(std::is_void_v<Params> ? SynapseWithoutParams<Syn, Neur> :
+                                  SynapseWithParams<Syn, Neur, Params>) class synapse_population {
 public:
 	template <bool Const>
 	class iterator_t {
 	public:
 		using synapse_t = std::conditional_t<Const, Syn const, Syn>;
 		struct edge {
-			Int dst;
+			Int32 dst;
 			synapse_t* syn;
 		};
 
@@ -45,7 +44,7 @@ public:
 
 		iterator_t& operator++() {
 			_edge++;
-			if constexpr (StatefulSynapse<Syn, TargetNeuron>)
+			if constexpr (StatefulSynapse<Syn, Neur>)
 				_synapse++;
 
 			return *this;
@@ -67,9 +66,10 @@ public:
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	synapse_population(Int const src_count, Int const dst_count, double const p,
-	                   util::seed_seq seed = {1337}) :
-	_offsets(src_count + 1) {
+	synapse_population(Int const src_count, Int const dst_count, double const p, util::seed_seq seed,
+	                   util::nonvoid_or_empty_t<Params> params = {}) :
+	_offsets(src_count + 1),
+	_params(std::move(params)) {
 		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
 		SPICE_ASSERT(0 <= p && p <= 1);
@@ -82,7 +82,7 @@ public:
 		    std::max<Int>(0, std::round(dst_count * p + 3 * std::sqrt(dst_count * p * (1 - p))));
 		_edges.resize(src_count * max_degree);
 
-		if constexpr (StatefulSynapse<Syn, TargetNeuron>)
+		if constexpr (StatefulSynapse<Syn, Neur>)
 			_synapses.resize(src_count * max_degree);
 
 		util::xoroshiro64_128p rng(seed);
@@ -103,7 +103,7 @@ public:
 
 				_edges[count] = dst;
 
-				if constexpr (StatefulSynapse<Syn, TargetNeuron>)
+				if constexpr (StatefulSynapse<Syn, Neur>)
 					_synapses[count] = {};
 
 				index++;
@@ -123,14 +123,18 @@ public:
 		        {_edges.data() + last, _synapses.data() + last}};
 	}
 
-	void deliver(std::span<Int32 const> spikes, std::span<TargetNeuron> pool) const {
+	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool) const {
 		for (auto spike : spikes)
 			for (auto edge : neighbors(spike)) {
 				SPICE_ASSERT(edge.dst < pool.size());
-				if constexpr (StatelessSynapse<Syn, TargetNeuron>)
+				if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
 					Syn::deliver(pool[edge.dst]);
-				else
+				else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
+					Syn::deliver(pool[edge.dst], _params);
+				else if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
 					edge.syn->deliver(pool[edge.dst]);
+				else
+					edge.syn->deliver(pool[edge.dst], _params);
 			}
 	}
 
@@ -138,5 +142,6 @@ private:
 	std::vector<Int> _offsets;
 	std::vector<Int32> _edges;
 	std::vector<Syn> _synapses;
+	util::nonvoid_or_empty_t<Params> _params;
 };
 }
