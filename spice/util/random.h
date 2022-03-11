@@ -27,59 +27,12 @@ constexpr uint64_t fmix64(uint64_t k) {
 	k ^= k >> 33;
 	return k;
 }
-}
 
-struct seed_t {
-	UInt lo = 0;
-	UInt hi = 0;
-};
-
-// based on splitmix64
-constexpr UInt hash(UInt x) {
-	x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9llu;
-	x = (x ^ (x >> 27)) * 0x94d049bb133111ebllu;
-	x = x ^ (x >> 31);
-	return x;
-}
-
-constexpr seed_t murmur(seed_t k) {
-	// non-zero seed (chosen arbitrarily)
-	seed_t h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
-
-	UInt const c1 = 0x87c37b91114253d5llu;
-	UInt const c2 = 0x4cf5ad432745937fllu;
-
-	k.lo *= c1;
-	k.lo = detail::rotl(k.lo, 31);
-	k.lo *= c2;
-	h.lo ^= k.lo;
-	h.lo = detail::rotl(h.lo, 27);
-	h.lo += h.hi;
-	h.lo = h.lo * 5 + 0x52dce729;
-	k.hi *= c2;
-	k.hi = detail::rotl(k.hi, 33);
-	k.hi *= c1;
-	h.hi ^= k.hi;
-	h.hi = detail::rotl(h.hi, 31);
-	h.hi += h.lo;
-	h.hi = h.hi * 5 + 0x38495ab5;
-	h.lo ^= 16;
-	h.hi ^= 16;
-	h.lo += h.hi;
-	h.hi += h.lo;
-	h.lo = detail::fmix64(h.lo);
-	h.hi = detail::fmix64(h.hi);
-	h.lo += h.hi;
-	h.hi += h.lo;
-
-	return h;
-}
-
-constexpr seed_t murmur(void const* ptr, UInt len) {
+constexpr UInt128 murmur3(void const* ptr, UInt const len) {
 	UInt8 const* const data = static_cast<UInt8 const*>(ptr);
 
 	// non-zero seed (chosen arbitrarily)
-	seed_t h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
+	UInt128 h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
 
 	UInt const c1 = 0x87c37b91114253d5llu;
 	UInt const c2 = 0x4cf5ad432745937fllu;
@@ -91,17 +44,17 @@ constexpr seed_t murmur(void const* ptr, UInt len) {
 		UInt k2 = blocks[i * 2 + 1];
 
 		k1 *= c1;
-		k1 = detail::rotl(k1, 31);
+		k1 = rotl(k1, 31);
 		k1 *= c2;
 		h.lo ^= k1;
-		h.lo = detail::rotl(h.lo, 27);
+		h.lo = rotl(h.lo, 27);
 		h.lo += h.hi;
 		h.lo = h.lo * 5 + 0x52dce729;
 		k2 *= c2;
-		k2 = detail::rotl(k2, 33);
+		k2 = rotl(k2, 33);
 		k2 *= c1;
 		h.hi ^= k2;
-		h.hi = detail::rotl(h.hi, 31);
+		h.hi = rotl(h.hi, 31);
 		h.hi += h.lo;
 		h.hi = h.hi * 5 + 0x38495ab5;
 	}
@@ -121,7 +74,7 @@ constexpr seed_t murmur(void const* ptr, UInt len) {
 		case 9:
 			k2 ^= UInt(tail[8]) << 0;
 			k2 *= c2;
-			k2 = detail::rotl(k2, 33);
+			k2 = rotl(k2, 33);
 			k2 *= c1;
 			h.hi ^= k2;
 		case 8: k1 ^= UInt(tail[7]) << 56;
@@ -134,7 +87,7 @@ constexpr seed_t murmur(void const* ptr, UInt len) {
 		case 1:
 			k1 ^= UInt(tail[0]) << 0;
 			k1 *= c1;
-			k1 = detail::rotl(k1, 31);
+			k1 = rotl(k1, 31);
 			k1 *= c2;
 			h.lo ^= k1;
 	};
@@ -143,36 +96,68 @@ constexpr seed_t murmur(void const* ptr, UInt len) {
 	h.hi ^= len;
 	h.lo += h.hi;
 	h.hi += h.lo;
-	h.lo = detail::fmix64(h.lo);
-	h.hi = detail::fmix64(h.hi);
+	h.lo = fmix64(h.lo);
+	h.hi = fmix64(h.hi);
 	h.lo += h.hi;
 	h.hi += h.lo;
 
 	return h;
 }
 
-// Copy-able, fixed-size seed_seq
+constexpr UInt128 murmur3(UInt128 k) {
+	// non-zero seed (chosen arbitrarily)
+	UInt128 h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
+
+	UInt const c1 = 0x87c37b91114253d5llu;
+	UInt const c2 = 0x4cf5ad432745937fllu;
+
+	k.lo *= c1;
+	k.lo = rotl(k.lo, 31);
+	k.lo *= c2;
+	h.lo ^= k.lo;
+	h.lo = rotl(h.lo, 27);
+	h.lo += h.hi;
+	h.lo = h.lo * 5 + 0x52dce729;
+	k.hi *= c2;
+	k.hi = rotl(k.hi, 33);
+	k.hi *= c1;
+	h.hi ^= k.hi;
+	h.hi = rotl(h.hi, 31);
+	h.hi += h.lo;
+	h.hi = h.hi * 5 + 0x38495ab5;
+	h.lo ^= 16;
+	h.hi ^= 16;
+	h.lo += h.hi;
+	h.hi += h.lo;
+	h.lo = fmix64(h.lo);
+	h.hi = fmix64(h.hi);
+	h.lo += h.hi;
+	h.hi += h.lo;
+
+	return h;
+}
+}
+
+// Copy-able, fixed-size seed sequence
 class seed_seq {
 public:
-	constexpr seed_seq(std::initializer_list<UInt32> il) : _seed(murmur(il.begin(), 4 * il.size())) {}
-	constexpr seed_t const& seed() const { return _seed; }
+	constexpr seed_seq(std::initializer_list<UInt32> il) :
+	_seed(detail::murmur3(il.begin(), 4 * il.size())) {}
+
+	constexpr UInt128 seed() const { return _seed; }
 
 	constexpr seed_seq operator++(int) {
 		auto result = *this;
-		_seed       = murmur(murmur(_seed));
+		_seed       = detail::murmur3(_seed);
 		return result;
 	}
 
-	constexpr seed_seq stream(UInt id) const {
-		seed_seq result = *this;
-		id              = hash(id);
-		result._seed.lo ^= id;
-		result._seed.hi ^= hash(id);
-		return result;
-	}
+	constexpr seed_seq stream(UInt id) const { return seed_seq(detail::murmur3(_seed + (id + 1))); }
 
 private:
-	seed_t _seed;
+	UInt128 _seed;
+
+	constexpr explicit seed_seq(UInt128 const seed) : _seed(seed) {}
 };
 
 template <std::integral Integer, int Period, class Next>
@@ -188,12 +173,12 @@ public:
 
 private:
 	struct state2 {
-		constexpr state2(seed_t const& s) : s0(s.lo), s1(s.hi) {}
+		constexpr state2(UInt128 const s) : s0(s.lo), s1(s.hi) {}
 		Integer s0;
 		Integer s1;
 	};
 	struct state4 {
-		constexpr state4(seed_t const& s) : s0(s.lo), s1(s.lo >> 32), s2(s.hi), s3(s.hi >> 32) {}
+		constexpr state4(UInt128 const s) : s0(s.lo), s1(s.lo >> 32), s2(s.hi), s3(s.hi >> 32) {}
 		Integer s0;
 		Integer s1;
 		Integer s2;
