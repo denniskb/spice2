@@ -289,7 +289,6 @@ public:
 			}
 			case 1: _state = 0; return _z1;
 		}
-		__builtin_unreachable();
 	}
 
 private:
