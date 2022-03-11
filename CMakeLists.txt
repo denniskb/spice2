@@ -48,6 +48,7 @@ set(math_flags
 file(GLOB_RECURSE spice_sources spice/*.h spice/*.cpp)
 add_library(spice SHARED ${spice_sources})
 target_compile_options(spice PRIVATE ${warning_flags} ${math_flags})
+target_include_directories(spice PRIVATE .)
 
 # lamodel (sample application using spice)
 file(GLOB_RECURSE lamodel_sources lamodel/*.h lamodel/*.cpp)

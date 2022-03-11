@@ -1,8 +1,9 @@
 #include "benchmark/benchmark.h"
 
-#include "spice/synapse_population.h"
+#include "spice/detail/synapse_population.h"
 
 using namespace spice;
+using namespace spice::detail;
 
 struct stateful_neuron {
 	bool update(float, util::xoroshiro64_128p&) { return false; }

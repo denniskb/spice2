@@ -1,8 +1,9 @@
 #include "gtest/gtest.h"
 
-#include "spice/neuron_population.h"
+#include "spice/detail/neuron_population.h"
 
 using namespace spice;
+using namespace spice::detail;
 using namespace spice::util;
 
 struct stateless_neuron {

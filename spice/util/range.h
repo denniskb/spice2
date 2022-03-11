@@ -4,7 +4,7 @@
 #include <iterator>
 #include <type_traits>
 
-#include "stdint.h"
+#include "spice/util/stdint.h"
 
 namespace spice::util {
 template <class It>

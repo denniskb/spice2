@@ -2,9 +2,10 @@
 
 #include <concepts>
 
-#include "spice/synapse_population.h"
+#include "spice/detail/synapse_population.h"
 
 using namespace spice;
+using namespace spice::detail;
 using namespace spice::util;
 
 struct stateful_neuron {

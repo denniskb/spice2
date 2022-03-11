@@ -8,15 +8,15 @@
 #include <utility>
 #include <vector>
 
-#include "concepts.h"
-#include "util/assert.h"
-#include "util/random.h"
-#include "util/range.h"
-#include "util/scope.h"
-#include "util/stdint.h"
-#include "util/type_traits.h"
+#include "spice/concepts.h"
+#include "spice/util/assert.h"
+#include "spice/util/random.h"
+#include "spice/util/range.h"
+#include "spice/util/scope.h"
+#include "spice/util/stdint.h"
+#include "spice/util/type_traits.h"
 
-namespace spice {
+namespace spice::detail {
 struct SynapsePopulation {
 	virtual ~SynapsePopulation()                                                    = default;
 	virtual void deliver(std::span<Int32 const> spikes, void* pool, Int size) const = 0;

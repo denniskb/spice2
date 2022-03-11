@@ -2,9 +2,9 @@
 
 #include <concepts>
 
-#include "util/random.h"
-#include "util/stdint.h"
-#include "util/type_traits.h"
+#include "spice/util/random.h"
+#include "spice/util/stdint.h"
+#include "spice/util/type_traits.h"
 
 namespace spice {
 template <class T>

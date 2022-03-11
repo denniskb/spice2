@@ -9,8 +9,8 @@
 #include <random>
 #include <type_traits>
 
-#include "assert.h"
-#include "stdint.h"
+#include "spice/util/assert.h"
+#include "spice/util/stdint.h"
 
 namespace spice::util {
 namespace detail {

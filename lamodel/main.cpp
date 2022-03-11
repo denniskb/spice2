@@ -2,10 +2,7 @@
 
 #include "matplot.h"
 
-#include "spice/neuron_population.h"
 #include "spice/snn.h"
-#include "spice/synapse_population.h"
-#include "spice/util/random.h"
 
 using namespace spice;
 using namespace spice::util;
