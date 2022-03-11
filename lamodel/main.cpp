@@ -3,6 +3,7 @@
 #include "matplot.h"
 
 #include "spice/neuron_population.h"
+#include "spice/snn.h"
 #include "spice/synapse_population.h"
 #include "spice/util/random.h"
 
@@ -58,16 +59,17 @@ int main() {
 	int const d    = 15;
 	float const DT = 1e-4;
 
-	neuron_population<poisson> P(N / 2, d);
-	neuron_population<lif> E(N * 4 / 10, d);
-	neuron_population<lif> I(N / 10, d);
+	snn brunel(DT, d);
+	auto P = brunel.add_population<poisson>(N / 2);
+	auto E = brunel.add_population<lif>(N * 4 / 10);
+	auto I = brunel.add_population<lif>(N / 10);
 
-	synapse_population<SynE, lif, Int> PE(P.size(), E.size(), 0.1, {1212321}, N);
-	synapse_population<SynE, lif, Int> PI(P.size(), I.size(), 0.1, {8304294}, N);
-	synapse_population<SynE, lif, Int> EE(E.size(), E.size(), 0.1, {2141241}, N);
-	synapse_population<SynE, lif, Int> EI(E.size(), I.size(), 0.1, {419240124}, N);
-	synapse_population<SynI, lif, Int> IE(I.size(), E.size(), 0.1, {912412421}, N);
-	synapse_population<SynI, lif, Int> II(I.size(), I.size(), 0.1, {41092312}, N);
+	brunel.connect<SynE>(P, E, 0.1, N);
+	brunel.connect<SynE>(P, I, 0.1, N);
+	brunel.connect<SynE>(E, E, 0.1, N);
+	brunel.connect<SynE>(E, I, 0.1, N);
+	brunel.connect<SynI>(I, E, 0.1, N);
+	brunel.connect<SynI>(I, I, 0.1, N);
 
 	std::vector<double> x(N);
 	std::vector<double> y(N);
@@ -75,30 +77,19 @@ int main() {
 	xlim({0, 100});
 	ylim({0, 100});
 	for (Int i : range(200)) {
-		if (i >= d) {
-			PI.deliver(P.spikes(14), I.neurons());
-			PE.deliver(P.spikes(14), E.neurons());
-			EE.deliver(E.spikes(14), E.neurons());
-			EI.deliver(E.spikes(14), I.neurons());
-			II.deliver(I.spikes(14), I.neurons());
-			IE.deliver(I.spikes(14), E.neurons());
-		}
-
-		P.update(d, DT);
-		E.update(d, DT);
-		I.update(d, DT);
+		brunel.step();
 
 		x.clear();
 		y.clear();
-		for (auto s : P.spikes(0)) {
+		for (auto s : P->spikes(0)) {
 			x.push_back(s % 100);
 			y.push_back(s / 100);
 		}
-		for (auto s : E.spikes(0)) {
+		for (auto s : E->spikes(0)) {
 			x.push_back((s + N / 2) % 100);
 			y.push_back((s + N / 2) / 100);
 		}
-		for (auto s : I.spikes(0)) {
+		for (auto s : I->spikes(0)) {
 			x.push_back((s + 9 * N / 10) % 100);
 			y.push_back((s + 9 * N / 10) / 100);
 		}

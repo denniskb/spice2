@@ -71,7 +71,7 @@ TEST(NeuronPopulation, StatelessWithParams) {
 TEST(NeuronPopulation, Stateful) {
 	neuron_population<stateful_neuron> pop(5, 1);
 	for (Int i : range(5))
-		ASSERT_EQ(pop.neurons()[i].i, 0), (void)i;
+		ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
 	pop.update(1, 1);
 	ASSERT_EQ(pop.spikes(0).size(), 5);
@@ -79,13 +79,13 @@ TEST(NeuronPopulation, Stateful) {
 		ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
 
 	for (Int i : range(5))
-		ASSERT_EQ(pop.neurons()[i].i, 1), (void)i;
+		ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
 
 	pop.update(1, 0);
 	ASSERT_EQ(pop.spikes(0).size(), 0);
 
 	for (Int i : range(5))
-		ASSERT_EQ(pop.neurons()[i].i, 2), (void)i;
+		ASSERT_EQ(pop.get_neurons()[i].i, 2), (void)i;
 
 	for (Int i : range(5))
 		ASSERT_EQ(pop.history()[i], 2), (void)i;
@@ -95,13 +95,13 @@ TEST(NeuronPopulation, StatefulWithParams) {
 	{
 		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, false);
 		for (Int i : range(5))
-			ASSERT_EQ(pop.neurons()[i].i, 0), (void)i;
+			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
 		pop.update(1, 0);
 		ASSERT_EQ(pop.spikes(0).size(), 0);
 
 		for (Int i : range(5))
-			ASSERT_EQ(pop.neurons()[i].i, 1), (void)i;
+			ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
 
 		for (Int i : range(5))
 			ASSERT_EQ(pop.history()[i], 0), (void)i;
@@ -109,7 +109,7 @@ TEST(NeuronPopulation, StatefulWithParams) {
 	{
 		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, true);
 		for (Int i : range(5))
-			ASSERT_EQ(pop.neurons()[i].i, 0), (void)i;
+			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
 		pop.update(1, 0);
 		ASSERT_EQ(pop.spikes(0).size(), 5);
@@ -117,7 +117,7 @@ TEST(NeuronPopulation, StatefulWithParams) {
 			ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
 
 		for (Int i : range(5))
-			ASSERT_EQ(pop.neurons()[i].i, 1), (void)i;
+			ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
 
 		for (Int i : range(5))
 			ASSERT_EQ(pop.history()[i], 1), (void)i;

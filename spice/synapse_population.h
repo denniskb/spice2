@@ -17,9 +17,15 @@
 #include "util/type_traits.h"
 
 namespace spice {
+struct SynapsePopulation {
+	virtual ~SynapsePopulation()                                                    = default;
+	virtual void deliver(std::span<Int32 const> spikes, void* pool, Int size) const = 0;
+};
+
 template <class Syn, StatefulNeuron Neur, class Params = void>
 requires(std::is_void_v<Params> ? SynapseWithoutParams<Syn, Neur> :
-                                  SynapseWithParams<Syn, Neur, Params>) class synapse_population {
+                                  SynapseWithParams<Syn, Neur, Params>) class synapse_population :
+public SynapsePopulation {
 public:
 	template <bool Const>
 	class iterator_t {
@@ -123,10 +129,14 @@ public:
 		        {_edges.data() + last, _synapses.data() + last}};
 	}
 
-	void deliver(std::span<Int32 const> spikes, std::span<Neur> pool) const {
+	void deliver(std::span<Int32 const> spikes, void* const ptr, Int const size) const override {
+		SPICE_ASSERT(ptr);
+		SPICE_ASSERT(size >= 0);
+		Neur* const pool = static_cast<Neur*>(ptr);
+
 		for (auto spike : spikes)
 			for (auto edge : neighbors(spike)) {
-				SPICE_ASSERT(edge.dst < pool.size());
+				SPICE_ASSERT(edge.dst < size);
 				if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
 					Syn::deliver(pool[edge.dst]);
 				else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
