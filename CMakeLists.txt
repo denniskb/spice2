@@ -21,17 +21,13 @@ set(warning_flags
 -Woverloaded-virtual
 -Wnull-dereference
 -Wuseless-cast
+-Wno-sign-compare
+-Wno-implicit-fallthrough
 -Werror
 -Wno-error=conversion
 -Wno-error=float-conversion
 -Wno-error=sign-conversion
--Wno-error=sign-compare
--Wno-sign-compare
 -fconcepts-diagnostics-depth=2
-# Optional, additional (noisy) warnings (won't affect compilation):
-#-Wsign-compare
-#-Wconversion
-#-Wsign-conversion
 )
 
 set(math_flags
