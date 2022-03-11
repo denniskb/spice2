@@ -45,6 +45,15 @@ set(math_flags
 )
 
 # spice (snn simulation library)
+set(spice_assert_preconditions TRUE CACHE BOOL "Assert preconditions in release mode (recommended)")
+set(spice_assert_invariants FALSE CACHE BOOL "Assert invariants in release mode (for development only)")
+if(spice_assert_preconditions)
+	add_compile_definitions(SPICE_ASSERT_PRECONDITIONS)
+endif()
+if(spice_assert_invariants)
+	add_compile_definitions(SPICE_ASSERT_INVARIANTS)
+endif()
+
 file(GLOB_RECURSE spice_sources spice/*.h spice/*.cpp)
 add_library(spice SHARED ${spice_sources})
 target_compile_options(spice PRIVATE ${warning_flags} ${math_flags})

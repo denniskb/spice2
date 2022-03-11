@@ -258,7 +258,7 @@ template <std::floating_point Real>
 class exponential_distribution {
 public:
 	constexpr explicit exponential_distribution(Real const scale = 1) : _scale(scale) {
-		SPICE_ASSERT(scale >= 0);
+		SPICE_PRECONDITION(scale >= 0);
 	}
 	constexpr Real operator()(auto& rng) const {
 		return -_scale * std::log(generate_canonical<Real, true>(rng));
@@ -272,7 +272,7 @@ template <std::floating_point Real>
 class normal_distribution {
 public:
 	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) : _mu(mu), _sigma(sigma) {
-		SPICE_ASSERT(sigma >= 0);
+		SPICE_PRECONDITION(sigma >= 0);
 	}
 
 	constexpr Real operator()(auto& rng) {
@@ -307,8 +307,8 @@ public:
 
 	constexpr explicit binomial_distribution(Integer const N, Real const p) :
 	_N(N), _norm(N * p, std::sqrt(N * p * (1 - p))) {
-		SPICE_ASSERT(N >= 0);
-		SPICE_ASSERT(0 <= p && p <= 1);
+		SPICE_PRECONDITION(N >= 0);
+		SPICE_PRECONDITION(0 <= p && p <= 1);
 	}
 
 	constexpr Integer operator()(auto& rng) {

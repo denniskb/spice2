@@ -9,8 +9,8 @@ using namespace spice;
 using namespace spice::util;
 
 static constexpr Int n_choose_k(Int const n, Int const k) {
-	SPICE_ASSERT(0 <= k && k <= n);
-	SPICE_ASSERT(0 <= n && n <= 20);
+	SPICE_PRECONDITION(0 <= k && k <= n);
+	SPICE_PRECONDITION(0 <= n && n <= 20);
 
 	constexpr Int const factorial[21] = {1,
 	                                     1,

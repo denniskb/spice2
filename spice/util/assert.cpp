@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace spice::util {
+namespace spice::util::detail {
 void assert_failed(char const* _file, int const line, char const* condition) {
 	std::string const file(_file);
 	std::stringstream error;

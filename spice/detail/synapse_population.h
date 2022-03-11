@@ -76,9 +76,9 @@ public:
 	                   util::nonvoid_or_empty_t<Params> params = {}) :
 	_offsets(src_count + 1),
 	_params(std::move(params)) {
-		SPICE_ASSERT(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
-		SPICE_ASSERT(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
-		SPICE_ASSERT(0 <= p && p <= 1);
+		SPICE_PRECONDITION(0 <= src_count && src_count < std::numeric_limits<Int32>::max());
+		SPICE_PRECONDITION(0 <= dst_count && dst_count < std::numeric_limits<Int32>::max());
+		SPICE_PRECONDITION(0 <= p && p <= 1);
 
 		if (p == 0)
 			return;
@@ -120,7 +120,7 @@ public:
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {
-		SPICE_ASSERT(0 <= src && src < _offsets.size() - 1);
+		SPICE_PRECONDITION(0 <= src && src < _offsets.size() - 1);
 
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];
@@ -130,13 +130,13 @@ public:
 	}
 
 	void deliver(std::span<Int32 const> spikes, void* const ptr, Int const size) const override {
-		SPICE_ASSERT(ptr);
-		SPICE_ASSERT(size >= 0);
+		SPICE_PRECONDITION(ptr);
+		SPICE_PRECONDITION(size >= 0);
 		Neur* const pool = static_cast<Neur*>(ptr);
 
 		for (auto spike : spikes)
 			for (auto edge : neighbors(spike)) {
-				SPICE_ASSERT(edge.dst < size);
+				SPICE_INVARIANT(edge.dst < size);
 				if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
 					Syn::deliver(pool[edge.dst]);
 				else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
