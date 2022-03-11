@@ -9,7 +9,7 @@ using namespace spice::util;
 
 struct stateful_neuron {
 	int v = 0;
-	bool update(float) { return false; }
+	bool update(float, xoroshiro64_128p&) { return false; }
 };
 
 struct stateless_synapse {

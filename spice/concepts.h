@@ -2,37 +2,38 @@
 
 #include <concepts>
 
+#include "util/random.h"
 #include "util/stdint.h"
 #include "util/type_traits.h"
 
 namespace spice {
 template <class T>
-concept StatelessNeuronWithoutParams = requires(float dt) {
-	{ T::update(dt) } -> std::same_as<bool>;
+concept StatelessNeuronWithoutParams = requires(float dt, util::xoroshiro64_128p& rng) {
+	{ T::update(dt, rng) } -> std::same_as<bool>;
 };
 
 template <class T, class Params>
-concept StatelessNeuronWithParams = requires(float dt, Params params) {
+concept StatelessNeuronWithParams = requires(float dt, util::xoroshiro64_128p& rng, Params params) {
 	requires std::default_initializable<Params>;
-	{ T::update(dt, params) } -> std::same_as<bool>;
+	{ T::update(dt, rng, params) } -> std::same_as<bool>;
 };
 
 template <class T>
 concept StatelessNeuron = StatelessNeuronWithoutParams<T> || StatelessNeuronWithParams<T, util::any_t>;
 
 template <class T>
-concept StatefulNeuronWithoutParams = requires(T t, float dt) {
+concept StatefulNeuronWithoutParams = requires(T t, float dt, util::xoroshiro64_128p& rng) {
 	requires !StatelessNeuron<T>;
 	requires std::default_initializable<T>;
-	{ t.update(dt) } -> std::same_as<bool>;
+	{ t.update(dt, rng) } -> std::same_as<bool>;
 };
 
 template <class T, class Params>
-concept StatefulNeuronWithParams = requires(T t, float dt, Params params) {
+concept StatefulNeuronWithParams = requires(T t, float dt, util::xoroshiro64_128p& rng, Params params) {
 	requires std::default_initializable<Params>;
 	requires !StatelessNeuron<T>;
 	requires std::default_initializable<T>;
-	{ t.update(dt, params) } -> std::same_as<bool>;
+	{ t.update(dt, rng, params) } -> std::same_as<bool>;
 };
 
 template <class T>

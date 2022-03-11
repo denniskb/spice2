@@ -12,12 +12,9 @@ using namespace spice::util;
 using namespace matplot;
 
 struct poisson {
-	static bool update(float const dt) {
-		static xoroshiro64_128p rng({1337});
-		static uniform_real_distribution<double> iid;
-
-		double const firing_rate = 20; //Hz
-		return iid(rng) < (firing_rate * dt);
+	static bool update(float const dt, util::xoroshiro64_128p& rng) {
+		float const firing_rate = 20; //Hz
+		return util::generate_canonical<float>(rng) < (firing_rate * dt);
 	}
 };
 
@@ -27,7 +24,7 @@ struct lif {
 
 	lif() : V(0), Twait(0) {}
 
-	bool update(float const dt) {
+	bool update(float const dt, util::xoroshiro64_128p&) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
@@ -59,7 +56,7 @@ int main() {
 	int const d    = 15;
 	float const DT = 1e-4;
 
-	snn brunel(DT, d);
+	snn brunel(DT, d, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);

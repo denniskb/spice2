@@ -5,7 +5,7 @@
 using namespace spice;
 
 struct stateful_neuron {
-	bool update(double) { return false; }
+	bool update(float, util::xoroshiro64_128p&) { return false; }
 };
 struct stateless_synapse {
 	static void deliver(stateful_neuron&) {}

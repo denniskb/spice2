@@ -72,7 +72,7 @@ public:
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	synapse_population(Int const src_count, Int const dst_count, double const p, util::seed_seq seed,
+	synapse_population(Int const src_count, Int const dst_count, double const p, util::seed_seq const& seed,
 	                   util::nonvoid_or_empty_t<Params> params = {}) :
 	_offsets(src_count + 1),
 	_params(std::move(params)) {

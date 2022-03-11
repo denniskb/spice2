@@ -15,12 +15,12 @@
 
 namespace spice {
 struct NeuronPopulation {
-	virtual ~NeuronPopulation()                          = default;
-	virtual Int size() const                             = 0;
-	virtual void update(Int delay, float dt)             = 0;
-	virtual std::span<Int32 const> spikes(Int age) const = 0;
-	virtual std::span<UInt const> history() const        = 0;
-	virtual void* neurons()                              = 0;
+	virtual ~NeuronPopulation()                                           = default;
+	virtual Int size() const                                              = 0;
+	virtual void update(Int delay, float dt, util::xoroshiro64_128p& rng) = 0;
+	virtual std::span<Int32 const> spikes(Int age) const                  = 0;
+	virtual std::span<UInt const> history() const                         = 0;
+	virtual void* neurons()                                               = 0;
 };
 
 template <Neuron Neur, class Params = void>
@@ -42,7 +42,7 @@ public:
 
 	Int size() const override { return _history.size(); }
 
-	void update(Int const delay, float const dt) override {
+	void update(Int const delay, float const dt, util::xoroshiro64_128p& rng) override {
 		SPICE_ASSERT(delay >= 1);
 
 		if (_spike_counts.size() == delay) {
@@ -54,13 +54,13 @@ public:
 		for (Int const i : util::range(_history)) {
 			bool spiked;
 			if constexpr (StatelessNeuronWithoutParams<Neur>)
-				spiked = Neur::update(dt);
+				spiked = Neur::update(dt, rng);
 			else if constexpr (StatelessNeuronWithParams<Neur, Params>)
-				spiked = Neur::update(dt, _params);
+				spiked = Neur::update(dt, rng, _params);
 			else if constexpr (StatefulNeuronWithoutParams<Neur>)
-				spiked = _neurons[i].update(dt);
+				spiked = _neurons[i].update(dt, rng);
 			else
-				spiked = _neurons[i].update(dt, _params);
+				spiked = _neurons[i].update(dt, rng, _params);
 
 			_history[i] = (_history[i] << 1) | spiked;
 			if (spiked)

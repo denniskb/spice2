@@ -4,11 +4,13 @@
 
 #include "neuron_population.h"
 #include "synapse_population.h"
+#include "util/random.h"
 
 namespace spice {
 class snn {
 public:
-	snn(float const dt, Int const max_delay) : _dt(dt), _delay(max_delay) {}
+	snn(float const dt, Int const max_delay, util::seed_seq seq) :
+	_dt(dt), _delay(max_delay), _seed(std::move(seq)) {}
 
 	template <Neuron Neur, class Params = void>
 	neuron_population<Neur, Params>* add_population(Int const size,
@@ -24,7 +26,7 @@ public:
 	void connect(NeuronPopulation const* source, neuron_population<Neur, NeurParams> const* target,
 	             double const p) {
 		_synapses.push_back(std::unique_ptr<SynapsePopulation>(
-		    new synapse_population<Syn, Neur>(source->size(), target->size(), p, {1337})));
+		    new synapse_population<Syn, Neur>(source->size(), target->size(), p, _seed++)));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 	}
@@ -34,19 +36,21 @@ public:
 	void connect(NeuronPopulation* source, neuron_population<Neur, NeurParams>* target, double const p,
 	             Params const params) {
 		_synapses.push_back(std::unique_ptr<SynapsePopulation>(new synapse_population<Syn, Neur, Params>(
-		    source->size(), target->size(), p, {1337}, std::move(params))));
+		    source->size(), target->size(), p, _seed++, std::move(params))));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 	}
 
 	void step() {
+		util::xoroshiro64_128p rng(_seed++);
+
 		if (_iter >= _delay) {
 			for (auto& c : _connections)
 				c.synapse->deliver(c.from->spikes(_delay - 1), c.to->neurons(), c.to->size());
 		}
 
 		for (auto& pop : _neurons)
-			pop->update(_delay, _dt);
+			pop->update(_delay, _dt, rng);
 
 		_iter++;
 	}
@@ -61,6 +65,7 @@ private:
 	Int _iter = 0;
 	float _dt;
 	Int _delay;
+	util::seed_seq _seed;
 	std::vector<std::unique_ptr<NeuronPopulation>> _neurons;
 	std::vector<std::unique_ptr<SynapsePopulation>> _synapses;
 	std::vector<connection> _connections;
