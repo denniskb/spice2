@@ -69,7 +69,10 @@ public:
 		_spike_counts.push_back(_spikes.size() - spike_count);
 	}
 
-	void* neurons() override { return _neurons.data(); }
+	void* neurons() override {
+		SPICE_PRE(StatefulNeuron<Neur> && "Can't return collection of stateless neurons.");
+		return _neurons.data();
+	}
 	std::span<Neur> get_neurons() {
 		static_assert(StatefulNeuron<Neur>, "Can't return collection of stateless neurons.");
 		return _neurons;
