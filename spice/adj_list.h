@@ -3,16 +3,17 @@
 #include <span>
 #include <vector>
 
+#include "spice/connectivity.h"
 #include "spice/util/stdint.h"
 
 namespace spice {
-class adj_list {
+class adj_list : public Connectivity {
 public:
 	void connect(Int const src, Int const dst);
 
-	Int size() const;
-	Int src_count() const;
-	void fill_csr(std::span<UInt> offsets, std::span<Int32> neighbors);
+	Int size() const override;
+	Int src_count() const override;
+	void fill_csr(std::span<UInt> offsets, std::span<Int32> neighbors) override;
 
 private:
 	std::vector<UInt> _connections;
