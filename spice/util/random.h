@@ -141,6 +141,10 @@ constexpr UInt128 murmur3(UInt128 k) {
 // Copy-able, fixed-size seed sequence
 class seed_seq {
 public:
+	seed_seq(std::seed_seq seq) {
+		Int32* const data = reinterpret_cast<Int32*>(&_seed);
+		seq.generate(data, data + 4);
+	}
 	constexpr seed_seq(std::initializer_list<UInt32> il) :
 	_seed(detail::murmur3(il.begin(), 4 * il.size())) {}
 
