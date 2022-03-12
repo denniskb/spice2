@@ -57,9 +57,9 @@ public:
 	using const_iterator = iterator_t<true>;
 
 	csr(Int const src_count, Int const dst_count, double const p, util::seed_seq const& seed) {
-		SPICE_PRECONDITION(src_count >= 0);
-		SPICE_PRECONDITION(dst_count >= 0);
-		SPICE_PRECONDITION(0 <= p && p <= 1);
+		SPICE_PRE(src_count >= 0);
+		SPICE_PRE(dst_count >= 0);
+		SPICE_PRE(0 <= p && p <= 1);
 
 		if (src_count == 0 || dst_count == 0 || p == 0)
 			return;
@@ -96,7 +96,7 @@ public:
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {
-		SPICE_PRECONDITION(0 <= src && src + 1 < _offsets.size());
+		SPICE_PRE(0 <= src && src + 1 < _offsets.size());
 
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];

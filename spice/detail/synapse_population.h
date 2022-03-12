@@ -27,13 +27,13 @@ public:
 	_params(std::move(params)) {}
 
 	void deliver(std::span<Int32 const> spikes, void* const ptr, Int const size) const override {
-		SPICE_PRECONDITION(ptr);
-		SPICE_PRECONDITION(size >= 0);
+		SPICE_PRE(ptr);
+		SPICE_PRE(size >= 0);
 		Neur* const pool = static_cast<Neur*>(ptr);
 
 		for (auto spike : spikes)
 			for (auto edge : _graph.neighbors(spike)) {
-				SPICE_INVARIANT(edge.first < size);
+				SPICE_INV(edge.first < size);
 				if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
 					Syn::deliver(pool[edge.first]);
 				else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)

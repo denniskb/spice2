@@ -1,15 +1,15 @@
 #pragma once
 
 #ifdef SPICE_ASSERT_PRECONDITIONS
-	#define SPICE_PRECONDITION(X) SPICE_ASSERT(X)
+	#define SPICE_PRE(X) SPICE_ASSERT(X)
 #else
-	#define SPICE_PRECONDITION(X) (void)(X);
+	#define SPICE_PRE(X) (void)(X);
 #endif
 
 #ifdef SPICE_ASSERT_INVARIANTS
-	#define SPICE_INVARIANT(X) SPICE_ASSERT(X)
+	#define SPICE_INV(X) SPICE_ASSERT(X)
 #else
-	#define SPICE_INVARIANT(X) (void)(X);
+	#define SPICE_INV(X) (void)(X);
 #endif
 
 #define SPICE_ASSERT(X)            \
