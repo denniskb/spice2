@@ -10,23 +10,26 @@ static void adjlist(benchmark::State& state) {
 	for (Int i : util::range(10'000'000))
 		adj.connect(rand() % 10'000, i), (void)i;
 
-	std::vector<UInt> offsets(adj.src_count() + 1);
+	adj(10'000, std::numeric_limits<Int32>::max() - 1);
+
+	std::vector<Int> offsets(adj.src_count + 1);
 	std::vector<Int32> neighbors(adj.size());
 
 	for (auto _ : state) {
-		adj.fill_csr(offsets, neighbors, {});
+		adj.fill_csr(offsets, neighbors, {1337});
 	}
 }
 BENCHMARK(adjlist)->Unit(benchmark::kMillisecond);
 
 static void fixedprob(benchmark::State& state) {
-	fixed_probability fprob(10'000, 10'000, 0.1);
+	fixed_probability fprob(0.1);
+	fprob(10'000, 10'000);
 
-	std::vector<UInt> offsets(fprob.src_count() + 1);
+	std::vector<Int> offsets(fprob.src_count + 1);
 	std::vector<Int32> neighbors(fprob.size());
 
 	for (auto _ : state) {
-		fprob.fill_csr(offsets, neighbors, {});
+		fprob.fill_csr(offsets, neighbors, {1337});
 	}
 }
 BENCHMARK(fixedprob)->Unit(benchmark::kMillisecond);

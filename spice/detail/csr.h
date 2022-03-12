@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "spice/connectivity.h"
 #include "spice/util/assert.h"
 #include "spice/util/random.h"
 #include "spice/util/range.h"
@@ -56,43 +57,13 @@ public:
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	csr(Int const src_count, Int const dst_count, double const p, util::seed_seq const& seed) {
-		SPICE_PRE(src_count >= 0);
-		SPICE_PRE(dst_count >= 0);
-		SPICE_PRE(0 <= p && p <= 1);
-
-		if (src_count == 0 || dst_count == 0 || p == 0)
-			return;
-
-		Int const max_degree = dst_count * p + 3 * std::sqrt(dst_count * p * (1 - p));
-		_offsets.resize(src_count + 1);
-		_neighbors.resize(src_count * max_degree);
+	csr(Connectivity& c, util::seed_seq const& seed) {
+		_offsets.resize(c.src_count > 0 ? c.src_count + 1 : 0);
+		_neighbors.resize(c.size());
 		if constexpr (!util::is_empty_v<T>)
 			_edges.resize(_neighbors.size());
 
-		util::xoroshiro64_128p rng(seed);
-		util::exponential_distribution<double> exprnd(1 / p - 1);
-
-		Int count = 0;
-		for (UInt const src : util::range(src_count)) {
-			_offsets[src] = count;
-
-			Int32 index  = 0;
-			double noise = 0;
-			for (;;) {
-				noise += exprnd(rng);
-				Int32 const dst = index + static_cast<Int32>(std::round(noise));
-
-				if (__builtin_expect((dst >= dst_count) | (index >= max_degree), 0))
-					break;
-
-				_neighbors[count] = dst;
-
-				index++;
-				count++;
-			}
-		}
-		_offsets.back() = count;
+		c.fill_csr(_offsets, _neighbors, seed);
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {

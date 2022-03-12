@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "spice/concepts.h"
+#include "spice/connectivity.h"
 #include "spice/detail/csr.h"
 #include "spice/util/assert.h"
 #include "spice/util/random.h"
@@ -21,10 +22,8 @@ requires(util::is_empty_v<Params> ? SynapseWithoutParams<Syn, Neur> :
                                     SynapseWithParams<Syn, Neur, Params>) class synapse_population :
 public SynapsePopulation {
 public:
-	synapse_population(Int const src_count, Int const dst_count, double const p, util::seed_seq const& seed,
-	                   Params const params = {}) :
-	_graph(src_count, dst_count, p, seed),
-	_params(std::move(params)) {}
+	synapse_population(Connectivity& c, util::seed_seq const& seed, Params const params = {}) :
+	_graph(c, seed), _params(std::move(params)) {}
 
 	void deliver(std::span<Int32 const> spikes, void* const ptr, Int const size) const override {
 		SPICE_PRE(ptr);

@@ -145,8 +145,9 @@ public:
 		Int32* const data = reinterpret_cast<Int32*>(&_seed);
 		seq.generate(data, data + 4);
 	}
-	constexpr seed_seq(std::initializer_list<UInt32> il) :
-	_seed(detail::murmur3(il.begin(), 4 * il.size())) {}
+	constexpr seed_seq(std::initializer_list<UInt32> il) : _seed(detail::murmur3(il.begin(), 4 * il.size())) {
+		SPICE_PRE(il.size() > 0 && "Please provide at least 1 seed to seed_seq");
+	}
 
 	constexpr UInt128 seed() const { return _seed; }
 

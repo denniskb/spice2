@@ -56,12 +56,12 @@ static void brunel(benchmark::State& state) {
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
 
-	brunel.connect<SynE>(P, E, 0.1, N);
-	brunel.connect<SynE>(P, I, 0.1, N);
-	brunel.connect<SynE>(E, E, 0.1, N);
-	brunel.connect<SynE>(E, I, 0.1, N);
-	brunel.connect<SynI>(I, E, 0.1, N);
-	brunel.connect<SynI>(I, I, 0.1, N);
+	brunel.connect<SynE>(P, E, fixed_probability(0.1), N);
+	brunel.connect<SynE>(P, I, fixed_probability(0.1), N);
+	brunel.connect<SynE>(E, E, fixed_probability(0.1), N);
+	brunel.connect<SynE>(E, I, fixed_probability(0.1), N);
+	brunel.connect<SynI>(I, E, fixed_probability(0.1), N);
+	brunel.connect<SynI>(I, I, fixed_probability(0.1), N);
 
 	for (auto _ : state) {
 		brunel.step();
