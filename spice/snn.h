@@ -12,9 +12,8 @@ public:
 	snn(float const dt, Int const max_delay, util::seed_seq seq) :
 	_dt(dt), _delay(max_delay), _seed(std::move(seq)) {}
 
-	template <Neuron Neur, class Params = void>
-	detail::neuron_population<Neur, Params>*
-	add_population(Int const size, util::nonvoid_or_empty_t<Params> const params = {}) {
+	template <Neuron Neur, class Params = util::empty_t>
+	detail::neuron_population<Neur, Params>* add_population(Int const size, Params const params = {}) {
 		_neurons.push_back(
 		    std::make_unique<detail::neuron_population<Neur, Params>>(size, _delay, std::move(params)));
 

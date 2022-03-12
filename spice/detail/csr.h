@@ -12,7 +12,7 @@
 #include "spice/util/type_traits.h"
 
 namespace spice::detail {
-template <class T = void>
+template <class T = util::empty_t>
 class csr {
 public:
 	template <bool Const>
@@ -34,7 +34,7 @@ public:
 
 		constexpr iterator_t& operator++() {
 			_dst++;
-			if constexpr (!std::is_void_v<T>)
+			if constexpr (!std::is_empty_v<T>)
 				_edge++;
 
 			return *this;
@@ -67,7 +67,7 @@ public:
 		Int const max_degree = dst_count * p + 3 * std::sqrt(dst_count * p * (1 - p));
 		_offsets.resize(src_count + 1);
 		_neighbors.resize(src_count * max_degree);
-		if constexpr (!std::is_void_v<T>)
+		if constexpr (!util::is_empty_v<T>)
 			_edges.resize(_neighbors.size());
 
 		util::xoroshiro64_128p rng(seed);
@@ -108,6 +108,6 @@ public:
 private:
 	std::vector<Int> _offsets;
 	std::vector<Int32> _neighbors;
-	std::vector<util::nonvoid_or_empty_t<T>> _edges;
+	std::vector<T> _edges;
 };
 }

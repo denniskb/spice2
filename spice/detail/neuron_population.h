@@ -23,12 +23,12 @@ struct NeuronPopulation {
 	virtual void* neurons()                                               = 0;
 };
 
-template <Neuron Neur, class Params = void>
-requires(std::is_void_v<Params> ? NeuronWithoutParams<Neur> :
-                                  NeuronWithParams<Neur, Params>) class neuron_population :
+template <Neuron Neur, class Params = util::empty_t>
+requires(util::is_empty_v<Params> ? NeuronWithoutParams<Neur> :
+                                    NeuronWithParams<Neur, Params>) class neuron_population :
 public NeuronPopulation {
 public:
-	neuron_population(Int const size, Int const delay, util::nonvoid_or_empty_t<Params> params = {}) :
+	neuron_population(Int const size, Int const delay, Params const params = {}) :
 	_history(size), _params(std::move(params)) {
 		SPICE_PRE(size >= 0);
 		SPICE_PRE(delay >= 1);
@@ -92,6 +92,6 @@ private:
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;
 	std::vector<UInt> _history;
-	util::nonvoid_or_empty_t<Params> _params;
+	Params _params;
 };
 }
