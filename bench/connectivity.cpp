@@ -14,9 +14,11 @@ static void adjlist(benchmark::State& state) {
 
 	std::vector<Int> offsets(adj.src_count + 1);
 	std::vector<Int32> neighbors(adj.size());
+	edge_stream es(offsets, neighbors);
 
 	for (auto _ : state) {
-		adj.fill_csr(offsets, neighbors, {1337});
+		adj.generate(es, {1337});
+		es.flush();
 	}
 }
 BENCHMARK(adjlist)->Unit(benchmark::kMillisecond);
@@ -27,9 +29,11 @@ static void fixedprob(benchmark::State& state) {
 
 	std::vector<Int> offsets(fprob.src_count + 1);
 	std::vector<Int32> neighbors(fprob.size());
+	edge_stream es(offsets, neighbors);
 
 	for (auto _ : state) {
-		fprob.fill_csr(offsets, neighbors, {1337});
+		fprob.generate(es, {1337});
+		es.flush();
 	}
 }
 BENCHMARK(fixedprob)->Unit(benchmark::kMillisecond);
