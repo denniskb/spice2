@@ -23,9 +23,9 @@ constexpr Integer rotl(Integer const x, Int const k) {
 
 constexpr uint64_t fmix64(uint64_t k) {
 	k ^= k >> 33;
-	k *= 0xff51afd7ed558ccdllu;
+	k *= 0xff51afd7ed558ccd;
 	k ^= k >> 33;
-	k *= 0xc4ceb9fe1a85ec53llu;
+	k *= 0xc4ceb9fe1a85ec53;
 	k ^= k >> 33;
 	return k;
 }
@@ -34,10 +34,10 @@ constexpr UInt128 murmur3(void const* ptr, UInt const len) {
 	UInt8 const* const data = static_cast<UInt8 const*>(ptr);
 
 	// non-zero seed (chosen arbitrarily)
-	UInt128 h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
+	UInt128 h{0x2E4016967F18E81, 0x447567949F9AA86};
 
-	UInt const c1 = 0x87c37b91114253d5llu;
-	UInt const c2 = 0x4cf5ad432745937fllu;
+	UInt const c1 = 0x87c37b91114253d5;
+	UInt const c2 = 0x4cf5ad432745937f;
 
 	const Int nblocks  = len / 16;
 	UInt const* blocks = reinterpret_cast<UInt const*>(data);
@@ -108,10 +108,10 @@ constexpr UInt128 murmur3(void const* ptr, UInt const len) {
 
 constexpr UInt128 murmur3(UInt128 k) {
 	// non-zero seed (chosen arbitrarily)
-	UInt128 h{0x2E4016967F18E81llu, 0x447567949F9AA86llu};
+	UInt128 h{0x2E4016967F18E81, 0x447567949F9AA86};
 
-	UInt const c1 = 0x87c37b91114253d5llu;
-	UInt const c2 = 0x4cf5ad432745937fllu;
+	UInt const c1 = 0x87c37b91114253d5;
+	UInt const c2 = 0x4cf5ad432745937f;
 
 	k.lo *= c1;
 	k.lo = rotl(k.lo, 31);
