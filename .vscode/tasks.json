@@ -9,55 +9,30 @@
 			"type": "shell",
 			"command": "chmod 700 build_third_party.sh && ./build_third_party.sh",
 			"group": "build",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
 			"label": "Clean",
 			"type": "shell",
-			"command": "rm -r build",
+			"command": "rm -rf build",
 			"group": "build",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
 			"label": "Debug",
 			"type": "shell",
 			"command": "mkdir -p build/debug && cd build/debug && cmake -DCMAKE_BUILD_TYPE=Debug ../.. && make -j 8",
 			"group": "build",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
 			"label": "Release",
 			"type": "shell",
 			"command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make -j 8",
 			"group": "build",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
 			"label": "Perf",
 			"type": "shell",
 			"command": "mkdir -p build/perf && cd build/perf && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2 -ggdb\" ../.. && make -j 8",
 			"group": "build",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		// test/run tasks
 		{
@@ -66,11 +41,6 @@
 			"command": "./build/release/test",
 			"group": "test",
 			"dependsOn": "Release",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
 			"label": "Benchmarks",
@@ -81,22 +51,18 @@
 			],
 			"group": "test",
 			"dependsOn": "Release",
-			"problemMatcher": "[]",
-			"presentation": {
-				"focus": true,
-				"clear": true
-			}
 		},
 		{
-			"label": "Lamodel",
+			"label": "Samples",
 			"type": "shell",
-			"command": "./build/release/lamodel",
+			"command": "./samples/runsample.sh",
+			"args": [
+				"${input:sample_filter}"
+			],
 			"group": "test",
 			"dependsOn": "Release",
-			"problemMatcher": "[]",
 			"presentation": {
-				"focus": true,
-				"clear": true
+				"close": true,
 			}
 		}
 	],
@@ -105,7 +71,13 @@
 			"id": "bench_filter",
 			"type": "promptString",
 			"default": "",
-			"description": "run only those benchmarks that match regex"
+			"description": "benchmark name"
+		},
+		{
+			"id": "sample_filter",
+			"type": "promptString",
+			"default": "",
+			"description": "sample name"
 		}
 	]
 }

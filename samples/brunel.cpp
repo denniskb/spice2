@@ -6,7 +6,6 @@
 
 using namespace spice;
 using namespace spice::util;
-using namespace matplot;
 
 struct poisson {
 	static bool update(float const dt, util::xoroshiro64_128p& rng) {
@@ -41,19 +40,21 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to, Int n) { to.V += (0.0001f * 20'000) / n; }
+	static void deliver(lif& to, Int const N) { to.V += (0.0001f * 20'000) / N; }
 };
 
 struct SynI {
-	static void deliver(lif& to, Int n) { to.V -= (0.0005f * 20'000) / n; }
+	static void deliver(lif& to, Int const N) { to.V -= (0.0005f * 20'000) / N; }
 };
 
 int main() {
-	int const N    = 10000;
-	int const d    = 15;
-	float const DT = 1e-4;
+	using namespace matplot;
 
-	snn brunel(DT, d, {1337});
+	int const N     = 20000;
+	int const delay = 15;
+	float const DT  = 1e-4;
+
+	snn brunel(DT, delay, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
@@ -65,31 +66,12 @@ int main() {
 	brunel.connect<SynI>(I, E, fixed_probability(0.1), N);
 	brunel.connect<SynI>(I, I, fixed_probability(0.1), N);
 
-	std::vector<double> x(N);
-	std::vector<double> y(N);
-	figure();
-	xlim({0, 100});
-	ylim({0, 100});
-	for (Int i : range(200)) {
+	for (Int i : range(300)) {
 		brunel.step();
 
-		x.clear();
-		y.clear();
-		for (auto s : P->spikes(0)) {
-			x.push_back(s % 100);
-			y.push_back(s / 100);
-		}
-		for (auto s : E->spikes(0)) {
-			x.push_back((s + N / 2) % 100);
-			y.push_back((s + N / 2) / 100);
-		}
-		for (auto s : I->spikes(0)) {
-			x.push_back((s + 9 * N / 10) % 100);
-			y.push_back((s + 9 * N / 10) / 100);
-		}
-		scatter(x, y);
-		pause(0.05);
+		scatter_spikes({I, E, P});
 
+		pause(0.05);
 		(void)i;
 	}
 	return 0;
