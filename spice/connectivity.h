@@ -29,8 +29,9 @@ struct Connectivity {
 	virtual ~Connectivity() = default;
 	Connectivity& operator()(Int src_count_, Int dst_count_);
 
-	virtual Int size() const                                               = 0;
-	virtual void generate(edge_stream& stream, util::seed_seq const& seed) = 0;
+	virtual Int size() const = 0;
+	virtual void generate(edge_stream& stream, util::seed_seq const& seed);
+	virtual void generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed);
 };
 
 class adj_list : public Connectivity {
@@ -38,7 +39,7 @@ public:
 	void connect(Int const src, Int const dst);
 
 	Int size() const override;
-	void generate(edge_stream& stream, util::seed_seq const& seed);
+	void generate(edge_stream& stream, util::seed_seq const& seed) override;
 
 private:
 	std::vector<UInt> _connections;
@@ -49,7 +50,7 @@ public:
 	explicit fixed_probability(double const p);
 
 	Int size() const override;
-	void generate(edge_stream& stream, util::seed_seq const& seed);
+	void generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed) override;
 
 private:
 	double const _p;

@@ -42,6 +42,18 @@ Connectivity& Connectivity::operator()(Int const src_count_, Int const dst_count
 	return *this;
 }
 
+void Connectivity::generate(edge_stream&, util::seed_seq const&) {
+	SPICE_PRE(false && "Connectivity subclasses must implement generate(edge_stream, seed_seq)");
+}
+void Connectivity::generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed) {
+	SPICE_PRE(offsets.size() > src_count);
+	SPICE_PRE(neighbors.size() >= size());
+
+	edge_stream es(offsets, neighbors);
+	generate(es, seed);
+	es.flush();
+}
+
 void adj_list::connect(Int const src, Int const dst) {
 	SPICE_PRE(0 <= src && src < std::numeric_limits<Int32>::max());
 	SPICE_PRE(0 <= dst && dst < std::numeric_limits<Int32>::max());
@@ -55,8 +67,6 @@ void adj_list::generate(edge_stream& stream, util::seed_seq const&) {
 	std::sort(_connections.begin(), _connections.end());
 
 	for (auto c : _connections) {
-		SPICE_PRE((c >> 32) < src_count && "Source index exceeds source population neuron count");
-		SPICE_PRE((c & 0xffffffff) < dst_count && "Destination index exceeds target population neuron count");
 		stream << std::pair{c >> 32, c & 0xffffffff};
 	}
 }
@@ -68,7 +78,11 @@ Int fixed_probability::size() const {
 	return src_count * max_degree;
 }
 
-void fixed_probability::generate(edge_stream& stream, util::seed_seq const& seed) {
+void fixed_probability::generate(std::span<Int> offsets, std::span<Int32> neighbors,
+                                 util::seed_seq const& seed) {
+	SPICE_PRE(offsets.size() > src_count);
+	SPICE_PRE(neighbors.size() >= size());
+
 	if (src_count == 0 || dst_count == 0 || _p == 0)
 		return;
 
@@ -76,7 +90,9 @@ void fixed_probability::generate(edge_stream& stream, util::seed_seq const& seed
 	util::exponential_distribution<double> exprnd(1 / _p - 1);
 
 	Int const max_degree = size() / src_count;
+	Int count            = 0;
 	for (Int const src : util::range(src_count)) {
+		offsets[src] = count;
 		Int32 index  = 0;
 		double noise = 0;
 		for (;;) {
@@ -89,8 +105,9 @@ void fixed_probability::generate(edge_stream& stream, util::seed_seq const& seed
 			SPICE_INV(src < src_count);
 			SPICE_INV(dst < dst_count);
 
-			stream << std::pair{src, dst};
+			neighbors[count++] = dst;
 			index++;
 		}
 	}
+	offsets[src_count] = count;
 }

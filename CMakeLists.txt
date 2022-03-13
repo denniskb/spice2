@@ -23,6 +23,7 @@ set(warning_flags
 -Wuseless-cast
 -Wno-sign-compare
 -Wno-implicit-fallthrough
+-Wno-overloaded-virtual
 -Werror
 -Wno-error=conversion
 -Wno-error=float-conversion

@@ -63,9 +63,7 @@ public:
 		if constexpr (!util::is_empty_v<T>)
 			_edges.resize(_neighbors.size());
 
-		edge_stream es(_offsets, _neighbors);
-		c.generate(es, seed);
-		es.flush();
+		c.generate(_offsets, _neighbors, seed);
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {
@@ -79,7 +77,6 @@ public:
 	}
 
 private:
-	friend class edge_stream;
 	std::vector<Int> _offsets;
 	std::vector<Int32> _neighbors;
 	std::vector<T> _edges;

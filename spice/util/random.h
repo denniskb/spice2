@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <cstring>
 #include <initializer_list>
+#include <iterator>
 #include <limits>
 #include <numbers>
 #include <random>
@@ -147,6 +149,15 @@ public:
 	}
 	constexpr seed_seq(std::initializer_list<UInt32> il) : _seed(detail::murmur3(il.begin(), 4 * il.size())) {
 		SPICE_PRE(il.size() > 0 && "Please provide at least 1 seed to seed_seq");
+	}
+
+	template <std::output_iterator<Int32> OutputIt>
+	constexpr void generate(OutputIt first, OutputIt last) const {
+		UInt32 seed[4];
+		std::memcpy(seed, &_seed, 16);
+		Int i = 0;
+		while (first != last)
+			*first++ = seed[i++ % 4];
 	}
 
 	constexpr UInt128 seed() const { return _seed; }
