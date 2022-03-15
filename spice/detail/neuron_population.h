@@ -1,14 +1,12 @@
 #pragma once
 
-#include <functional>
 #include <numeric>
 #include <span>
-#include <utility>
-#include <variant>
 #include <vector>
 
 #include "spice/concepts.h"
 #include "spice/util/assert.h"
+#include "spice/util/random.h"
 #include "spice/util/range.h"
 #include "spice/util/stdint.h"
 #include "spice/util/type_traits.h"

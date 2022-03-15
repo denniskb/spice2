@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
-#include <cstring>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -153,11 +152,9 @@ public:
 
 	template <std::output_iterator<Int32> OutputIt>
 	constexpr void generate(OutputIt first, OutputIt last) const {
-		UInt32 seed[4];
-		std::memcpy(seed, &_seed, 16);
-		Int i = 0;
-		while (first != last)
-			*first++ = seed[i++ % 4];
+		UInt32 const* seed = reinterpret_cast<UInt32 const*>(&_seed);
+		for (Int i = 0; first != last; i++, first++)
+			*first = seed[i % 4];
 	}
 
 	constexpr UInt128 seed() const { return _seed; }

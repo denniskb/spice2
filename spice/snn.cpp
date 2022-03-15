@@ -1,5 +1,7 @@
 #include "spice/snn.h"
 
+#include "spice/util/random.h"
+
 using namespace spice;
 
 void snn::step() {

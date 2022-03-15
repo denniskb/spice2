@@ -1,7 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <iterator>
+#include <concepts>
 #include <type_traits>
 
 #include "spice/util/stdint.h"
@@ -30,5 +30,5 @@ template <class Container>
 requires requires(Container c) {
 	{ c.size() } -> std::integral;
 }
-inline constexpr auto range(Container const& c) { return range(c.size()); }
+constexpr auto range(Container const& c) { return range(c.size()); }
 }

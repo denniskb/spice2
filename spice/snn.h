@@ -1,11 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
+#include "spice/concepts.h"
 #include "spice/connectivity.h"
 #include "spice/detail/neuron_population.h"
 #include "spice/detail/synapse_population.h"
 #include "spice/util/random.h"
+#include "spice/util/stdint.h"
+#include "spice/util/type_traits.h"
 
 namespace spice {
 class snn {
