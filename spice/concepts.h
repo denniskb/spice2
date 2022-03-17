@@ -82,6 +82,12 @@ concept StatefulSynapseWithParams = requires(T t, Neur& n, Params params) {
 	t.deliver(n, params);
 };
 
+template <class T>
+concept PlasticSynapse = requires(T t, float dt, bool pre, bool post, Int n, util::any_t params) {
+	requires(
+	    requires { t.update(dt, pre, post, n); } || requires { t.update(dt, pre, post, n, params); });
+};
+
 template <class T, class Neur>
 concept StatefulSynapse =
     StatefulSynapseWithoutParams<T, Neur> || StatefulSynapseWithParams<T, Neur, util::any_t>;

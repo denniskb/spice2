@@ -6,6 +6,7 @@
 
 #include "spice/concepts.h"
 #include "spice/util/assert.h"
+#include "spice/util/meta.h"
 #include "spice/util/random.h"
 #include "spice/util/range.h"
 #include "spice/util/stdint.h"
@@ -16,9 +17,10 @@ struct NeuronPopulation {
 	virtual ~NeuronPopulation()                                           = default;
 	virtual Int size() const                                              = 0;
 	virtual void update(Int delay, float dt, util::xoroshiro64_128p& rng) = 0;
-	virtual std::span<Int32 const> spikes(Int age) const                  = 0;
-	virtual std::span<UInt const> history() const                         = 0;
 	virtual void* neurons()                                               = 0;
+	virtual std::span<Int32 const> spikes(Int age) const                  = 0;
+	virtual void plastic()                                                = 0;
+	virtual std::span<UInt const> history() const                         = 0;
 };
 
 template <Neuron Neur, class Params = util::empty_t>
@@ -27,7 +29,7 @@ requires(util::is_empty_v<Params> ? NeuronWithoutParams<Neur> :
 public NeuronPopulation {
 public:
 	neuron_population(Int const size, Int const delay, Params const params = {}) :
-	_history(size), _params(std::move(params)) {
+	_size(size), _params(std::move(params)) {
 		SPICE_PRE(size >= 0);
 		SPICE_PRE(delay >= 1);
 
@@ -38,7 +40,7 @@ public:
 			_neurons.resize(size);
 	}
 
-	Int size() const override { return _history.size(); }
+	Int size() const override { return _size; }
 
 	void update(Int const delay, float const dt, util::xoroshiro64_128p& rng) override {
 		SPICE_PRE(delay >= 1);
@@ -49,21 +51,26 @@ public:
 		}
 
 		Int const spike_count = _spikes.size();
-		for (Int const i : util::range(_history)) {
-			bool spiked;
-			if constexpr (StatelessNeuronWithoutParams<Neur>)
-				spiked = Neur::update(dt, rng);
-			else if constexpr (StatelessNeuronWithParams<Neur, Params>)
-				spiked = Neur::update(dt, rng, _params);
-			else if constexpr (StatefulNeuronWithoutParams<Neur>)
-				spiked = _neurons[i].update(dt, rng);
-			else
-				spiked = _neurons[i].update(dt, rng, _params);
+		util::invoke(_plastic, [&]<bool Plastic>() {
+			for (Int const i : util::range(size())) {
+				bool spiked;
+				if constexpr (StatelessNeuronWithoutParams<Neur>)
+					spiked = Neur::update(dt, rng);
+				else if constexpr (StatelessNeuronWithParams<Neur, Params>)
+					spiked = Neur::update(dt, rng, _params);
+				else if constexpr (StatefulNeuronWithoutParams<Neur>)
+					spiked = _neurons[i].update(dt, rng);
+				else
+					spiked = _neurons[i].update(dt, rng, _params);
 
-			_history[i] = (_history[i] << 1) | spiked;
-			if (spiked)
-				_spikes.push_back(i);
-		}
+				if constexpr (Plastic)
+					_history[i] = (_history[i] << 1) | spiked;
+
+				if (spiked)
+					_spikes.push_back(i);
+			}
+		});
+
 		_spike_counts.push_back(_spikes.size() - spike_count);
 	}
 
@@ -83,13 +90,23 @@ public:
 		return {_spikes.data() + _spikes.size() - offset, static_cast<UInt>(_spike_counts.rbegin()[age])};
 	}
 
-	std::span<UInt const> history() const override { return _history; }
+	void plastic() {
+		_history.resize(size());
+		_plastic = true;
+	}
+
+	std::span<UInt const> history() const override {
+		SPICE_PRE(_plastic && "History does not exist. Call plastic() to generate history.");
+		return _history;
+	}
 
 private:
+	Int _size = 0;
 	std::vector<Neur> _neurons;
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;
 	std::vector<UInt> _history;
-	Params _params;
+	bool _plastic  = false;
+	Params _params = {};
 };
 }

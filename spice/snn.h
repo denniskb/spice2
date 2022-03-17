@@ -37,6 +37,9 @@ public:
 		        c(source->size(), target->size()), _seed++, std::move(params))));
 
 		_connections.push_back({source, _synapses.back().get(), target});
+
+		if constexpr (PlasticSynapse<Syn>)
+			source->plastic();
 	}
 
 	template <class Syn, class Params = util::empty_t, StatefulNeuron Neur, class NeurParams>

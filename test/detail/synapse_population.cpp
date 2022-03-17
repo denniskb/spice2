@@ -26,6 +26,13 @@ struct stateful_synapse_with_params {
 	void deliver(stateful_neuron&, int) {}
 };
 
+struct plastic_synapse : stateful_synapse {
+	void update(float, bool, bool, Int) {}
+};
+struct plastic_synapse_with_params : stateful_synapse_with_params {
+	void update(float, bool, bool, Int, int) {}
+};
+
 static_assert(!StatelessSynapseWithoutParams<int, stateful_neuron>);
 static_assert(!StatelessSynapseWithParams<int, stateful_neuron, any_t>);
 static_assert(!StatefulSynapseWithoutParams<int, stateful_neuron>);
@@ -79,3 +86,11 @@ static_assert(!SynapseWithoutParams<stateful_synapse_with_params, stateful_neuro
 static_assert(SynapseWithParams<stateful_synapse_with_params, stateful_neuron, any_t>);
 static_assert(SynapseWithParams<stateful_synapse_with_params, stateful_neuron, int>);
 static_assert(Synapse<stateful_synapse_with_params, stateful_neuron>);
+
+static_assert(!PlasticSynapse<stateless_synapse>);
+static_assert(!PlasticSynapse<stateful_synapse>);
+static_assert(!PlasticSynapse<stateless_synapse_with_params>);
+static_assert(!PlasticSynapse<stateful_synapse_with_params>);
+static_assert(PlasticSynapse<plastic_synapse>);
+static_assert(PlasticSynapse<plastic_synapse_with_params>);
+static_assert(!PlasticSynapse<int>);
