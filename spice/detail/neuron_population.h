@@ -95,10 +95,7 @@ public:
 		_plastic = true;
 	}
 
-	std::span<UInt const> history() const override {
-		SPICE_PRE(_plastic && "History does not exist. Call plastic() to generate history.");
-		return _history;
-	}
+	std::span<UInt const> history() const override { return _history; }
 
 private:
 	Int _size = 0;

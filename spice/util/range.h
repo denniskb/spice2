@@ -30,5 +30,12 @@ template <class Container>
 requires requires(Container c) {
 	{ c.size() } -> std::integral;
 }
-constexpr auto range(Container const& c) { return range(c.size()); }
+constexpr auto indices(Container const& c) { return range(c.size()); }
+
+template <class Container>
+requires requires(Container c) {
+	c.begin();
+	c.end();
+}
+constexpr auto values(Container& c) { return range_t{c.begin(), c.end()}; }
 }

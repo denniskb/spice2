@@ -67,7 +67,7 @@ public:
 		c.generate(_offsets, _neighbors, seed);
 	}
 
-	util::range_t<const_iterator> neighbors(Int const src) const {
+	util::range_t<iterator> neighbors(Int const src) {
 		SPICE_PRE(0 <= src && src + 1 < _offsets.size());
 
 		Int const first = _offsets[src];
@@ -75,6 +75,10 @@ public:
 
 		return {{_neighbors.data() + first, _edges.data() + first},
 		        {_neighbors.data() + last, _edges.data() + last}};
+	}
+
+	util::range_t<const_iterator> neighbors(Int const src) const {
+		return const_cast<csr*>(this)->neighbors(src);
 	}
 
 private:
