@@ -70,6 +70,7 @@ private:
 						SPICE_INV(edge.first < history.size());
 						UInt hist = history[edge.first] & mask;
 						Int i     = iter - age;
+						SPICE_INV(i <= 64);
 						while (hist) {
 							Int hsb = 63 - __builtin_clzl(hist);
 							if constexpr (SynapseWithParams<Syn, Neur, Params>)
