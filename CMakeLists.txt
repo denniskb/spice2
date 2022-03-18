@@ -64,7 +64,7 @@ target_compile_options(spice PRIVATE ${warning_flags} ${math_flags})
 target_include_directories(spice PRIVATE .)
 
 # samples
-foreach(sample brunel brunel_plus vogels)
+foreach(sample brunel brunel+ vogels)
 	add_executable(${sample} samples/matplot.h samples/matplot.cpp samples/${sample}.cpp)
 	target_compile_options(${sample} PRIVATE ${warning_flags} ${math_flags})
 	target_include_directories(${sample} PRIVATE . third_party/matplot/source)
