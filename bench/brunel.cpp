@@ -14,10 +14,8 @@ struct poisson {
 };
 
 struct lif {
-	float V;
-	int Twait;
-
-	lif() : V(0), Twait(0) {}
+	float V   = 0;
+	int Twait = 0;
 
 	bool update(float const dt, util::xoroshiro64_128p&) {
 		float const TmemInv = 1.0 / 0.02; // s

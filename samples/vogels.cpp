@@ -8,12 +8,10 @@ using namespace spice;
 using namespace spice::util;
 
 struct lif {
-	float V;
-	float Gex;
-	float Gin;
-	Int32 Twait;
-
-	lif() : V(-0.06), Gex(0), Gin(0), Twait(0) {}
+	float V     = -0.06;
+	float Gex   = 0;
+	float Gin   = 0;
+	Int32 Twait = 0;
 
 	bool update(float const dt, util::xoroshiro64_128p&) {
 		Int32 const Tref    = 50;           // dt
