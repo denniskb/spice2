@@ -33,6 +33,11 @@ public:
 	                               Params>) void connect(detail::NeuronPopulation* source,
 	                                                     detail::neuron_population<Neur, NeurParams>* target,
 	                                                     Connectivity& c, Params const params = {}) {
+		static_assert(
+		    !requires { &Syn::update; } || PlasticSynapse<Syn>,
+		    "It looks like you're trying to define a plastic synapse (your synapse has an update() method). "
+		    "However, your synapse type does not conform to the PlasticSynapse concept.");
+
 		_synapses.push_back(
 		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur, Params>(
 		        c(source->size(), target->size()), _seed++, std::move(params))));
