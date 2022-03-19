@@ -7,6 +7,7 @@
 #include "spice/connectivity.h"
 #include "spice/detail/neuron_population.h"
 #include "spice/detail/synapse_population.h"
+#include "spice/util/numeric.h"
 #include "spice/util/random.h"
 #include "spice/util/stdint.h"
 #include "spice/util/type_traits.h"
@@ -60,6 +61,7 @@ private:
 	Int _iter = 0;
 	float _dt;
 	Int _delay;
+	util::kahan_sum<float> _simtime;
 	util::seed_seq _seed;
 	std::vector<std::unique_ptr<detail::NeuronPopulation>> _neurons;
 	std::vector<std::unique_ptr<detail::SynapsePopulation>> _synapses;
