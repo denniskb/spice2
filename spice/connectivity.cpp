@@ -28,14 +28,14 @@ edge_stream& edge_stream::operator<<(std::pair<Int32, Int32> const edge) {
 }
 
 void edge_stream::flush() {
-	SPICE_PRE(_src < _offsets.size());
+	SPICE_INV(_src < _offsets.size());
 	_offsets[_src] = _dst;
 	*this          = edge_stream(std::move(_offsets), std::move(_neighbors));
 }
 
 Connectivity& Connectivity::operator()(Int const src_count_, Int const dst_count_) {
-	SPICE_PRE(0 <= src_count_ && src_count_ < std::numeric_limits<Int32>::max());
-	SPICE_PRE(0 <= dst_count_ && dst_count_ < std::numeric_limits<Int32>::max());
+	SPICE_INV(0 <= src_count_ && src_count_ < std::numeric_limits<Int32>::max());
+	SPICE_INV(0 <= dst_count_ && dst_count_ < std::numeric_limits<Int32>::max());
 
 	src_count = src_count_;
 	dst_count = dst_count_;

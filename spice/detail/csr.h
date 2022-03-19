@@ -68,7 +68,7 @@ public:
 	}
 
 	util::range_t<iterator> neighbors(Int const src) {
-		SPICE_PRE(0 <= src && src + 1 < _offsets.size());
+		SPICE_INV(0 <= src && src + 1 < _offsets.size());
 
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];

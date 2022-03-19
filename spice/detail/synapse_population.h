@@ -34,8 +34,8 @@ public:
 
 	void deliver(Int const iter, float const dt, std::span<Int32 const> spikes, void* const ptr,
 	             Int const size, std::span<UInt const> history) override {
-		SPICE_PRE(ptr);
-		SPICE_PRE(size >= 0);
+		SPICE_INV(ptr);
+		SPICE_INV(size >= 0);
 		Neur* const dst_neurons = static_cast<Neur*>(ptr);
 
 		_update<true>(iter, dt, spikes, dst_neurons, size, history);
@@ -62,6 +62,7 @@ private:
 			}
 
 			SPICE_INV(iter >= age);
+			SPICE_INV(iter - age <= 64);
 			[[maybe_unused]] UInt const mask = ~UInt(0) >> (64 - (iter - age + (iter == age)));
 
 			util::invoke(iter > age, [&]<bool Update>() {
@@ -70,7 +71,6 @@ private:
 						SPICE_INV(edge.first < history.size());
 						UInt hist = history[edge.first] & mask;
 						Int i     = iter - age;
-						SPICE_INV(i <= 64);
 						while (hist) {
 							Int hsb = 63 - __builtin_clzl(hist);
 							if constexpr (SynapseWithParams<Syn, Neur, Params>)

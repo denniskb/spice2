@@ -30,8 +30,8 @@ public NeuronPopulation {
 public:
 	neuron_population(Int const size, Int const delay, Params const params = {}) :
 	_size(size), _params(std::move(params)) {
-		SPICE_PRE(size >= 0);
-		SPICE_PRE(delay >= 1);
+		SPICE_INV(size >= 0);
+		SPICE_INV(delay >= 1);
 
 		_spike_counts.reserve(delay);
 		_spikes.reserve(size * delay / 100);
@@ -43,7 +43,7 @@ public:
 	Int size() const override { return _size; }
 
 	void update(Int const delay, float const dt, util::xoroshiro64_128p& rng) override {
-		SPICE_PRE(delay >= 1);
+		SPICE_INV(delay >= 1);
 
 		if (_spike_counts.size() == delay) {
 			_spikes.erase(_spikes.begin(), _spikes.begin() + _spike_counts.front());
@@ -84,7 +84,7 @@ public:
 	}
 
 	std::span<Int32 const> spikes(Int age) const override {
-		SPICE_PRE(age < _spike_counts.size());
+		SPICE_PRE(0 <= age && age < _spike_counts.size());
 
 		Int const offset = std::accumulate(_spike_counts.end() - 1 - age, _spike_counts.end(), 0);
 		return {_spikes.data() + _spikes.size() - offset, static_cast<UInt>(_spike_counts.rbegin()[age])};
