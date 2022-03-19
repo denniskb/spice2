@@ -52,15 +52,21 @@ struct SynPlast {
 
 	void deliver(lif& to) { to.V += W; }
 	void update(float const dt, bool const pre, bool const post, Int const n) {
-		float const TstdpInv = 1.0f / 0.02f;
-		float const dtInv    = 1.0f / dt;
+		if (n) { // post() + update()
+			Zpost += post;
 
-		Zpre  = std::fmaf(Zpre, std::pow(1 - dt * TstdpInv, n), pre);
-		Zpost = std::fmaf(Zpost, std::pow(1 - dt * TstdpInv, n), post);
+			float const TstdpInv = 1.0f / 0.02f;
+			float const dtInv    = 1.0f / dt;
 
-		W = std::clamp(W - pre * 0.0202f * W * std::exp(-Zpost * dtInv) +
-		                   post * 0.01f * (1.0f - W) * std::exp(-Zpre * dtInv),
-		               0.0f, 0.0003f);
+			W = std::clamp(W - pre * 0.0202f * W * std::exp(-Zpost * dtInv) +
+			                   post * 0.01f * (1.0f - W) * std::exp(-Zpre * dtInv),
+			               0.0f, 0.0003f);
+
+			// TODO: Decay before or after weight update?
+			Zpre -= Zpre * dt * TstdpInv;
+			Zpost -= Zpost * dt * TstdpInv;
+		} else // pre()
+			Zpre += pre;
 	}
 };
 
@@ -88,8 +94,6 @@ int main() {
 
 		scatter_spikes({I, E, P});
 
-		if (i % 64)
-			pause(0.05);
 		(void)i;
 	}
 	return 0;

@@ -52,57 +52,24 @@ private:
 	Params _params;
 
 	template <bool Deliver>
-	void _update(Int const iter, float const dt, auto src_neurons, Neur* const dst_neurons, Int const size,
+	void _update(Int const iter, float const dt, auto spikes, Neur* const dst_neurons, Int const,
 	             std::span<UInt const> history) {
-		for (auto src : src_neurons) {
-			[[maybe_unused]] Int age = iter;
-			if constexpr (PlasticSynapse<Syn>) {
-				SPICE_INV(src < _ages.size());
-				age = _ages[src];
-			}
+		for (auto src : spikes) {
+			for (auto edge : _graph.neighbors(src)) {
+				if constexpr (PlasticSynapse<Syn> && !Deliver) // post() + update()
+					edge.second->update(dt, false, history[edge.first] & 1, 1);
 
-			SPICE_INV(iter >= age);
-			SPICE_INV(iter - age <= 64);
-			[[maybe_unused]] UInt const mask = ~UInt(0) >> (64 - (iter - age + (iter == age)));
+				if constexpr (PlasticSynapse<Syn> && Deliver) { // pre()
+					// TODO: Hard-coded delay
+					edge.second->update(dt, iter >= 14, false, 0);
 
-			util::invoke(iter > age, [&]<bool Update>() {
-				for (auto edge : _graph.neighbors(src)) {
-					if constexpr (PlasticSynapse<Syn> && Update) {
-						SPICE_INV(edge.first < history.size());
-						UInt hist = history[edge.first] & mask;
-						Int i     = iter - age;
-						while (hist) {
-							Int hsb = 63 - __builtin_clzl(hist);
-							if constexpr (SynapseWithParams<Syn, Neur, Params>)
-								edge.second->update(dt, false, true, i - hsb, _params);
-							else
-								edge.second->update(dt, false, true, i - hsb);
-
-							hist ^= UInt(1) << hsb;
-							i = hsb;
-						}
-						if constexpr (SynapseWithParams<Syn, Neur, Params>)
-							edge.second->update(dt, true, false, i, _params);
-						else
-							edge.second->update(dt, true, false, i);
-					}
-
-					if constexpr (Deliver) {
-						SPICE_INV(edge.first < size);
-						if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
-							Syn::deliver(dst_neurons[edge.first]);
-						else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
-							Syn::deliver(dst_neurons[edge.first], _params);
-						else if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
-							edge.second->deliver(dst_neurons[edge.first]);
-						else
-							edge.second->deliver(dst_neurons[edge.first], _params);
-					}
+					if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
+						edge.second->deliver(dst_neurons[edge.first]);
 				}
-			});
 
-			if constexpr (PlasticSynapse<Syn>)
-				_ages[src] = iter;
+				if constexpr (StatelessSynapseWithParams<Syn, Neur, Params> && Deliver)
+					Syn::deliver(dst_neurons[edge.first], _params);
+			}
 		}
 	}
 };
