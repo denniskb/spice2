@@ -74,17 +74,17 @@ private:
 						while (hist) {
 							Int hsb = 63 - __builtin_clzl(hist);
 							if constexpr (SynapseWithParams<Syn, Neur, Params>)
-								edge.second->update(dt, hsb == 0, true, i - hsb, _params);
+								edge.second->update(dt, false, true, i - hsb, _params);
 							else
-								edge.second->update(dt, hsb == 0, true, i - hsb);
+								edge.second->update(dt, false, true, i - hsb);
 
 							hist ^= UInt(1) << hsb;
 							i = hsb;
 						}
 						if constexpr (SynapseWithParams<Syn, Neur, Params>)
-							edge.second->update(dt, i > 0, false, i, _params);
+							edge.second->update(dt, true, false, i, _params);
 						else
-							edge.second->update(dt, i > 0, false, i);
+							edge.second->update(dt, true, false, i);
 					}
 
 					if constexpr (Deliver) {
