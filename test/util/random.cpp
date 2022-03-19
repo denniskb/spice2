@@ -8,7 +8,7 @@
 using namespace spice;
 using namespace spice::util;
 
-static constexpr Int n_choose_k(Int const n, Int const k) {
+static Int n_choose_k(Int const n, Int const k) {
 	SPICE_PRE(0 <= k && k <= n);
 	SPICE_PRE(0 <= n && n <= 20);
 
