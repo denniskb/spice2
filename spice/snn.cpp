@@ -14,9 +14,9 @@ void snn::step() {
 		pop->update(_delay, dt, rng);
 
 	for (auto& c : _connections)
-		c.synapse->update(_iter, dt, c.to->history());
+		c.synapse->update(_iter, dt, c.to->history(), c.from->history());
 
-	if (_iter >= _delay)
+	if (_iter >= _delay - 1)
 		for (auto& c : _connections)
 			c.synapse->deliver(_iter, dt, c.from->spikes(_delay - 1), c.to->neurons(), c.to->size(),
 			                   c.from->history());

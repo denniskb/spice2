@@ -15,10 +15,11 @@
 
 namespace spice::detail {
 struct SynapsePopulation {
-	virtual ~SynapsePopulation()                                                       = default;
+	virtual ~SynapsePopulation()                           = default;
 	virtual void deliver(Int iter, float dt, std::span<Int32 const> spikes, void* pool, Int size,
-	                     std::span<UInt const> history)                                = 0;
-	virtual void update(Int const iter, float const dt, std::span<UInt const> history) = 0;
+	                     std::span<UInt const> history)    = 0;
+	virtual void update(Int const iter, float const dt, std::span<UInt const> history,
+	                    std::span<UInt const> src_history) = 0;
 };
 
 template <class Syn, StatefulNeuron Neur, class Params = util::empty_t>
@@ -38,12 +39,13 @@ public:
 		SPICE_INV(size >= 0);
 		Neur* const dst_neurons = static_cast<Neur*>(ptr);
 
-		_update<true>(iter, dt, spikes, dst_neurons, size, history);
+		_update<true>(iter, dt, spikes, dst_neurons, size, history, {});
 	}
 
-	void update(Int const iter, float const dt, std::span<UInt const> history) override {
+	void update(Int const iter, float const dt, std::span<UInt const> history,
+	            std::span<UInt const> src_history) override {
 		if constexpr (PlasticSynapse<Syn>)
-			_update<false>(iter, dt, util::range(_ages.size()), nullptr, 0, history);
+			_update<false>(iter, dt, util::range(_ages.size()), nullptr, 0, history, src_history);
 	}
 
 private:
@@ -52,23 +54,26 @@ private:
 	Params _params;
 
 	template <bool Deliver>
-	void _update(Int const iter, float const dt, auto spikes, Neur* const dst_neurons, Int const,
-	             std::span<UInt const> history) {
+	void _update(Int const, float const dt, auto spikes, Neur* const dst_neurons, Int const,
+	             std::span<UInt const> history, std::span<UInt const> src_history) {
 		for (auto src : spikes) {
+			// TODO: Hard-coded delay
+			bool pre = false;
+			if (src_history.size() > 0)
+				pre = src_history[src] & (UInt(1) << 15);
+
 			for (auto edge : _graph.neighbors(src)) {
-				if constexpr (PlasticSynapse<Syn> && !Deliver) // post() + update()
-					edge.second->update(dt, false, history[edge.first] & 1, 1);
+				// update
+				if constexpr (PlasticSynapse<Syn> && !Deliver)
+					edge.second->update(dt, pre, history[edge.first] & 1, 1);
 
-				if constexpr (PlasticSynapse<Syn> && Deliver) { // pre()
-					// TODO: Hard-coded delay
-					edge.second->update(dt, iter >= 14, false, 0);
-
-					if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
+				// deliver
+				if constexpr (Deliver) {
+					if constexpr (StatelessSynapseWithParams<Syn, Neur, Params> && Deliver)
+						Syn::deliver(dst_neurons[edge.first], _params);
+					else if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
 						edge.second->deliver(dst_neurons[edge.first]);
 				}
-
-				if constexpr (StatelessSynapseWithParams<Syn, Neur, Params> && Deliver)
-					Syn::deliver(dst_neurons[edge.first], _params);
 			}
 		}
 	}
