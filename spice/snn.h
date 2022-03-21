@@ -65,7 +65,7 @@ private:
 		detail::NeuronPopulation* to       = nullptr;
 	};
 
-	Int _iter = 0;
+	Int _time = 0;
 	float _dt;
 	Int _max_delay;
 	util::kahan_sum<float> _simtime;

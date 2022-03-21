@@ -65,31 +65,5 @@ private:
 	detail::csr<std::conditional_t<StatefulSynapse<Syn, Neur>, Syn, util::empty_t>> _graph;
 	std::vector<Int> _ages;
 	Params _params;
-
-	template <bool Deliver>
-	void _update(Int const, float const dt, auto spikes, Neur* const dst_neurons, Int const,
-	             std::span<UInt const> history, std::span<UInt const> src_history) {
-		for (auto src : spikes) {
-			// TODO: Hard-coded delay
-			bool pre = false;
-			if (src_history.size() > 0)
-				// TODO: Enforce delay <= 63
-				pre = src_history[src] & (1_u64 << 60);
-
-			for (auto edge : _graph.neighbors(src)) {
-				// update
-				if constexpr (PlasticSynapse<Syn> && !Deliver)
-					edge.second->update(dt, pre, history[edge.first] & 1, 1);
-
-				// deliver
-				if constexpr (Deliver) {
-					if constexpr (StatelessSynapseWithParams<Syn, Neur, Params> && Deliver)
-						Syn::deliver(dst_neurons[edge.first], _params);
-					else if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
-						edge.second->deliver(dst_neurons[edge.first]);
-				}
-			}
-		}
-	}
 };
 }
