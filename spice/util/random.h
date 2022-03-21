@@ -234,7 +234,7 @@ constexpr Real generate_canonical(auto& rng) {
 	if constexpr (rng_size < sizeof(Real))
 		iid = (iid << (8 * rng_size)) | rng();
 
-	return ((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) / Real(Int(1) << digits);
+	return ((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) / Real(1_u64 << digits);
 }
 
 template <std::floating_point Real, bool LeftOpen = false>

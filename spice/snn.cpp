@@ -8,18 +8,17 @@ void snn::step() {
 	util::xoroshiro64_128p rng(_seed++);
 	float const dt = _simtime += _dt;
 	if (_simtime >= 1)
-		_simtime = {};
+		_simtime.reset();
 
 	for (auto& pop : _neurons)
-		pop->update(_delay, dt, rng);
+		pop->update(_max_delay, dt, rng);
 
 	for (auto& c : _connections)
-		c.synapse->update(_iter, dt, c.to->history(), c.from->history());
+		c.synapse->update(_max_delay, _dt, c.from->history(), c.to->history());
 
-	if (_iter >= _delay - 1)
+	if (_iter >= _max_delay - 1)
 		for (auto& c : _connections)
-			c.synapse->deliver(_iter, dt, c.from->spikes(_delay - 1), c.to->neurons(), c.to->size(),
-			                   c.from->history());
+			c.synapse->deliver(c.from->spikes(_max_delay - 1), c.to->neurons(), c.to->size());
 
 	_iter++;
 }

@@ -8,7 +8,7 @@
 			"name": "Debug Test",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/build/debug/test",
+			"program": "${workspaceFolder}/build/debug/brunel+",
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"externalConsole": false,

@@ -1,8 +1,8 @@
-#include <algorithm>
-
-#include "matplot.h"
+#include <iostream>
 
 #include "spice/snn.h"
+
+#include "matplot.h"
 
 using namespace spice;
 using namespace spice::util;
@@ -70,11 +70,9 @@ struct SynPlast {
 int main() {
 	using namespace matplot;
 
-	int const N     = 20000;
-	int const delay = 15;
-	float const DT  = 1e-4;
+	int const N = 20000;
 
-	snn brunel(DT, delay, {1337});
+	snn brunel(1e-4, 15e-4, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
@@ -89,7 +87,17 @@ int main() {
 	for (Int i : range(300)) {
 		brunel.step();
 
-		scatter_spikes({I, E, P});
+		//scatter_spikes({I, E, P});
+		for (auto spike : P->spikes(0))
+			std::cout << spike << ',';
+
+		for (auto spike : E->spikes(0))
+			std::cout << (spike + P->size()) << ',';
+
+		for (auto spike : I->spikes(0))
+			std::cout << (spike + P->size() + E->size()) << ',';
+
+		std::cout << '\n';
 
 		(void)i;
 	}
