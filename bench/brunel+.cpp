@@ -61,14 +61,18 @@ struct SynPlast {
 		                   post * 0.01f * (1.0f - W) * std::exp(-Zpre * dtInv),
 		               0.0f, 0.0003f);
 	}
+	void skip(float const dt, Int const n) {
+		float const TstdpInv = 1.0f / 0.02f;
+
+		Zpre *= std::pow(1 - dt * TstdpInv, n);
+		Zpost *= std::pow(1 - dt * TstdpInv, n);
+	}
 };
 
 static void brunel_plus(benchmark::State& state) {
-	int const N    = 20000;
-	int const d    = 15;
-	float const DT = 1e-4;
+	int const N = 20000;
 
-	snn brunel(DT, d, {1337});
+	snn brunel(1e-4, 15e-4, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);

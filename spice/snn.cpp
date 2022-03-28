@@ -13,7 +13,7 @@ void snn::step() {
 	for (auto& pop : _neurons)
 		pop->update(_max_delay, dt, rng);
 
-	if (_time % 48 == 0)
+	if (_time % 64 == 0)
 		for (auto& c : _connections)
 			c.synapse->update(_time, _max_delay, _dt, c.from->history(), c.to->history());
 

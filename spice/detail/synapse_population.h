@@ -41,19 +41,46 @@ public:
 		Neur* const dst_neurons = static_cast<Neur*>(ptr);
 
 		for (auto src : spikes) {
-			bool pre = false;
-			UInt age = 0;
+			Int const age = _ages[src] & (~0_u64 >> 1);
 			if constexpr (PlasticSynapse<Syn>) {
-				pre = _ages[src] >> 63;
-				age = _ages[src] & (~0_u64 >> 1);
-			}
-			for (auto edge : _graph.neighbors(src)) {
-				if constexpr (PlasticSynapse<Syn>) {
-					for (Int i = age; i <= time; i++)
-						edge.second->update(dt, (i == age) & pre,
-						                    dst_history[edge.first] & (1_u64 << (time - i)), 1);
-				}
+				if (time >= age) {
+					bool const pre = _ages[src] >> 63;
+					for (auto edge : _graph.neighbors(src)) {
+						//if (time > age && dst_history[edge.first])
+						//	printf("src: %ld, dst: %d, age: %lu, time: %ld\n", src, edge.first, age, time);
 
+						edge.second->update(dt, pre, dst_history[edge.first] & (1_u64 << (time - age)), 1);
+						//if (time > age && dst_history[edge.first])
+						//	printf("update(%d, %lu)\n", pre, dst_history[edge.first] & (1_u64 << (time - age)));
+
+						UInt hist  = dst_history[edge.first] & (~0_u64 >> (64 - time + age));
+						Int prefix = 64 - time + age;
+						while (hist) {
+							Int lz = __builtin_clzl(hist) - prefix;
+							edge.second->skip(dt, lz);
+							//printf("skip(%ld)\n", lz);
+							edge.second->update(dt, false, true, 1);
+							//printf("update(0, 1)\n");
+							hist ^= 1_u64 << (63 - lz - prefix);
+							prefix += lz + 1;
+						}
+						edge.second->skip(dt, 64 - prefix);
+						//if (time > age && dst_history[edge.first])
+						//	printf("skip(%ld)\n", 64 - prefix);
+						//for (Int i = age; i <= time; i++) {
+						//	edge.second->update(dt, (i == age) & pre,
+						//	                    dst_history[edge.first] & (1_u64 << (time - i)), 1);
+						//
+						//	if (time > age && dst_history[edge.first])
+						//		printf("update(%d, %lu)\n", (i == age) & pre,
+						//		       dst_history[edge.first] & (1_u64 << (time - i)));
+						//}
+					}
+				}
+				_ages[src] = (time + 1) | (1_u64 << 63);
+			}
+
+			for (auto edge : _graph.neighbors(src)) {
 				SPICE_INV(edge.first < size);
 				// TODO: Handle remaining cases
 				if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
@@ -71,11 +98,37 @@ public:
 		if constexpr (PlasticSynapse<Syn>) {
 			for (auto src : util::range(src_history.size())) {
 				bool const pre = _ages[src] >> 63;
-				UInt const age = _ages[src] & (~0_u64 >> 1);
+				Int const age  = _ages[src] & (~0_u64 >> 1);
 				for (auto edge : _graph.neighbors(src)) {
-					for (Int i = age; i <= time; i++)
-						edge.second->update(dt, (i == age) & pre,
-						                    dst_history[edge.first] & (1_u64 << (time - i)), 1);
+					//if (time > age && dst_history[edge.first])
+					//	printf("src: %ld, dst: %d, age: %lu, time: %ld\n", src, edge.first, age, time);
+
+					edge.second->update(dt, pre, dst_history[edge.first] & (1_u64 << (time - age)), 1);
+					//if (time > age && dst_history[edge.first])
+					//	printf("update(%d, %lu)\n", pre, dst_history[edge.first] & (1_u64 << (time - age)));
+
+					UInt hist  = dst_history[edge.first] & (~0_u64 >> (64 - time + age));
+					Int prefix = 64 - time + age;
+					while (hist) {
+						Int lz = __builtin_clzl(hist) - prefix;
+						edge.second->skip(dt, lz);
+						//printf("skip(%ld)\n", lz);
+						edge.second->update(dt, false, true, 1);
+						//printf("update(0, 1)\n");
+						hist ^= 1_u64 << (63 - lz - prefix);
+						prefix += lz + 1;
+					}
+					edge.second->skip(dt, 64 - prefix);
+					//if (time > age && dst_history[edge.first])
+					//	printf("skip(%ld)\n", 64 - prefix);
+					//for (Int i = age; i <= time; i++) {
+					//	edge.second->update(dt, (i == age) & pre,
+					//	                    dst_history[edge.first] & (1_u64 << (time - i)), 1);
+					//
+					//	if (time > age && dst_history[edge.first])
+					//		printf("update(%d, %lu)\n", (i == age) & pre,
+					//		       dst_history[edge.first] & (1_u64 << (time - i)));
+					//}
 				}
 				_ages[src] = time + 1;
 			}

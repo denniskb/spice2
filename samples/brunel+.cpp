@@ -65,6 +65,12 @@ struct SynPlast {
 		Zpre -= Zpre * dt * TstdpInv;
 		Zpost -= Zpost * dt * TstdpInv;
 	}
+	void skip(float const dt, Int const n) {
+		float const TstdpInv = 1.0f / 0.02f;
+
+		Zpre *= std::pow(1 - dt * TstdpInv, n);
+		Zpost *= std::pow(1 - dt * TstdpInv, n);
+	}
 };
 
 int main() {
