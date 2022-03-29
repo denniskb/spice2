@@ -1,8 +1,8 @@
-#include <algorithm>
-
-#include "matplot.h"
+#include <iostream>
 
 #include "spice/snn.h"
+
+#include "matplot.h"
 
 using namespace spice;
 using namespace spice::util;
@@ -51,27 +51,34 @@ struct SynPlast {
 	float Zpost = 0;
 
 	void deliver(lif& to) { to.V += W; }
-	void update(float const dt, bool const pre, bool const post, Int const n) {
+	void update(float const dt, bool const pre, bool const post, Int const) {
 		float const TstdpInv = 1.0f / 0.02f;
 		float const dtInv    = 1.0f / dt;
-
-		Zpre  = std::fmaf(Zpre, std::pow(1 - dt * TstdpInv, n), pre);
-		Zpost = std::fmaf(Zpost, std::pow(1 - dt * TstdpInv, n), post);
 
 		W = std::clamp(W - pre * 0.0202f * W * std::exp(-Zpost * dtInv) +
 		                   post * 0.01f * (1.0f - W) * std::exp(-Zpre * dtInv),
 		               0.0f, 0.0003f);
+
+		Zpre += pre;
+		Zpost += post;
+
+		Zpre -= Zpre * dt * TstdpInv;
+		Zpost -= Zpost * dt * TstdpInv;
+	}
+	void skip(float const dt, Int const n) {
+		float const TstdpInv = 1.0f / 0.02f;
+
+		Zpre *= std::pow(1 - dt * TstdpInv, n);
+		Zpost *= std::pow(1 - dt * TstdpInv, n);
 	}
 };
 
 int main() {
 	using namespace matplot;
 
-	int const N     = 20000;
-	int const delay = 15;
-	float const DT  = 1e-4;
+	int const N = 20000;
 
-	snn brunel(DT, delay, {1337});
+	snn brunel(1e-4, 15e-4, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
@@ -86,10 +93,21 @@ int main() {
 	for (Int i : range(300)) {
 		brunel.step();
 
+#if 1
 		scatter_spikes({I, E, P});
+		pause(0.05);
+#else
+		for (auto spike : P->spikes(0))
+			std::cout << spike << ',';
 
-		if (i % 64)
-			pause(0.05);
+		for (auto spike : E->spikes(0))
+			std::cout << (spike + P->size()) << ',';
+
+		for (auto spike : I->spikes(0))
+			std::cout << (spike + P->size() + E->size()) << ',';
+
+		std::cout << '\n';
+#endif
 		(void)i;
 	}
 	return 0;

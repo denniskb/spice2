@@ -11,6 +11,8 @@ using UInt16 = std::uint16_t;
 using UInt32 = std::uint32_t;
 using UInt   = std::uint64_t;
 
+constexpr UInt operator"" _u64(unsigned long long int x) { return UInt(x); }
+
 struct UInt128 {
 	UInt lo;
 	UInt hi;

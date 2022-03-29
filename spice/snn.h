@@ -15,13 +15,15 @@
 namespace spice {
 class snn {
 public:
-	snn(float const dt, Int const max_delay, util::seed_seq seq) :
-	_dt(dt), _delay(max_delay), _seed(std::move(seq)) {}
+	snn(float const dt, float const max_delay, util::seed_seq seq) :
+	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seq)) {
+		SPICE_PRE(_max_delay <= 63 && "The maximum delay must not exceed 63dt");
+	}
 
 	template <Neuron Neur, class Params = util::empty_t>
 	detail::neuron_population<Neur, Params>* add_population(Int const size, Params const params = {}) {
 		_neurons.push_back(
-		    std::make_unique<detail::neuron_population<Neur, Params>>(size, _delay, std::move(params)));
+		    std::make_unique<detail::neuron_population<Neur, Params>>(size, _max_delay, std::move(params)));
 
 		return static_cast<detail::neuron_population<Neur, Params>*>(_neurons.back().get());
 	}
@@ -63,9 +65,9 @@ private:
 		detail::NeuronPopulation* to       = nullptr;
 	};
 
-	Int _iter = 0;
+	Int _time = 0;
 	float _dt;
-	Int _delay;
+	Int _max_delay;
 	util::kahan_sum<float> _simtime;
 	util::seed_seq _seed;
 	std::vector<std::unique_ptr<detail::NeuronPopulation>> _neurons;

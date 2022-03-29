@@ -16,6 +16,8 @@ public:
 
 	constexpr operator Real() const { return _sum; }
 
+	constexpr void reset() { _sum = 0; }
+
 private:
 	Real _c   = 0;
 	Real _sum = 0;

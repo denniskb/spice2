@@ -59,11 +59,9 @@ struct SynI {
 int main() {
 	using namespace matplot;
 
-	int const N     = 4000;
-	int const delay = 8;
-	float const DT  = 1e-4;
+	int const N = 4000;
 
-	snn vogels(DT, delay, {1337});
+	snn vogels(1e-4, 8e-4, {1337});
 	auto E = vogels.add_population<lif>(N * 8 / 10);
 	auto I = vogels.add_population<lif>(N * 2 / 10);
 

@@ -61,9 +61,6 @@
 			],
 			"group": "test",
 			"dependsOn": "Release",
-			"presentation": {
-				"close": true,
-			}
 		}
 	],
 	"inputs": [
