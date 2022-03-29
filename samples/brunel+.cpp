@@ -93,8 +93,9 @@ int main() {
 	for (Int i : range(300)) {
 		brunel.step();
 
-#if 0
+#if 1
 		scatter_spikes({I, E, P});
+		pause(0.05);
 #else
 		for (auto spike : P->spikes(0))
 			std::cout << spike << ',';

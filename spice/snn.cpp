@@ -15,12 +15,12 @@ void snn::step() {
 
 	if (_time % 64 == 0)
 		for (auto& c : _connections)
-			c.synapse->update(_time, _max_delay, _dt, c.from->history(), c.to->history());
+			c.synapse->update(_time, _dt, c.from->size(), c.to->history());
 
 	if (_time >= _max_delay - 1)
 		for (auto& c : _connections)
-			c.synapse->deliver(_time, _max_delay, _dt, c.from->spikes(_max_delay - 1), c.to->neurons(),
-			                   c.to->size(), c.from->history(), c.to->history());
+			c.synapse->deliver(_time, _dt, c.from->spikes(_max_delay - 1), c.to->neurons(), c.to->size(),
+			                   c.to->history());
 
 	_time++;
 }
