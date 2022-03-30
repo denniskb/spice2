@@ -16,9 +16,7 @@ namespace spice {
 class snn {
 public:
 	snn(float const dt, float const max_delay, util::seed_seq seq) :
-	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seq)) {
-		SPICE_PRE(_max_delay <= 63 && "The maximum delay must not exceed 63dt");
-	}
+	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seq)) {}
 
 	template <Neuron Neur, class Params = util::empty_t>
 	detail::neuron_population<Neur, Params>* add_population(Int const size, Params const params = {}) {
