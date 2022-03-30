@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(spice VERSION 0.1 DESCRIPTION "Spice SNN Simulator")
+project(spice VERSION 0.0.0 DESCRIPTION "Spice SNN Simulator")
 set(CMAKE_CXX_STANDARD 20)
 
 set(spice_assert_preconditions TRUE CACHE BOOL "Assert preconditions in release mode (recommended)")
