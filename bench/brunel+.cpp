@@ -50,7 +50,7 @@ struct SynPlast {
 	float Zpost = 0;
 
 	void deliver(lif& to) { to.V += W; }
-	void update(float const dt, bool const pre, bool const post, Int const) {
+	void update(float const dt, bool const pre, bool const post) {
 		float const TstdpInv = 1.0f / 0.02f;
 		float const dtInv    = 1.0f / dt;
 

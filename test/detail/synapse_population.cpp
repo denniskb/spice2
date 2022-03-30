@@ -27,10 +27,10 @@ struct stateful_synapse_with_params {
 };
 
 struct plastic_synapse : stateful_synapse {
-	void update(float, bool, bool, Int) {}
+	void update(float, bool, bool) {}
 };
 struct plastic_synapse_with_params : stateful_synapse_with_params {
-	void update(float, bool, bool, Int, int) {}
+	void update(float, bool, bool, int) {}
 };
 
 static_assert(!StatelessSynapseWithoutParams<int, stateful_neuron>);

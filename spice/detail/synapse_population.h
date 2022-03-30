@@ -58,26 +58,29 @@ private:
 		static_assert(Deliver || PlasticSynapse<Syn>);
 
 		for (auto src : spikes) {
-			bool const pre = PlasticSynapse<Syn> ? _ages[src] >> 63 : false;
-			Int const age  = PlasticSynapse<Syn> ? _ages[src] & ~(1_u64 << 63) : time + 1;
+			bool const pre   = PlasticSynapse<Syn> ? _ages[src] >> 63 : false;
+			Int const age    = PlasticSynapse<Syn> ? _ages[src] & ~(1_u64 << 63) : time + 1;
+			Int const prefix = 63 + pre - time + age;
+			UInt const mask  = ~0_u64 >> prefix;
 
-			util::invoke(time >= age, [&]<bool Outdated>() {
+			util::invoke(pre, time >= age, [&]<bool Pre, bool Outdated>() {
 				for (auto edge : _graph.neighbors(src)) {
 					if constexpr (PlasticSynapse<Syn> && Outdated) {
 						SPICE_INV(edge.first < dst_history.size());
-						// TODO: Move pre into compile-time, don't special case first update call.
-						edge.second->update(dt, pre, dst_history[edge.first] & (1_u64 << (time - age)), 1);
-						UInt hist  = dst_history[edge.first] & (~0_u64 >> (64 - time + age));
-						Int prefix = 64 - time + age;
+						UInt hist = dst_history[edge.first];
+						if constexpr (Pre)
+							edge.second->update(dt, true, hist & (1_u64 << (time - age)));
+
+						hist &= mask;
+						Int p = prefix;
 						while (hist) {
-							// TODO: Cleanup, optimize
-							Int lz = __builtin_clzl(hist) - prefix;
-							edge.second->skip(dt, lz);
-							edge.second->update(dt, false, true, 1);
-							hist ^= 1_u64 << (63 - lz - prefix);
-							prefix += lz + 1;
+							Int const lz = __builtin_clzl(hist);
+							edge.second->skip(dt, lz - p);
+							edge.second->update(dt, false, true);
+							hist ^= 1_u64 << (63 - lz);
+							p = lz + 1;
 						}
-						edge.second->skip(dt, 64 - prefix);
+						edge.second->skip(dt, 64 - p);
 					}
 
 					if constexpr (Deliver) {

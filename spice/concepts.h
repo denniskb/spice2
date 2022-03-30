@@ -83,9 +83,9 @@ concept StatefulSynapseWithParams = requires(T t, Neur& n, Params params) {
 };
 
 template <class T>
-concept PlasticSynapse = requires(T t, float dt, bool pre, bool post, Int n, util::any_t params) {
+concept PlasticSynapse = requires(T t, float dt, bool pre, bool post, util::any_t params) {
 	requires(
-	    requires { t.update(dt, pre, post, n); } || requires { t.update(dt, pre, post, n, params); });
+	    requires { t.update(dt, pre, post); } || requires { t.update(dt, pre, post, params); });
 };
 
 template <class T, class Neur>
