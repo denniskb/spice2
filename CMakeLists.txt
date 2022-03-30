@@ -4,7 +4,7 @@ project(spice VERSION 0.1 DESCRIPTION "Spice SNN Simulator")
 set(CMAKE_CXX_STANDARD 20)
 
 set(spice_assert_preconditions TRUE CACHE BOOL "Assert preconditions in release mode (recommended)")
-set(spice_assert_invariants FALSE CACHE BOOL "Assert invariants in release mode (for developers only)")
+set(spice_assert_invariants TRUE CACHE BOOL "Assert invariants in release mode (for developers only)")
 set(spice_build_tests FALSE CACHE BOOL "Build unit tests? (optional, for developers only)")
 set(spice_build_benchmarks FALSE CACHE BOOL "Build performance benchmarks? (optional, for developers only)")
 
