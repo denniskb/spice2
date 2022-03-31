@@ -48,19 +48,20 @@ struct SynI {
 int main() {
 	using namespace matplot;
 
-	int const N = 20000;
+	int const N       = 20000;
+	float const delay = 15e-4;
 
-	snn brunel(1e-4, 15e-4, {1337});
+	snn brunel(/*dt*/ 1e-4, delay, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
 
-	brunel.connect<SynE>(P, E, fixed_probability(0.1), N);
-	brunel.connect<SynE>(P, I, fixed_probability(0.1), N);
-	brunel.connect<SynE>(E, E, fixed_probability(0.1), N);
-	brunel.connect<SynE>(E, I, fixed_probability(0.1), N);
-	brunel.connect<SynI>(I, E, fixed_probability(0.1), N);
-	brunel.connect<SynI>(I, I, fixed_probability(0.1), N);
+	brunel.connect<SynE>(P, E, fixed_probability(0.1), delay, N);
+	brunel.connect<SynE>(P, I, fixed_probability(0.1), delay, N);
+	brunel.connect<SynE>(E, E, fixed_probability(0.1), delay, N);
+	brunel.connect<SynE>(E, I, fixed_probability(0.1), delay, N);
+	brunel.connect<SynI>(I, E, fixed_probability(0.1), delay, N);
+	brunel.connect<SynI>(I, I, fixed_probability(0.1), delay, N);
 
 	for (Int i : range(300)) {
 		brunel.step();

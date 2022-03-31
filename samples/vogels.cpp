@@ -59,16 +59,17 @@ struct SynI {
 int main() {
 	using namespace matplot;
 
-	int const N = 4000;
+	int const N       = 4000;
+	float const delay = 8e-4;
 
-	snn vogels(1e-4, 8e-4, {1337});
+	snn vogels(/*dt*/ 1e-4, delay, {1337});
 	auto E = vogels.add_population<lif>(N * 8 / 10);
 	auto I = vogels.add_population<lif>(N * 2 / 10);
 
-	vogels.connect<SynE>(E, E, fixed_probability(0.02), N);
-	vogels.connect<SynE>(E, I, fixed_probability(0.02), N);
-	vogels.connect<SynI>(I, E, fixed_probability(0.02), N);
-	vogels.connect<SynI>(I, I, fixed_probability(0.02), N);
+	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay, N);
+	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay, N);
+	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, N);
+	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, N);
 
 	for (Int i : range(1500)) {
 		vogels.step();

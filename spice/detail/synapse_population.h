@@ -19,6 +19,7 @@ struct SynapsePopulation {
 	virtual void deliver(Int time, float dt, std::span<Int32 const> spikes, void* ptr, Int size,
 	                     std::span<UInt const> dst_history)                                  = 0;
 	virtual void update(Int time, float dt, Int src_size, std::span<UInt const> dst_history) = 0;
+	virtual Int delay() const                                                                = 0;
 };
 
 template <class Syn, StatefulNeuron Neur, class Params = util::empty_t>
@@ -26,8 +27,11 @@ requires(util::is_empty_v<Params> ? SynapseWithoutParams<Syn, Neur> :
                                     SynapseWithParams<Syn, Neur, Params>) class synapse_population :
 public SynapsePopulation {
 public:
-	synapse_population(Connectivity& c, util::seed_seq const& seed, Params const params = {}) :
-	_graph(c, seed), _params(std::move(params)) {
+	synapse_population(Connectivity& c, util::seed_seq const& seed, Int const delay,
+	                   Params const params = {}) :
+	_graph(c, seed),
+	_delay(delay), _params(std::move(params)) {
+		SPICE_PRE(delay >= 1);
 		if constexpr (PlasticSynapse<Syn>)
 			_ages.resize(c.src_count);
 	}
@@ -47,9 +51,12 @@ public:
 			_update<false>(time, dt, util::range(src_size), {}, dst_history);
 	}
 
+	Int delay() const override { return _delay; }
+
 private:
 	detail::csr<std::conditional_t<StatefulSynapse<Syn, Neur>, Syn, util::empty_t>> _graph;
 	std::vector<UInt> _ages;
+	Int _delay;
 	Params _params;
 
 	template <bool Deliver>

@@ -28,19 +28,24 @@ public:
 
 	template <class Syn, class Params = util::empty_t, StatefulNeuron Neur, class NeurParams>
 	requires(util::is_empty_v<Params> ?
-                 SynapseWithoutParams<Syn, Neur> :
+	             SynapseWithoutParams<Syn, Neur> :
                  SynapseWithParams<Syn, Neur,
 	                               Params>) void connect(detail::NeuronPopulation* source,
 	                                                     detail::neuron_population<Neur, NeurParams>* target,
-	                                                     Connectivity& c, Params const params = {}) {
+	                                                     Connectivity& c, float const delay,
+	                                                     Params const params = {}) {
 		static_assert(
 		    !requires { &Syn::update; } || PlasticSynapse<Syn>,
 		    "It looks like you're trying to define a plastic synapse (your synapse has an update() method). "
 		    "However, your synapse type does not conform to the PlasticSynapse concept.");
 
+		Int const d = std::round(delay / _dt);
+		SPICE_PRE(d <= _max_delay &&
+		          "The delay of a synapse population may not exceed the maximum delay of the network.");
+
 		_synapses.push_back(
 		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur, Params>(
-		        c(source->size(), target->size()), _seed++, std::move(params))));
+		        c(source->size(), target->size()), _seed++, d, std::move(params))));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 
@@ -50,8 +55,8 @@ public:
 
 	template <class Syn, class Params = util::empty_t, StatefulNeuron Neur, class NeurParams>
 	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur, NeurParams>* target,
-	             Connectivity&& c, Params const params = {}) {
-		connect<Syn, Params, Neur, NeurParams>(source, target, c, std::move(params));
+	             Connectivity&& c, float const delay, Params const params = {}) {
+		connect<Syn, Params, Neur, NeurParams>(source, target, c, delay, std::move(params));
 	}
 
 	void step();
