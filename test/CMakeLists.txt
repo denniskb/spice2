@@ -9,5 +9,5 @@ util/scope.cpp
 snn.cpp)
 
 target_compile_options(test PRIVATE ${warning_flags} ${math_flags})
-target_include_directories(test PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/third_party/googletest/googletest/include)
+target_include_directories(test PRIVATE ${CMAKE_SOURCE_DIR}/spice/include ${CMAKE_SOURCE_DIR}/third_party/googletest/googletest/include)
 target_link_libraries(test PRIVATE spice gtest_main)
