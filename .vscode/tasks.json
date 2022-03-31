@@ -5,75 +5,94 @@
 	"tasks": [
 		// build tasks
 		{
-			"label": "Third Party",
+			"label": "Configure",
 			"type": "shell",
-			"command": "chmod 700 build_third_party.sh && ./build_third_party.sh",
-			"group": "build",
+			"command": "./configure.sh",
+			"args": [
+				"${input:config}"
+			],
+			"group": "build"
 		},
 		{
-			"label": "Clean",
+			"label": "Build",
 			"type": "shell",
-			"command": "rm -rf build",
-			"group": "build",
-		},
-		{
-			"label": "Debug",
-			"type": "shell",
-			"command": "mkdir -p build/debug && cd build/debug && cmake -DCMAKE_BUILD_TYPE=Debug ../.. && make -j 8",
-			"group": "build",
+			"command": "./build.sh",
+			"args": [
+				"${input:build}"
+			],
+			"group": "build"
 		},
 		{
 			"label": "Release",
 			"type": "shell",
-			"command": "mkdir -p build/release && cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2\" ../.. && make -j 8",
-			"group": "build",
+			"command": "./build.sh release",
+			"group": "none"
 		},
 		{
-			"label": "Perf",
+			"label": "Debug",
 			"type": "shell",
-			"command": "mkdir -p build/perf && cd build/perf && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O2 -ggdb\" ../.. && make -j 8",
-			"group": "build",
+			"command": "./build.sh debug",
+			"group": "none"
 		},
 		// test/run tasks
 		{
 			"label": "Unit Tests",
 			"type": "shell",
-			"command": "./build/release/test",
+			"command": "./build/release/test/test",
 			"group": "test",
-			"dependsOn": "Release",
+			"dependsOn": "Release"
 		},
 		{
 			"label": "Benchmarks",
 			"type": "shell",
-			"command": "./build/release/bench",
+			"command": "./build/release/bench/bench",
 			"args": [
-				"--benchmark_filter=${input:bench_filter}"
+				"--benchmark_filter=${input:bench}"
 			],
 			"group": "test",
-			"dependsOn": "Release",
+			"dependsOn": "Release"
 		},
 		{
 			"label": "Samples",
 			"type": "shell",
 			"command": "./samples/runsample.sh",
 			"args": [
-				"${input:sample_filter}"
+				"${input:sample}"
 			],
 			"group": "test",
-			"dependsOn": "Release",
+			"dependsOn": "Release"
 		}
 	],
 	"inputs": [
 		{
-			"id": "bench_filter",
+			"id": "config",
+			"type": "pickString",
+			"options": [
+				"user",
+				"developer"
+			],
+			"default": "user",
+			"description": "configure for user/developer"
+		},
+		{
+			"id": "build",
+			"type": "pickString",
+			"options": [
+				"release",
+				"debug",
+				"perf"
+			],
+			"default": "release",
+			"description": "build mode"
+		},
+		{
+			"id": "bench",
 			"type": "promptString",
-			"default": "",
 			"description": "benchmark name"
 		},
 		{
-			"id": "sample_filter",
+			"id": "sample",
 			"type": "promptString",
-			"default": "",
 			"description": "sample name"
 		}
 	]

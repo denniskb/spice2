@@ -5,4 +5,4 @@
 
 BASE_FOLDER=$(pwd)
 
-$BASE_FOLDER/build/release/$1
+$BASE_FOLDER/build/release/samples/$1
