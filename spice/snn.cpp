@@ -1,6 +1,6 @@
 #include "spice/snn.h"
 
-#include "spice/snn_info.h"
+#include "spice/sim_info.h"
 #include "spice/util/random.h"
 
 using namespace spice;
@@ -11,7 +11,7 @@ void snn::step() {
 	if (_simtime >= 1)
 		_simtime.reset();
 
-	snn_info info{std::accumulate(_neurons.begin(), _neurons.end(), 0,
+	sim_info info{std::accumulate(_neurons.begin(), _neurons.end(), 0,
 	                              [](auto i, auto const& n) { return i + n->size(); }),
 	              util::xoroshiro64_128p(_seed++)};
 

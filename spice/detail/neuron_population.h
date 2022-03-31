@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "spice/concepts.h"
-#include "spice/snn_info.h"
+#include "spice/sim_info.h"
 #include "spice/util/assert.h"
 #include "spice/util/meta.h"
 #include "spice/util/random.h"
@@ -17,7 +17,7 @@ namespace spice::detail {
 struct NeuronPopulation {
 	virtual ~NeuronPopulation()                              = default;
 	virtual Int size() const                                 = 0;
-	virtual void update(Int delay, float dt, snn_info& info) = 0;
+	virtual void update(Int delay, float dt, sim_info& info) = 0;
 	virtual void* neurons()                                  = 0;
 	virtual std::span<Int32 const> spikes(Int age) const     = 0;
 	virtual void plastic()                                   = 0;
@@ -43,7 +43,7 @@ public:
 
 	Int size() const override { return _size; }
 
-	void update(Int const delay, float const dt, snn_info& info) override {
+	void update(Int const delay, float const dt, sim_info& info) override {
 		SPICE_INV(delay >= 1);
 
 		if (_spike_counts.size() == delay) {

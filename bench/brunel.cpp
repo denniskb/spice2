@@ -7,7 +7,7 @@ using namespace spice;
 using namespace spice::util;
 
 struct poisson {
-	static bool update(float const dt, snn_info& info) {
+	static bool update(float const dt, sim_info& info) {
 		float const firing_rate = 20; //Hz
 		return util::generate_canonical<float>(info.rng) < (firing_rate * dt);
 	}
@@ -17,7 +17,7 @@ struct lif {
 	float V   = 0;
 	int Twait = 0;
 
-	bool update(float const dt, snn_info&) {
+	bool update(float const dt, sim_info&) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
@@ -37,11 +37,11 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to, snn_info& info) { to.V += (0.0001f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V += (0.0001f * 20'000) / info.N; }
 };
 
 struct SynI {
-	static void deliver(lif& to, snn_info& info) { to.V -= (0.0005f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V -= (0.0005f * 20'000) / info.N; }
 };
 
 static void brunel(benchmark::State& state) {

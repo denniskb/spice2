@@ -8,30 +8,30 @@ using namespace spice::util;
 
 struct stateless_neuron {
 	static bool fire;
-	static bool update(float, snn_info&) { return fire; }
+	static bool update(float, sim_info&) { return fire; }
 };
 bool stateless_neuron::fire = false;
 
 struct stateful_neuron {
 	int i = 0;
-	bool update(float dt, snn_info&) {
+	bool update(float dt, sim_info&) {
 		i++;
 		return dt >= 0.5f;
 	}
 };
 struct stateless_neuron_with_params {
-	static bool update(float, snn_info&, bool p) { return p; }
+	static bool update(float, sim_info&, bool p) { return p; }
 };
 struct stateful_neuron_with_params {
 	int i = 0;
-	bool update(float, snn_info&, bool p) {
+	bool update(float, sim_info&, bool p) {
 		i++;
 		return p;
 	}
 };
 
 TEST(NeuronPopulation, Stateless) {
-	snn_info info{1, xoroshiro64_128p({1337})};
+	sim_info info{1, xoroshiro64_128p({1337})};
 	neuron_population<stateless_neuron> pop(5, 2);
 	pop.plastic();
 	stateless_neuron::fire = false;
@@ -51,7 +51,7 @@ TEST(NeuronPopulation, Stateless) {
 }
 
 TEST(NeuronPopulation, StatelessWithParams) {
-	snn_info info{1, xoroshiro64_128p({1337})};
+	sim_info info{1, xoroshiro64_128p({1337})};
 	{
 		neuron_population<stateless_neuron_with_params, bool> pop(5, 1, false);
 		pop.plastic();
@@ -75,7 +75,7 @@ TEST(NeuronPopulation, StatelessWithParams) {
 }
 
 TEST(NeuronPopulation, Stateful) {
-	snn_info info{1, xoroshiro64_128p({1337})};
+	sim_info info{1, xoroshiro64_128p({1337})};
 	neuron_population<stateful_neuron> pop(5, 1);
 	pop.plastic();
 	for (Int i : range(5))
@@ -100,7 +100,7 @@ TEST(NeuronPopulation, Stateful) {
 }
 
 TEST(NeuronPopulation, StatefulWithParams) {
-	snn_info info{1, xoroshiro64_128p({1337})};
+	sim_info info{1, xoroshiro64_128p({1337})};
 	{
 		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, false);
 		pop.plastic();

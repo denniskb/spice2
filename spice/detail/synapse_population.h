@@ -16,9 +16,9 @@
 namespace spice::detail {
 struct SynapsePopulation {
 	virtual ~SynapsePopulation()                                      = default;
-	virtual void deliver(Int time, float dt, snn_info& info, std::span<Int32 const> spikes, void* ptr,
+	virtual void deliver(Int time, float dt, sim_info& info, std::span<Int32 const> spikes, void* ptr,
 	                     Int size, std::span<UInt const> dst_history) = 0;
-	virtual void update(Int time, float dt, snn_info& info, Int src_size,
+	virtual void update(Int time, float dt, sim_info& info, Int src_size,
 	                    std::span<UInt const> dst_history)            = 0;
 	virtual Int delay() const                                         = 0;
 };
@@ -37,7 +37,7 @@ public:
 			_ages.resize(c.src_count);
 	}
 
-	void deliver(Int const time, float const dt, snn_info& info, std::span<Int32 const> spikes,
+	void deliver(Int const time, float const dt, sim_info& info, std::span<Int32 const> spikes,
 	             void* const ptr, Int const size, std::span<UInt const> dst_history) override {
 		SPICE_INV(ptr);
 		SPICE_INV(size >= 0);
@@ -46,7 +46,7 @@ public:
 		_update<true>(time, dt, info, spikes, {dst_neurons, static_cast<UInt>(size)}, dst_history);
 	}
 
-	void update(Int const time, float const dt, snn_info& info, Int const src_size,
+	void update(Int const time, float const dt, sim_info& info, Int const src_size,
 	            std::span<UInt const> dst_history) override {
 		if constexpr (PlasticSynapse<Syn>)
 			_update<false>(time, dt, info, util::range(src_size), {}, dst_history);
@@ -61,7 +61,7 @@ private:
 	Params _params;
 
 	template <bool Deliver>
-	void _update(Int const time, float const dt, snn_info& info, auto spikes, std::span<Neur> dst_neurons,
+	void _update(Int const time, float const dt, sim_info& info, auto spikes, std::span<Neur> dst_neurons,
 	             std::span<UInt const> dst_history) {
 		static_assert(Deliver || PlasticSynapse<Syn>);
 

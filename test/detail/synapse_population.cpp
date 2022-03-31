@@ -10,29 +10,29 @@ using namespace spice::util;
 
 struct stateful_neuron {
 	int v = 0;
-	bool update(float, snn_info&) { return false; }
+	bool update(float, sim_info&) { return false; }
 };
 
 struct stateless_synapse {
-	static void deliver(stateful_neuron&, snn_info&) {}
+	static void deliver(stateful_neuron&, sim_info&) {}
 };
 struct stateful_synapse {
-	void deliver(stateful_neuron&, snn_info&) {}
+	void deliver(stateful_neuron&, sim_info&) {}
 };
 struct stateless_synapse_with_params {
-	static void deliver(stateful_neuron&, snn_info&, int) {}
+	static void deliver(stateful_neuron&, sim_info&, int) {}
 };
 struct stateful_synapse_with_params {
-	void deliver(stateful_neuron&, snn_info&, int) {}
+	void deliver(stateful_neuron&, sim_info&, int) {}
 };
 
 struct plastic_synapse : stateful_synapse {
-	void update(float, bool, bool, snn_info&) {}
-	void skip(float, Int, snn_info&) {}
+	void update(float, bool, bool, sim_info&) {}
+	void skip(float, Int, sim_info&) {}
 };
 struct plastic_synapse_with_params : stateful_synapse_with_params {
-	void update(float, bool, bool, snn_info&, int) {}
-	void skip(float, Int, snn_info&, int) {}
+	void update(float, bool, bool, sim_info&, int) {}
+	void skip(float, Int, sim_info&, int) {}
 };
 
 static_assert(!StatelessSynapseWithoutParams<int, stateful_neuron>);

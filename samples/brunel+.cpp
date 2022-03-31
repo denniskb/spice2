@@ -8,7 +8,7 @@ using namespace spice;
 using namespace spice::util;
 
 struct poisson {
-	static bool update(float const dt, snn_info& info) {
+	static bool update(float const dt, sim_info& info) {
 		float const firing_rate = 20; //Hz
 		return util::generate_canonical<float>(info.rng) < (firing_rate * dt);
 	}
@@ -18,7 +18,7 @@ struct lif {
 	float V   = 0;
 	int Twait = 0;
 
-	bool update(float const dt, snn_info&) {
+	bool update(float const dt, sim_info&) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
@@ -38,11 +38,11 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to, snn_info& info) { to.V += (0.0001f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V += (0.0001f * 20'000) / info.N; }
 };
 
 struct SynI {
-	static void deliver(lif& to, snn_info& info) { to.V -= (0.0005f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V -= (0.0005f * 20'000) / info.N; }
 };
 
 struct SynPlast {
@@ -50,8 +50,8 @@ struct SynPlast {
 	float Zpre  = 0;
 	float Zpost = 0;
 
-	void deliver(lif& to, snn_info&) { to.V += W; }
-	void update(float const dt, bool const pre, bool const post, snn_info&) {
+	void deliver(lif& to, sim_info&) { to.V += W; }
+	void update(float const dt, bool const pre, bool const post, sim_info&) {
 		float const TstdpInv = 1.0f / 0.02f;
 		float const dtInv    = 1.0f / dt;
 
@@ -65,7 +65,7 @@ struct SynPlast {
 		Zpre -= Zpre * dt * TstdpInv;
 		Zpost -= Zpost * dt * TstdpInv;
 	}
-	void skip(float const dt, Int const n, snn_info&) {
+	void skip(float const dt, Int const n, sim_info&) {
 		float const TstdpInv = 1.0f / 0.02f;
 
 		Zpre *= std::pow(1 - dt * TstdpInv, n);
