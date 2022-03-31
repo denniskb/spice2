@@ -13,7 +13,7 @@ struct lif {
 	float Gin   = 0;
 	Int32 Twait = 0;
 
-	bool update(float const dt, util::xoroshiro64_128p&) {
+	bool update(float const dt, snn_info&) {
 		Int32 const Tref    = 50;           // dt
 		float const Vrest   = -0.06f;       // v
 		float const Vthres  = -0.05f;       // v
@@ -43,15 +43,15 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to, Int const N) {
-		float const W = (0.4f * 16'000'000) / (N * N); // siemens
+	static void deliver(lif& to, snn_info& info) {
+		float const W = 0.4f * (16'000'000.0 / (info.N * info.N)); // siemens
 		to.Gex += W;
 	}
 };
 
 struct SynI {
-	static void deliver(lif& to, Int const N) {
-		float const W = (5.1f * 16'000'000) / (N * N); // siemens
+	static void deliver(lif& to, snn_info& info) {
+		float const W = 5.1f * (16'000'000.0 / (info.N * info.N)); // siemens
 		to.Gin += W;
 	}
 };
@@ -66,10 +66,10 @@ int main() {
 	auto E = vogels.add_population<lif>(N * 8 / 10);
 	auto I = vogels.add_population<lif>(N * 2 / 10);
 
-	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay, N);
-	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay, N);
-	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, N);
-	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, N);
+	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay);
+	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay);
+	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay);
+	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay);
 
 	for (Int i : range(1500)) {
 		vogels.step();

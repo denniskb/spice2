@@ -8,39 +8,39 @@ using namespace spice::util;
 
 struct stateless_neuron {
 	static bool fire;
-	static bool update(float, xoroshiro64_128p&) { return fire; }
+	static bool update(float, snn_info&) { return fire; }
 };
 bool stateless_neuron::fire = false;
 
 struct stateful_neuron {
 	int i = 0;
-	bool update(float dt, xoroshiro64_128p&) {
+	bool update(float dt, snn_info&) {
 		i++;
 		return dt >= 0.5f;
 	}
 };
 struct stateless_neuron_with_params {
-	static bool update(float, xoroshiro64_128p&, bool p) { return p; }
+	static bool update(float, snn_info&, bool p) { return p; }
 };
 struct stateful_neuron_with_params {
 	int i = 0;
-	bool update(float, xoroshiro64_128p&, bool p) {
+	bool update(float, snn_info&, bool p) {
 		i++;
 		return p;
 	}
 };
 
 TEST(NeuronPopulation, Stateless) {
-	xoroshiro64_128p rng({1337});
+	snn_info info{1, xoroshiro64_128p({1337})};
 	neuron_population<stateless_neuron> pop(5, 2);
 	pop.plastic();
 	stateless_neuron::fire = false;
-	pop.update(2, 0, rng);
+	pop.update(2, 0, info);
 
 	ASSERT_EQ(pop.spikes(0).size(), 0);
 
 	stateless_neuron::fire = true;
-	pop.update(2, 0, rng);
+	pop.update(2, 0, info);
 	ASSERT_EQ(pop.spikes(1).size(), 0);
 	ASSERT_EQ(pop.spikes(0).size(), 5);
 	for (Int i : range(5))
@@ -51,11 +51,11 @@ TEST(NeuronPopulation, Stateless) {
 }
 
 TEST(NeuronPopulation, StatelessWithParams) {
-	xoroshiro64_128p rng({1337});
+	snn_info info{1, xoroshiro64_128p({1337})};
 	{
 		neuron_population<stateless_neuron_with_params, bool> pop(5, 1, false);
 		pop.plastic();
-		pop.update(1, 0, rng);
+		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 0);
 
 		for (Int i : range(5))
@@ -64,7 +64,7 @@ TEST(NeuronPopulation, StatelessWithParams) {
 	{
 		neuron_population<stateless_neuron_with_params, bool> pop(5, 1, true);
 		pop.plastic();
-		pop.update(1, 0, rng);
+		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 5);
 		for (Int i : range(5))
 			ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
@@ -75,13 +75,13 @@ TEST(NeuronPopulation, StatelessWithParams) {
 }
 
 TEST(NeuronPopulation, Stateful) {
-	xoroshiro64_128p rng({1337});
+	snn_info info{1, xoroshiro64_128p({1337})};
 	neuron_population<stateful_neuron> pop(5, 1);
 	pop.plastic();
 	for (Int i : range(5))
 		ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
-	pop.update(1, 1, rng);
+	pop.update(1, 1, info);
 	ASSERT_EQ(pop.spikes(0).size(), 5);
 	for (Int i : range(5))
 		ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
@@ -89,7 +89,7 @@ TEST(NeuronPopulation, Stateful) {
 	for (Int i : range(5))
 		ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
 
-	pop.update(1, 0, rng);
+	pop.update(1, 0, info);
 	ASSERT_EQ(pop.spikes(0).size(), 0);
 
 	for (Int i : range(5))
@@ -100,14 +100,14 @@ TEST(NeuronPopulation, Stateful) {
 }
 
 TEST(NeuronPopulation, StatefulWithParams) {
-	xoroshiro64_128p rng({1337});
+	snn_info info{1, xoroshiro64_128p({1337})};
 	{
 		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, false);
 		pop.plastic();
 		for (Int i : range(5))
 			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
-		pop.update(1, 0, rng);
+		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 0);
 
 		for (Int i : range(5))
@@ -122,7 +122,7 @@ TEST(NeuronPopulation, StatefulWithParams) {
 		for (Int i : range(5))
 			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
-		pop.update(1, 0, rng);
+		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 5);
 		for (Int i : range(5))
 			ASSERT_EQ(pop.spikes(0)[i], i), (void)i;

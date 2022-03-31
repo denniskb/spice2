@@ -18,6 +18,7 @@ util/type_traits.h
 concepts.h
 connectivity.cpp
 connectivity.h
+snn_info.h
 snn.cpp
 snn.h)
 
