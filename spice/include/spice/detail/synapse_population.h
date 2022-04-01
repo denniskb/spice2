@@ -37,13 +37,14 @@ public:
 			info.rng = util::xoroshiro64_128p(seed++);
 			for (auto src : util::range(c.src_count)) {
 				info.src_neuron_id = src;
-				Int dst            = 0;
+				info.dst_neuron_id = 0;
 				for (auto edge : _graph.neighbors(src)) {
-					info.dst_neuron_id = dst++;
 					if constexpr (StatefulSynapseWithParams<Syn, Neur, Params>)
 						*edge.second = Syn(info, params);
 					else
 						*edge.second = Syn(info);
+
+					info.dst_neuron_id++;
 				}
 			}
 		}

@@ -44,6 +44,7 @@ public:
 			sim_info info;
 			info.rng             = util::xoroshiro64_128p(seed++);
 			info.population_size = size;
+			info.neuron_id = 0;
 			std::generate(_neurons.begin(), _neurons.end(), [&] {
 				if constexpr (StatefulNeuronWithParams<Neur, Params>)
 					return Neur(info, params);
