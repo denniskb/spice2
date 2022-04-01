@@ -13,6 +13,8 @@ struct lif {
 	float Gin   = 0;
 	Int32 Twait = 0;
 
+	lif(sim_info = {}) {}
+
 	bool update(float const dt, sim_info&) {
 		Int32 const Tref    = 50;           // dt
 		float const Vrest   = -0.06f;       // v
@@ -44,14 +46,14 @@ struct lif {
 
 struct SynE {
 	static void deliver(lif& to, sim_info& info) {
-		float const W = 0.4f * (16'000'000.0 / (info.N * info.N)); // siemens
+		float const W = 0.4f * (16'000'000.0 / (info.network_size * info.network_size)); // siemens
 		to.Gex += W;
 	}
 };
 
 struct SynI {
 	static void deliver(lif& to, sim_info& info) {
-		float const W = 5.1f * (16'000'000.0 / (info.N * info.N)); // siemens
+		float const W = 5.1f * (16'000'000.0 / (info.network_size * info.network_size)); // siemens
 		to.Gin += W;
 	}
 };

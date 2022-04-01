@@ -10,6 +10,7 @@ using namespace spice::util;
 
 struct stateful_neuron {
 	int v = 0;
+	stateful_neuron(sim_info = {}) {}
 	bool update(float, sim_info&) { return false; }
 };
 
@@ -17,12 +18,14 @@ struct stateless_synapse {
 	static void deliver(stateful_neuron&, sim_info&) {}
 };
 struct stateful_synapse {
+	stateful_synapse(sim_info = {}) {}
 	void deliver(stateful_neuron&, sim_info&) {}
 };
 struct stateless_synapse_with_params {
 	static void deliver(stateful_neuron&, sim_info&, int) {}
 };
 struct stateful_synapse_with_params {
+	stateful_synapse_with_params(sim_info = {}, int = 0) {}
 	void deliver(stateful_neuron&, sim_info&, int) {}
 };
 

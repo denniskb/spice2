@@ -15,13 +15,13 @@
 namespace spice {
 class snn {
 public:
-	snn(float const dt, float const max_delay, util::seed_seq seq) :
-	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seq)) {}
+	snn(float const dt, float const max_delay, util::seed_seq seed) :
+	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seed)) {}
 
 	template <Neuron Neur, class Params = util::empty_t>
 	detail::neuron_population<Neur, Params>* add_population(Int const size, Params const params = {}) {
-		_neurons.push_back(
-		    std::make_unique<detail::neuron_population<Neur, Params>>(size, _max_delay, std::move(params)));
+		_neurons.push_back(std::make_unique<detail::neuron_population<Neur, Params>>(_seed, size, _max_delay,
+		                                                                             std::move(params)));
 
 		return static_cast<detail::neuron_population<Neur, Params>*>(_neurons.back().get());
 	}
@@ -45,7 +45,7 @@ public:
 
 		_synapses.push_back(
 		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur, Params>(
-		        c(source->size(), target->size()), _seed++, d, std::move(params))));
+		        c(source->size(), target->size()), _seed, d, std::move(params))));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 

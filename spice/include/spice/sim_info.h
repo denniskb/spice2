@@ -5,7 +5,13 @@
 
 namespace spice {
 struct sim_info {
-	Int N;
-	util::xoroshiro64_128p rng;
+	util::xoroshiro64_128p rng{{1337}};
+	union {
+		Int neuron_id = 0;
+		Int dst_neuron_id;
+	};
+	Int src_neuron_id   = 0;
+	Int network_size    = -1;
+	Int population_size = -1;
 };
 }

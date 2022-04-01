@@ -25,6 +25,9 @@ template <class T>
 concept StatefulNeuronWithoutParams = requires(T t, float dt, sim_info& info) {
 	requires !StatelessNeuron<T>;
 	requires std::default_initializable<T>;
+	requires std::constructible_from<T, sim_info>;
+	requires std::copy_constructible<T>;
+	requires std::copyable<T>;
 	{ t.update(dt, info) } -> std::same_as<bool>;
 };
 
@@ -33,6 +36,9 @@ concept StatefulNeuronWithParams = requires(T t, float dt, sim_info& info, Param
 	requires std::default_initializable<Params>;
 	requires !StatelessNeuron<T>;
 	requires std::default_initializable<T>;
+	requires std::constructible_from<T, sim_info, Params>;
+	requires std::copy_constructible<T>;
+	requires std::copyable<T>;
 	{ t.update(dt, info, params) } -> std::same_as<bool>;
 };
 
@@ -70,6 +76,9 @@ concept StatefulSynapseWithoutParams = requires(T t, Neur& n, sim_info& info) {
 	requires StatefulNeuron<Neur>;
 	requires !StatelessSynapse<T, Neur>;
 	requires std::default_initializable<T>;
+	requires std::constructible_from<T, sim_info>;
+	requires std::copy_constructible<T>;
+	requires std::copyable<T>;
 	t.deliver(n, info);
 };
 
@@ -79,6 +88,9 @@ concept StatefulSynapseWithParams = requires(T t, Neur& n, sim_info& info, Param
 	requires StatefulNeuron<Neur>;
 	requires !StatelessSynapse<T, Neur>;
 	requires std::default_initializable<T>;
+	requires std::constructible_from<T, sim_info, Params>;
+	requires std::copy_constructible<T>;
+	requires std::copyable<T>;
 	t.deliver(n, info, params);
 };
 

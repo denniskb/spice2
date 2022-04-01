@@ -28,11 +28,26 @@ requires(util::is_empty_v<Params> ? SynapseWithoutParams<Syn, Neur> :
                                     SynapseWithParams<Syn, Neur, Params>) class synapse_population :
 public SynapsePopulation {
 public:
-	synapse_population(Connectivity& c, util::seed_seq const& seed, Int const delay,
-	                   Params const params = {}) :
-	_graph(c, seed),
-	_delay(delay), _params(std::move(params)) {
+	synapse_population(Connectivity& c, util::seed_seq& seed, Int const delay, Params const params = {}) :
+	_graph(c, seed++), _delay(delay), _params(std::move(params)) {
 		SPICE_PRE(delay >= 1);
+
+		if constexpr (StatefulSynapse<Syn, Neur>) {
+			sim_info info;
+			info.rng = util::xoroshiro64_128p(seed++);
+			for (auto src : util::range(c.src_count)) {
+				info.src_neuron_id = src;
+				Int dst            = 0;
+				for (auto edge : _graph.neighbors(src)) {
+					info.dst_neuron_id = dst++;
+					if constexpr (StatefulSynapseWithParams<Syn, Neur, Params>)
+						*edge.second = Syn(info, params);
+					else
+						*edge.second = Syn(info);
+				}
+			}
+		}
+
 		if constexpr (PlasticSynapse<Syn>)
 			_ages.resize(c.src_count);
 	}

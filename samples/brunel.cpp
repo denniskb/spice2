@@ -18,6 +18,8 @@ struct lif {
 	float V   = 0;
 	int Twait = 0;
 
+	lif(sim_info = {}) {}
+
 	bool update(float const dt, sim_info&) {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
@@ -38,11 +40,11 @@ struct lif {
 };
 
 struct SynE {
-	static void deliver(lif& to, sim_info& info) { to.V += (0.0001f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V += (0.0001f * 20'000) / info.network_size; }
 };
 
 struct SynI {
-	static void deliver(lif& to, sim_info& info) { to.V -= (0.0005f * 20'000) / info.N; }
+	static void deliver(lif& to, sim_info& info) { to.V -= (0.0005f * 20'000) / info.network_size; }
 };
 
 int main() {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <numeric>
 #include <span>
 #include <vector>
@@ -15,13 +16,13 @@
 
 namespace spice::detail {
 struct NeuronPopulation {
-	virtual ~NeuronPopulation()                              = default;
-	virtual Int size() const                                 = 0;
-	virtual void update(Int delay, float dt, sim_info& info) = 0;
-	virtual void* neurons()                                  = 0;
-	virtual std::span<Int32 const> spikes(Int age) const     = 0;
-	virtual void plastic()                                   = 0;
-	virtual std::span<UInt const> history() const            = 0;
+	virtual ~NeuronPopulation()                                  = default;
+	virtual Int size() const                                     = 0;
+	virtual void update(Int max_delay, float dt, sim_info& info) = 0;
+	virtual void* neurons()                                      = 0;
+	virtual std::span<Int32 const> spikes(Int age) const         = 0;
+	virtual void plastic()                                       = 0;
+	virtual std::span<UInt const> history() const                = 0;
 };
 
 template <Neuron Neur, class Params = util::empty_t>
@@ -29,31 +30,46 @@ requires(util::is_empty_v<Params> ? NeuronWithoutParams<Neur> :
                                     NeuronWithParams<Neur, Params>) class neuron_population :
 public NeuronPopulation {
 public:
-	neuron_population(Int const size, Int const delay, Params const params = {}) :
+	neuron_population(util::seed_seq& seed, Int const size, Int const max_delay, Params const params = {}) :
 	_size(size), _params(std::move(params)) {
 		SPICE_INV(size >= 0);
-		SPICE_INV(delay >= 1);
+		SPICE_INV(max_delay >= 1);
 
-		_spike_counts.reserve(delay);
-		_spikes.reserve(size * delay / 100);
+		_spike_counts.reserve(max_delay);
+		_spikes.reserve(size * max_delay / 100);
 
-		if constexpr (StatefulNeuron<Neur>)
+		if constexpr (StatefulNeuron<Neur>) {
 			_neurons.resize(size);
+
+			sim_info info;
+			info.rng             = util::xoroshiro64_128p(seed++);
+			info.population_size = size;
+			std::generate(_neurons.begin(), _neurons.end(), [&] {
+				if constexpr (StatefulNeuronWithParams<Neur, Params>)
+					return Neur(info, params);
+				else
+					return Neur(info);
+
+				info.neuron_id++;
+			});
+		}
 	}
 
 	Int size() const override { return _size; }
 
-	void update(Int const delay, float const dt, sim_info& info) override {
-		SPICE_INV(delay >= 1);
+	void update(Int const max_delay, float const dt, sim_info& info) override {
+		SPICE_INV(max_delay >= 1);
 
-		if (_spike_counts.size() == delay) {
+		if (_spike_counts.size() == max_delay) {
 			_spikes.erase(_spikes.begin(), _spikes.begin() + _spike_counts.front());
 			_spike_counts.erase(_spike_counts.begin());
 		}
 
+		info.population_size  = size();
 		Int const spike_count = _spikes.size();
 		util::invoke(_plastic, [&]<bool Plastic>() {
 			for (Int const i : util::range(size())) {
+				info.neuron_id = i;
 				bool spiked;
 				if constexpr (StatelessNeuronWithoutParams<Neur>)
 					spiked = Neur::update(dt, info);

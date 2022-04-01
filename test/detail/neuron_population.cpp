@@ -14,6 +14,7 @@ bool stateless_neuron::fire = false;
 
 struct stateful_neuron {
 	int i = 0;
+	stateful_neuron(sim_info = {}) {}
 	bool update(float dt, sim_info&) {
 		i++;
 		return dt >= 0.5f;
@@ -24,6 +25,7 @@ struct stateless_neuron_with_params {
 };
 struct stateful_neuron_with_params {
 	int i = 0;
+	stateful_neuron_with_params(sim_info = {}, bool = false) {}
 	bool update(float, sim_info&, bool p) {
 		i++;
 		return p;
@@ -31,8 +33,9 @@ struct stateful_neuron_with_params {
 };
 
 TEST(NeuronPopulation, Stateless) {
-	sim_info info{1, xoroshiro64_128p({1337})};
-	neuron_population<stateless_neuron> pop(5, 2);
+	sim_info info;
+	seed_seq seed{1337};
+	neuron_population<stateless_neuron> pop(seed, 5, 2);
 	pop.plastic();
 	stateless_neuron::fire = false;
 	pop.update(2, 0, info);
@@ -51,9 +54,10 @@ TEST(NeuronPopulation, Stateless) {
 }
 
 TEST(NeuronPopulation, StatelessWithParams) {
-	sim_info info{1, xoroshiro64_128p({1337})};
+	sim_info info;
+	seed_seq seed{1337};
 	{
-		neuron_population<stateless_neuron_with_params, bool> pop(5, 1, false);
+		neuron_population<stateless_neuron_with_params, bool> pop(seed, 5, 1, false);
 		pop.plastic();
 		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 0);
@@ -62,7 +66,7 @@ TEST(NeuronPopulation, StatelessWithParams) {
 			ASSERT_EQ(pop.history()[i], 0), (void)i;
 	}
 	{
-		neuron_population<stateless_neuron_with_params, bool> pop(5, 1, true);
+		neuron_population<stateless_neuron_with_params, bool> pop(seed, 5, 1, true);
 		pop.plastic();
 		pop.update(1, 0, info);
 		ASSERT_EQ(pop.spikes(0).size(), 5);
@@ -75,8 +79,9 @@ TEST(NeuronPopulation, StatelessWithParams) {
 }
 
 TEST(NeuronPopulation, Stateful) {
-	sim_info info{1, xoroshiro64_128p({1337})};
-	neuron_population<stateful_neuron> pop(5, 1);
+	sim_info info;
+	seed_seq seed{1337};
+	neuron_population<stateful_neuron> pop(seed, 5, 1);
 	pop.plastic();
 	for (Int i : range(5))
 		ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
@@ -100,9 +105,10 @@ TEST(NeuronPopulation, Stateful) {
 }
 
 TEST(NeuronPopulation, StatefulWithParams) {
-	sim_info info{1, xoroshiro64_128p({1337})};
+	sim_info info;
+	seed_seq seed{1337};
 	{
-		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, false);
+		neuron_population<stateful_neuron_with_params, bool> pop(seed, 5, 1, false);
 		pop.plastic();
 		for (Int i : range(5))
 			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
@@ -117,7 +123,7 @@ TEST(NeuronPopulation, StatefulWithParams) {
 			ASSERT_EQ(pop.history()[i], 0), (void)i;
 	}
 	{
-		neuron_population<stateful_neuron_with_params, bool> pop(5, 1, true);
+		neuron_population<stateful_neuron_with_params, bool> pop(seed, 5, 1, true);
 		pop.plastic();
 		for (Int i : range(5))
 			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
