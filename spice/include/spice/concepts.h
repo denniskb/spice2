@@ -21,24 +21,28 @@ concept StatelessNeuronWithParams = requires(float dt, sim_info& info, Params pa
 template <class T>
 concept StatelessNeuron = StatelessNeuronWithoutParams<T> || StatelessNeuronWithParams<T, util::any_t>;
 
+namespace detail {
+	template <class T>
+	concept StatefulNeuronBase = requires(T t, float dt, sim_info& info) {
+		requires !StatelessNeuron<T>;
+		requires std::default_initializable<T>;
+		requires std::copy_constructible<T>;
+		requires std::copyable<T>;
+	};
+}
+
 template <class T>
 concept StatefulNeuronWithoutParams = requires(T t, float dt, sim_info& info) {
-	requires !StatelessNeuron<T>;
-	requires std::default_initializable<T>;
+	requires detail::StatefulNeuronBase<T>;
 	requires std::constructible_from<T, sim_info>;
-	requires std::copy_constructible<T>;
-	requires std::copyable<T>;
 	{ t.update(dt, info) } -> std::same_as<bool>;
 };
 
 template <class T, class Params>
 concept StatefulNeuronWithParams = requires(T t, float dt, sim_info& info, Params params) {
-	requires std::default_initializable<Params>;
-	requires !StatelessNeuron<T>;
-	requires std::default_initializable<T>;
+	requires detail::StatefulNeuronBase<T>;
 	requires std::constructible_from<T, sim_info, Params>;
-	requires std::copy_constructible<T>;
-	requires std::copyable<T>;
+	requires std::default_initializable<Params>;
 	{ t.update(dt, info, params) } -> std::same_as<bool>;
 };
 
@@ -71,26 +75,29 @@ template <class T, class Neur>
 concept StatelessSynapse =
     StatelessSynapseWithoutParams<T, Neur> || StatelessSynapseWithParams<T, Neur, util::any_t>;
 
+namespace detail {
+	template <class T, class Neur>
+	concept StatefulSynapseBase = requires(T t, Neur & n, sim_info & info) {
+		requires StatefulNeuron<Neur>;
+		requires !StatelessSynapse<T, Neur>;
+		requires std::default_initializable<T>;
+		requires std::copy_constructible<T>;
+		requires std::copyable<T>;
+	};
+}
+
 template <class T, class Neur>
 concept StatefulSynapseWithoutParams = requires(T t, Neur& n, sim_info& info) {
-	requires StatefulNeuron<Neur>;
-	requires !StatelessSynapse<T, Neur>;
-	requires std::default_initializable<T>;
+	requires detail::StatefulSynapseBase<T, Neur>;
 	requires std::constructible_from<T, sim_info>;
-	requires std::copy_constructible<T>;
-	requires std::copyable<T>;
 	t.deliver(n, info);
 };
 
 template <class T, class Neur, class Params>
 concept StatefulSynapseWithParams = requires(T t, Neur& n, sim_info& info, Params params) {
-	requires std::default_initializable<Params>;
-	requires StatefulNeuron<Neur>;
-	requires !StatelessSynapse<T, Neur>;
-	requires std::default_initializable<T>;
+	requires detail::StatefulSynapseBase<T, Neur>;
 	requires std::constructible_from<T, sim_info, Params>;
-	requires std::copy_constructible<T>;
-	requires std::copyable<T>;
+	requires std::default_initializable<Params>;
 	t.deliver(n, info, params);
 };
 
