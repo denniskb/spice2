@@ -1,7 +1,7 @@
 add_executable(test ${test_sources}
 detail/csr.cpp
-detail/neuron_population.cpp
-detail/synapse_population.cpp
+#detail/neuron_population.cpp
+#detail/synapse_population.cpp
 util/numeric.cpp
 util/random.cpp
 util/range.cpp

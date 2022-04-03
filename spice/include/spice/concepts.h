@@ -1,127 +1,107 @@
 #pragma once
 
 #include <concepts>
+#include <random>
+#include <span>
 
-#include "spice/sim_info.h"
 #include "spice/util/stdint.h"
 #include "spice/util/type_traits.h"
 
 namespace spice {
 template <class T>
-concept StatelessNeuronWithoutParams = requires(float dt, sim_info& info) {
-	{ T::update(dt, info) } -> std::same_as<bool>;
-};
-
-template <class T, class Params>
-concept StatelessNeuronWithParams = requires(float dt, sim_info& info, Params params) {
-	requires std::default_initializable<Params>;
-	{ T::update(dt, info, params) } -> std::same_as<bool>;
+concept StatelessNeuron = requires(T const t, float dt, std::mt19937& rng) {
+	requires std::default_initializable<T>;
+	{ t.update(dt, rng) } -> std::same_as<bool>;
 };
 
 template <class T>
-concept StatelessNeuron = StatelessNeuronWithoutParams<T> || StatelessNeuronWithParams<T, util::any_t>;
-
-namespace detail {
-	template <class T>
-	concept StatefulNeuronBase = requires(T t, float dt, sim_info& info) {
-		requires !StatelessNeuron<T>;
-		requires std::default_initializable<T>;
-		requires std::copy_constructible<T>;
-		requires std::copyable<T>;
-	};
-}
-
-template <class T>
-concept StatefulNeuronWithoutParams = requires(T t, float dt, sim_info& info) {
-	requires detail::StatefulNeuronBase<T>;
-	requires std::constructible_from<T, sim_info>;
-	{ t.update(dt, info) } -> std::same_as<bool>;
+concept StatefulNeuron = requires(T const t, typename T::neuron& n, float dt, std::mt19937& rng) {
+	requires std::default_initializable<T>;
+	typename T::neuron;
+	requires std::default_initializable<typename T::neuron>;
+	{ t.update(n, dt, rng) } -> std::same_as<bool>;
 };
-
-template <class T, class Params>
-concept StatefulNeuronWithParams = requires(T t, float dt, sim_info& info, Params params) {
-	requires detail::StatefulNeuronBase<T>;
-	requires std::constructible_from<T, sim_info, Params>;
-	requires std::default_initializable<Params>;
-	{ t.update(dt, info, params) } -> std::same_as<bool>;
-};
-
-template <class T>
-concept StatefulNeuron = StatefulNeuronWithoutParams<T> || StatefulNeuronWithParams<T, util::any_t>;
-
-template <class T>
-concept NeuronWithoutParams = StatelessNeuronWithoutParams<T> || StatefulNeuronWithoutParams<T>;
-
-template <class T, class Params>
-concept NeuronWithParams = StatelessNeuronWithParams<T, Params> || StatefulNeuronWithParams<T, Params>;
 
 template <class T>
 concept Neuron = StatelessNeuron<T> || StatefulNeuron<T>;
 
-template <class T, class Neur>
-concept StatelessSynapseWithoutParams = requires(Neur& n, sim_info& info) {
-	requires StatefulNeuron<Neur>;
-	T::deliver(n, info);
-};
-
-template <class T, class Neur, class Params>
-concept StatelessSynapseWithParams = requires(Neur& n, sim_info& info, Params params) {
-	requires std::default_initializable<Params>;
-	requires StatefulNeuron<Neur>;
-	T::deliver(n, info, params);
-};
-
-template <class T, class Neur>
-concept StatelessSynapse =
-    StatelessSynapseWithoutParams<T, Neur> || StatelessSynapseWithParams<T, Neur, util::any_t>;
-
-namespace detail {
-	template <class T, class Neur>
-	concept StatefulSynapseBase = requires(T t, Neur & n, sim_info & info) {
-		requires StatefulNeuron<Neur>;
-		requires !StatelessSynapse<T, Neur>;
-		requires std::default_initializable<T>;
-		requires std::copy_constructible<T>;
-		requires std::copyable<T>;
-	};
-}
-
-template <class T, class Neur>
-concept StatefulSynapseWithoutParams = requires(T t, Neur& n, sim_info& info) {
-	requires detail::StatefulSynapseBase<T, Neur>;
-	requires std::constructible_from<T, sim_info>;
-	t.deliver(n, info);
-};
-
-template <class T, class Neur, class Params>
-concept StatefulSynapseWithParams = requires(T t, Neur& n, sim_info& info, Params params) {
-	requires detail::StatefulSynapseBase<T, Neur>;
-	requires std::constructible_from<T, sim_info, Params>;
-	requires std::default_initializable<Params>;
-	t.deliver(n, info, params);
+template <class T>
+concept PerNeuronInit = requires(T const t, typename T::neuron& n, Int id, std::mt19937& rng) {
+	requires StatefulNeuron<T>;
+	t.init(n, id, rng);
 };
 
 template <class T>
-concept PlasticSynapse = requires(T t, float dt, bool pre, bool post, Int n, sim_info& info,
-                                  util::any_t params) {
-	requires(
-	    requires { t.update(dt, pre, post, info); } || requires { t.update(dt, pre, post, info, params); });
-	requires(
-	    requires { t.skip(dt, n, info); } || requires { t.skip(dt, n, info, params); });
+concept PerPopulationInit = requires(T t, std::span<typename T::neuron> n, std::mt19937& rng) {
+	requires StatefulNeuron<T>;
+	t.init(n, rng);
 };
 
 template <class T, class Neur>
-concept StatefulSynapse =
-    StatefulSynapseWithoutParams<T, Neur> || StatefulSynapseWithParams<T, Neur, util::any_t>;
+concept StatelessSynapse = requires(T const t, typename Neur::neuron& n) {
+	requires StatefulNeuron<Neur>;
+	requires std::default_initializable<T>;
+	t.deliver(n);
+};
 
 template <class T, class Neur>
-concept SynapseWithoutParams =
-    StatelessSynapseWithoutParams<T, Neur> || StatefulSynapseWithoutParams<T, Neur>;
-
-template <class T, class Neur, class Params>
-concept SynapseWithParams =
-    StatelessSynapseWithParams<T, Neur, Params> || StatefulSynapseWithParams<T, Neur, Params>;
+concept StatefulSynapse = requires(T const t, typename T::synapse const& syn, typename Neur::neuron& n) {
+	requires StatefulNeuron<Neur>;
+	requires std::default_initializable<T>;
+	typename T::synapse;
+	requires std::default_initializable<typename T::synapse>;
+	t.deliver(syn, n);
+};
 
 template <class T, class Neur>
 concept Synapse = StatelessSynapse<T, Neur> || StatefulSynapse<T, Neur>;
+
+template <class T, class Neur>
+concept PlasticSynapse = requires(T const t, typename T::synapse& syn, float dt, bool pre, bool post, Int n) {
+	requires StatefulSynapse<T, Neur>;
+	t.update(syn, dt, pre, post);
+	t.skip(syn, dt, n);
+};
+
+template <class T, class Neur>
+concept PerSynapseInit = requires(T const t, typename T::synapse& syn, Int src, Int dst, std::mt19937& rng) {
+	requires StatefulSynapse<T, Neur>;
+	t.init(syn, src, dst, rng);
+};
+
+template <Neuron T, bool = StatefulNeuron<T>>
+struct neuron_traits {};
+
+template <Neuron T>
+struct neuron_traits<T, false> {
+	using type = util::empty_t;
+};
+
+template <Neuron T>
+struct neuron_traits<T, true> {
+	using type = typename T::neuron;
+};
+
+template <Neuron T>
+using neuron_traits_t = typename neuron_traits<T>::type;
+
+template <class T, StatefulNeuron Neur, bool = StatefulSynapse<T, Neur>>
+requires Synapse<T, Neur>
+struct synapse_traits {
+};
+
+template <class T, StatefulNeuron Neur>
+requires Synapse<T, Neur>
+struct synapse_traits<T, Neur, false> {
+	using type = util::empty_t;
+};
+
+template <class T, StatefulNeuron Neur>
+requires Synapse<T, Neur>
+struct synapse_traits<T, Neur, true> {
+	using type = typename T::synapse;
+};
+
+template <class T, StatefulNeuron Neur>
+using synapse_traits_t = typename synapse_traits<T, Neur>::type;
 }

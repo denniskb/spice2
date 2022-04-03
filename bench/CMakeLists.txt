@@ -1,6 +1,4 @@
 add_executable(bench
-brunel.cpp
-brunel+.cpp
 connectivity.cpp)
 
 target_compile_options(bench PRIVATE ${warning_flags} ${math_flags})

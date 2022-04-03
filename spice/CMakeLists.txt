@@ -16,7 +16,6 @@ include/spice/util/stdint.h
 include/spice/util/type_traits.h
 include/spice/concepts.h
 include/spice/connectivity.h
-include/spice/sim_info.h
 include/spice/snn.h
 
 src/util/assert.cpp

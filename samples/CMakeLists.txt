@@ -1,4 +1,5 @@
-foreach(sample brunel brunel+ vogels)
+#foreach(sample brunel brunel+ vogels)
+foreach(sample brunel+)
 	add_executable(${sample}
 	matplot.h
 	matplot.cpp
