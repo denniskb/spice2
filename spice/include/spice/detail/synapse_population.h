@@ -63,8 +63,9 @@ public:
 private:
 	Syn _syn;
 	detail::csr<synapse_traits_t<Syn, Neur>> _graph;
-	std::vector<UInt> _ages;
 	Int _delay;
+	[[no_unique_address]] std::conditional_t<PlasticSynapse<Syn, Neur>, std::vector<UInt>, util::empty_t>
+	    _ages;
 
 	template <bool Deliver>
 	void _update(Int const time, float const dt, auto spikes, std::span<typename Neur::neuron> dst_neurons,
@@ -72,8 +73,12 @@ private:
 		static_assert(Deliver || PlasticSynapse<Syn, Neur>);
 
 		for (auto src : spikes) {
-			bool const pre   = PlasticSynapse<Syn, Neur> ? _ages[src] >> 63 : false;
-			Int const age    = PlasticSynapse<Syn, Neur> ? _ages[src] & ~(1_u64 << 63) : time + 1;
+			bool pre = false;
+			Int age  = time + 1;
+			if constexpr (PlasticSynapse<Syn, Neur>) {
+				pre = _ages[src] >> 63;
+				age = _ages[src] & ~(1_u64 << 63);
+			}
 			Int const prefix = 63 + pre - time + age;
 			UInt const mask  = ~0_u64 >> prefix;
 

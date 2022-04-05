@@ -73,8 +73,11 @@ public:
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];
 
-		return {{_neighbors.data() + first, _edges.data() + first},
-		        {_neighbors.data() + last, _edges.data() + last}};
+		T* edges = nullptr;
+		if constexpr (!util::is_empty_v<T>)
+			edges = _edges.data();
+
+		return {{_neighbors.data() + first, edges + first}, {_neighbors.data() + last, edges + last}};
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {
@@ -84,6 +87,6 @@ public:
 private:
 	std::vector<Int> _offsets;
 	std::vector<Int32> _neighbors;
-	std::vector<T> _edges;
+	[[no_unique_address]] std::conditional_t<util::is_empty_v<T>, util::empty_t, std::vector<T>> _edges;
 };
 }

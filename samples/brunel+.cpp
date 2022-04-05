@@ -13,8 +13,6 @@ struct poisson {
 		return util::generate_canonical<float>(rng) < (firing_rate * dt);
 	}
 };
-static_assert(StatelessNeuron<poisson>);
-static_assert(!StatefulNeuron<poisson>);
 
 struct lif {
 	struct neuron {
@@ -22,8 +20,6 @@ struct lif {
 		int Twait = 0;
 	};
 
-	// void init(neuron& n, Int id, auto& rng) const {}
-	// void init(std::span<neuron>, auto& rng) const {}
 	bool update(neuron& n, float const dt, auto&) const {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
@@ -42,15 +38,11 @@ struct lif {
 		return false;
 	}
 };
-static_assert(!StatelessNeuron<lif>);
-static_assert(StatefulNeuron<lif>);
 
 struct SynE {
 	Int N;
 	void deliver(lif::neuron& to) const { to.V += (0.0001f * 20'000) / N; }
 };
-static_assert(StatelessSynapse<SynE, lif>);
-static_assert(!StatefulSynapse<SynE, lif>);
 
 struct SynI {
 	Int N;
@@ -64,7 +56,6 @@ struct SynPlast {
 		float Zpost = 0;
 	};
 
-	// void init(synapse& syn, Int src, Int dst, auto& rng) const {}
 	void deliver(synapse const& syn, lif::neuron& to) const { to.V += syn.W; }
 	void update(synapse& syn, float const dt, bool const pre, bool const post) const {
 		float const TstdpInv = 1.0f / 0.02f;

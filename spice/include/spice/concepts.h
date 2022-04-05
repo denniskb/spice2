@@ -23,9 +23,6 @@ concept StatefulNeuron = requires(T const t, typename T::neuron& n, float dt, st
 };
 
 template <class T>
-concept Neuron = StatelessNeuron<T> || StatefulNeuron<T>;
-
-template <class T>
 concept PerNeuronInit = requires(T const t, typename T::neuron& n, Int id, std::mt19937& rng) {
 	requires StatefulNeuron<T>;
 	t.init(n, id, rng);
@@ -36,6 +33,17 @@ concept PerPopulationInit = requires(T t, std::span<typename T::neuron> n, std::
 	requires StatefulNeuron<T>;
 	t.init(n, rng);
 };
+
+template <class T>
+concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::vector<Int32>& out_spikes) {
+	requires std::default_initializable<T>;
+	{ t.size() } -> std::convertible_to<Int>;
+	t.update(dt, rng, out_spikes);
+};
+
+template <class T>
+concept Neuron = util::one_of<PerPopulationUpdate<T>, util::one_of<StatelessNeuron<T>, StatefulNeuron<T>> &&
+                              util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>>;
 
 template <class T, class Neur>
 concept StatelessSynapse = requires(T const t, typename Neur::neuron& n) {
@@ -69,39 +77,41 @@ concept PerSynapseInit = requires(T const t, typename T::synapse& syn, Int src, 
 	t.init(syn, src, dst, rng);
 };
 
-template <Neuron T, bool = StatefulNeuron<T>>
-struct neuron_traits {};
+namespace detail {
+	template <Neuron T, bool = StatefulNeuron<T>>
+	struct neuron_traits {};
 
-template <Neuron T>
-struct neuron_traits<T, false> {
-	using type = util::empty_t;
-};
+	template <Neuron T>
+	struct neuron_traits<T, false> {
+		using type = util::empty_t;
+	};
 
-template <Neuron T>
-struct neuron_traits<T, true> {
-	using type = typename T::neuron;
-};
+	template <Neuron T>
+	struct neuron_traits<T, true> {
+		using type = typename T::neuron;
+	};
 
-template <Neuron T>
-using neuron_traits_t = typename neuron_traits<T>::type;
+	template <Neuron T>
+	using neuron_traits_t = typename neuron_traits<T>::type;
 
-template <class T, StatefulNeuron Neur, bool = StatefulSynapse<T, Neur>>
-requires Synapse<T, Neur>
-struct synapse_traits {
-};
+	template <class T, StatefulNeuron Neur, bool = StatefulSynapse<T, Neur>>
+	requires Synapse<T, Neur>
+	struct synapse_traits {
+	};
 
-template <class T, StatefulNeuron Neur>
-requires Synapse<T, Neur>
-struct synapse_traits<T, Neur, false> {
-	using type = util::empty_t;
-};
+	template <class T, StatefulNeuron Neur>
+	requires Synapse<T, Neur>
+	struct synapse_traits<T, Neur, false> {
+		using type = util::empty_t;
+	};
 
-template <class T, StatefulNeuron Neur>
-requires Synapse<T, Neur>
-struct synapse_traits<T, Neur, true> {
-	using type = typename T::synapse;
-};
+	template <class T, StatefulNeuron Neur>
+	requires Synapse<T, Neur>
+	struct synapse_traits<T, Neur, true> {
+		using type = typename T::synapse;
+	};
 
-template <class T, StatefulNeuron Neur>
-using synapse_traits_t = typename synapse_traits<T, Neur>::type;
+	template <class T, StatefulNeuron Neur>
+	using synapse_traits_t = typename synapse_traits<T, Neur>::type;
+}
 }

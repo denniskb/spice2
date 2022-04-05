@@ -25,29 +25,76 @@ struct NeuronPopulation {
 };
 
 template <Neuron Neur>
-class neuron_population : public NeuronPopulation {
+class per_neuron_update {
 public:
-	neuron_population(Neur neur, util::seed_seq& seed, Int const size, Int const max_delay) :
-	_neur(std::move(neur)), _size(size) {
+	per_neuron_update() = default;
+	per_neuron_update(Neur neuron, util::seed_seq& seed, Int const size) : _neuron(std::move(neuron)) {
 		SPICE_INV(size >= 0);
-		SPICE_INV(max_delay >= 1);
-
-		_spike_counts.reserve(max_delay);
-		_spikes.reserve(size * max_delay / 100);
 
 		if constexpr (StatefulNeuron<Neur>)
 			_neurons.resize(size);
+		else
+			_size = size;
 
 		util::xoroshiro64_128p rng(seed++);
 		if constexpr (PerNeuronInit<Neur>) {
 			Int id = 0;
-			for (auto& neuron : _neurons)
-				_neur.init(neuron, id++, rng);
-		} else if constexpr (PerPopulationInit<Neur>)
-			_neur.init(_neurons, rng);
+			for (auto& n : _neurons)
+				_neuron.init(n, id++, rng);
+		}
+		if constexpr (PerPopulationInit<Neur>)
+			_neuron.init(std::span<typename Neur::neuron>(_neurons), rng);
 	}
 
-	Int size() const override { return _size; }
+	void update(float const dt, auto& rng, std::vector<Int32>& out_spikes) {
+		for (Int const i : util::range(size())) {
+			bool spiked;
+			if constexpr (StatelessNeuron<Neur>)
+				spiked = _neuron.update(dt, rng);
+			else
+				spiked = _neuron.update(_neurons[i], dt, rng);
+
+			if (spiked)
+				out_spikes.push_back(i);
+		}
+	}
+
+	Int size() const {
+		if constexpr (StatefulNeuron<Neur>)
+			return _neurons.size();
+		else
+			return _size;
+	}
+
+	template <class N = Neur>
+	std::enable_if_t<StatefulNeuron<N>, std::span<typename N::neuron>> neurons() {
+		return _neurons;
+	}
+
+private:
+	Neur _neuron;
+	[[no_unique_address]] std::conditional_t<StatelessNeuron<Neur>, Int, util::empty_t> _size;
+	[[no_unique_address]] std::conditional_t<StatefulNeuron<Neur>, std::vector<neuron_traits_t<Neur>>,
+	                                         util::empty_t>
+	    _neurons;
+};
+
+template <Neuron Neur>
+class neuron_population : public NeuronPopulation {
+public:
+	neuron_population(Neur neuron, util::seed_seq& seed, Int const size, Int const max_delay) {
+		SPICE_INV(max_delay >= 1);
+
+		if constexpr (PerPopulationUpdate<Neur>)
+			_neuron = std::move(neuron);
+		else
+			_neuron = {std::move(neuron), seed, size};
+
+		_spike_counts.reserve(max_delay);
+		_spikes.reserve(size * max_delay / 100);
+	}
+
+	Int size() const override { return _neuron.size(); }
 
 	void update(Int const max_delay, float const dt, util::xoroshiro64_128p& rng) override {
 		SPICE_INV(max_delay >= 1);
@@ -58,33 +105,25 @@ public:
 		}
 
 		Int const spike_count = _spikes.size();
-		util::invoke(_plastic, [&]<bool Plastic>() {
-			for (Int const i : util::range(size())) {
-				bool spiked;
-				if constexpr (StatelessNeuron<Neur>)
-					spiked = _neur.update(dt, rng);
-				else
-					spiked = _neur.update(_neurons[i], dt, rng);
+		_neuron.update(dt, rng, _spikes);
+		if (_plastic) {
+			for (auto& hist : _history)
+				hist <<= 1;
 
-				if constexpr (Plastic)
-					_history[i] = (_history[i] << 1) | spiked;
-
-				if (spiked)
-					_spikes.push_back(i);
-			}
-		});
-
+			for (auto spike : util::range(_spikes.begin() + spike_count, _spikes.end()))
+				_history[spike] |= 1;
+		}
 		_spike_counts.push_back(_spikes.size() - spike_count);
 	}
 
 	void* neurons() override {
 		SPICE_PRE(StatefulNeuron<Neur> && "Can't return collection of stateless neurons.");
-		return _neurons.data();
+		if constexpr (StatefulNeuron<Neur>)
+			return get_neurons().data();
+		else
+			return nullptr;
 	}
-	std::span<Neur> get_neurons() {
-		static_assert(StatefulNeuron<Neur>, "Can't return collection of stateless neurons.");
-		return _neurons;
-	}
+	auto get_neurons() { return _neuron.neurons(); }
 
 	std::span<Int32 const> spikes(Int age) const override {
 		SPICE_PRE(0 <= age && age < _spike_counts.size());
@@ -101,9 +140,7 @@ public:
 	std::span<UInt const> history() const override { return _history; }
 
 private:
-	Neur _neur;
-	Int _size = 0;
-	std::vector<neuron_traits_t<Neur>> _neurons;
+	std::conditional_t<PerPopulationUpdate<Neur>, Neur, per_neuron_update<Neur>> _neuron;
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;
 	std::vector<UInt> _history;

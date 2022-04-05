@@ -23,19 +23,17 @@ struct int_iterator {
 	constexpr operator Int&() { return i; }
 };
 
-inline constexpr range_t<int_iterator> range(Int min, Int max) { return {min, std::max(min, max)}; }
-inline constexpr range_t<int_iterator> range(Int max) { return range(0, max); }
+constexpr range_t<int_iterator> range(Int min, Int max) { return {min, std::max(min, max)}; }
+constexpr range_t<int_iterator> range(Int max) { return range(0, max); }
+
+template <std::input_iterator It>
+constexpr auto range(It first, It last) {
+	return range_t<It>{first, last};
+}
 
 template <class Container>
 requires requires(Container c) {
 	{ c.size() } -> std::integral;
 }
 constexpr auto indices(Container const& c) { return range(c.size()); }
-
-template <class Container>
-requires requires(Container c) {
-	c.begin();
-	c.end();
-}
-constexpr auto values(Container& c) { return range_t{c.begin(), c.end()}; }
 }
