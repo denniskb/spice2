@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <concepts>
+#include <iterator>
 #include <type_traits>
 
 #include "spice/util/stdint.h"
@@ -15,6 +16,8 @@ public:
 
 	constexpr It begin() const { return first; }
 	constexpr It end() const { return last; }
+
+	constexpr Int size() const { return std::distance(first, last); }
 };
 
 struct int_iterator {
@@ -36,4 +39,14 @@ requires requires(Container c) {
 	{ c.size() } -> std::integral;
 }
 constexpr auto range(Container const& c) { return range(c.size()); }
+}
+
+namespace std {
+template <>
+struct iterator_traits<spice::util::int_iterator> {
+	using iterator_concept  = random_access_iterator_tag;
+	using iterator_category = random_access_iterator_tag;
+	using difference_type   = Int;
+	using value_type        = Int;
+};
 }
