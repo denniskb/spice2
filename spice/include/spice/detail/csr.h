@@ -29,7 +29,12 @@ public:
 		constexpr iterator_t() = default;
 		constexpr iterator_t(const iterator_t<false>& other) : _dst(other._dst), _edge(other._edge) {}
 
-		constexpr value_type operator*() const { return {*_dst, _edge}; }
+		constexpr value_type operator*() const {
+			if constexpr (std::is_void_v<T>)
+				return {*_dst, nullptr};
+			else
+				return {*_dst, _edge};
+		}
 
 		constexpr bool operator==(const iterator_t& other) const { return _dst == other._dst; }
 		constexpr bool operator!=(const iterator_t& other) const { return _dst != other._dst; }
@@ -51,8 +56,10 @@ public:
 		friend class csr;
 
 		Int32 const* _dst = nullptr;
-		edge_t* _edge     = nullptr;
+		[[no_unique_address]] util::optional_t<edge_t*, !std::is_void_v<T>> _edge{};
 
+		constexpr iterator_t(Int32 const* dst) : _dst(dst) {}
+		template <class U = T, class = std::enable_if_t<!std::is_void_v<U>>>
 		constexpr iterator_t(Int32 const* dst, edge_t* edge) : _dst(dst), _edge(edge) {}
 	};
 	using iterator       = iterator_t<false>;
@@ -73,11 +80,11 @@ public:
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];
 
-		T* edges = nullptr;
-		if constexpr (!std::is_void_v<T>)
-			edges = _edges.data();
-
-		return {{_neighbors.data() + first, edges + first}, {_neighbors.data() + last, edges + last}};
+		if constexpr (std::is_void_v<T>)
+			return {_neighbors.data() + first, _neighbors.data() + last};
+		else
+			return {{_neighbors.data() + first, _edges.data() + first},
+			        {_neighbors.data() + last, _edges.data() + last}};
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {

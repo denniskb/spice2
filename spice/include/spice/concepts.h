@@ -83,7 +83,7 @@ namespace detail {
 
 	template <Neuron T>
 	struct neuron_traits<T, false> {
-		using type = util::empty_t;
+		using type = void;
 	};
 
 	template <Neuron T>
@@ -101,7 +101,7 @@ namespace detail {
 	template <class T, StatefulNeuron Neur>
 	requires Synapse<T, Neur>
 	struct synapse_traits<T, Neur, false> {
-		using type = util::empty_t;
+		using type = void;
 	};
 
 	template <class T, StatefulNeuron Neur>
