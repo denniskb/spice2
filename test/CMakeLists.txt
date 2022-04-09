@@ -8,6 +8,7 @@ util/numeric.cpp
 util/random.cpp
 util/range.cpp
 util/scope.cpp
+util/stdint.cpp
 snn.cpp)
 
 target_compile_options(test PRIVATE ${warning_flags} ${math_flags})
