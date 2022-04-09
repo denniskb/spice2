@@ -3,6 +3,7 @@ detail/csr.cpp
 #detail/neuron_population.cpp
 #detail/synapse_population.cpp
 util/assert.cpp
+util/meta.cpp
 util/numeric.cpp
 util/random.cpp
 util/range.cpp
