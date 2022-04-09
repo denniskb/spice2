@@ -73,10 +73,8 @@ public:
 
 private:
 	Neur _neuron;
-	[[no_unique_address]] std::conditional_t<StatelessNeuron<Neur>, Int, util::empty_t> _size;
-	[[no_unique_address]] std::conditional_t<StatefulNeuron<Neur>, std::vector<neuron_traits_t<Neur>>,
-	                                         util::empty_t>
-	    _neurons;
+	[[no_unique_address]] util::optional_t<Int, StatelessNeuron<Neur>> _size;
+	[[no_unique_address]] util::optional_t<std::vector<neuron_traits_t<Neur>>, StatefulNeuron<Neur>> _neurons;
 };
 
 template <Neuron Neur>

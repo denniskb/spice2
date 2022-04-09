@@ -14,7 +14,7 @@
 #include "spice/util/type_traits.h"
 
 namespace spice::detail {
-template <class T = util::empty_t>
+template <class T = void>
 class csr {
 public:
 	template <bool Const>
@@ -36,7 +36,7 @@ public:
 
 		constexpr iterator_t& operator++() {
 			_dst++;
-			if constexpr (!std::is_empty_v<T>)
+			if constexpr (!std::is_void_v<T>)
 				_edge++;
 
 			return *this;
@@ -61,7 +61,7 @@ public:
 	csr(Connectivity& c, util::seed_seq const& seed) {
 		_offsets.resize(c.src_count > 0 ? c.src_count + 1 : 0);
 		_neighbors.resize(c.size());
-		if constexpr (!util::is_empty_v<T>)
+		if constexpr (!std::is_void_v<T>)
 			_edges.resize(_neighbors.size());
 
 		c.generate(_offsets, _neighbors, seed);
@@ -74,7 +74,7 @@ public:
 		Int const last  = _offsets[src + 1];
 
 		T* edges = nullptr;
-		if constexpr (!util::is_empty_v<T>)
+		if constexpr (!std::is_void_v<T>)
 			edges = _edges.data();
 
 		return {{_neighbors.data() + first, edges + first}, {_neighbors.data() + last, edges + last}};
@@ -87,6 +87,6 @@ public:
 private:
 	std::vector<Int> _offsets;
 	std::vector<Int32> _neighbors;
-	[[no_unique_address]] std::conditional_t<util::is_empty_v<T>, util::empty_t, std::vector<T>> _edges;
+	[[no_unique_address]] util::optional_t<std::vector<T>, !std::is_void_v<T>> _edges;
 };
 }

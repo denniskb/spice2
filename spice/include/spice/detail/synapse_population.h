@@ -64,8 +64,7 @@ private:
 	Syn _syn;
 	detail::csr<synapse_traits_t<Syn, Neur>> _graph;
 	Int _delay;
-	[[no_unique_address]] std::conditional_t<PlasticSynapse<Syn, Neur>, std::vector<UInt>, util::empty_t>
-	    _ages;
+	[[no_unique_address]] util::optional_t<std::vector<UInt>, PlasticSynapse<Syn, Neur>> _ages;
 
 	template <bool Deliver>
 	void _update(Int const time, float const dt, auto spikes, std::span<typename Neur::neuron> dst_neurons,

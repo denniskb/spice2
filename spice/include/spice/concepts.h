@@ -79,7 +79,7 @@ concept PerSynapseInit = requires(T const t, typename T::synapse& syn, Int src, 
 
 namespace detail {
 	template <Neuron T, bool = StatefulNeuron<T>>
-	struct neuron_traits {};
+	struct neuron_traits;
 
 	template <Neuron T>
 	struct neuron_traits<T, false> {
@@ -96,8 +96,7 @@ namespace detail {
 
 	template <class T, StatefulNeuron Neur, bool = StatefulSynapse<T, Neur>>
 	requires Synapse<T, Neur>
-	struct synapse_traits {
-	};
+	struct synapse_traits;
 
 	template <class T, StatefulNeuron Neur>
 	requires Synapse<T, Neur>
