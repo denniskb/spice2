@@ -5,7 +5,7 @@
 using namespace spice;
 using namespace spice::util;
 
-TEST(Detail, Range) {
+TEST(Range, FromNumbers) {
 	{
 		auto r = range(0);
 		ASSERT_EQ(*r.begin(), 0);
@@ -53,4 +53,24 @@ TEST(Detail, Range) {
 
 		ASSERT_EQ(count, 0);
 	}
+}
+
+TEST(Range, FromContainer) {
+	std::vector<int> x(3);
+
+	int count = 0;
+	for (Int i : range(x))
+		count++, (void)i;
+
+	ASSERT_EQ(count, 3);
+}
+
+TEST(Range, FromIterators) {
+	std::vector<int> x(3);
+
+	int count = 0;
+	for (Int i : range(x.begin(), x.end()))
+		count++, (void)i;
+
+	ASSERT_EQ(count, 3);
 }
