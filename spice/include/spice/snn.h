@@ -31,6 +31,7 @@ public:
 	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity& c,
 	             float const delay, Syn syn = {}) {
 		Int const d = std::round(delay / _dt);
+		SPICE_PRE(d >= 1 && "The delay must be at least 1dt.");
 		SPICE_PRE(d <= _max_delay &&
 		          "The delay of a synapse population may not exceed the maximum delay of the network.");
 
