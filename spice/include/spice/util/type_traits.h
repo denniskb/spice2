@@ -5,6 +5,9 @@
 namespace spice::util {
 struct empty_t {};
 
+template <class T>
+constexpr bool is_empty_v = std::is_same_v<T, empty_t>;
+
 template <class T, bool HasValue>
 struct optional;
 
