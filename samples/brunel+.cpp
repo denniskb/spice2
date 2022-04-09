@@ -41,11 +41,13 @@ struct lif {
 
 struct SynE {
 	Int N;
+
 	void deliver(lif::neuron& to) const { to.V += (0.0001f * 20'000) / N; }
 };
 
 struct SynI {
 	Int N;
+
 	void deliver(lif::neuron& to) const { to.V -= (0.0005f * 20'000) / N; }
 };
 
