@@ -30,11 +30,6 @@ public:
 	requires Synapse<Syn, Neur>
 	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity& c,
 	             float const delay, Syn syn = {}) {
-		static_assert(
-		    !requires { &Syn::update; } || PlasticSynapse<Syn, Neur>,
-		    "It looks like you're trying to define a plastic synapse (your synapse has an update() method). "
-		    "However, your synapse type does not conform to the PlasticSynapse concept.");
-
 		Int const d = std::round(delay / _dt);
 		SPICE_PRE(d <= _max_delay &&
 		          "The delay of a synapse population may not exceed the maximum delay of the network.");
