@@ -4,7 +4,7 @@
 			"name": "Spice",
 			"compilerPath": "/usr/bin/g++",
 			"includePath": [
-				"${workspaceRoot}",
+				"${workspaceRoot}/spice/include",
 				"${workspaceRoot}/third_party/benchmark/include",
 				"${workspaceRoot}/third_party/googletest/googletest/include",
 				"${workspaceRoot}/third_party/matplot/source"
