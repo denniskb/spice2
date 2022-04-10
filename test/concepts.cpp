@@ -105,3 +105,107 @@ TEST(Concepts, InvalidNeurons) {
 	                      Neuron<update_and_stateless>, Neuron<update_and_stateful>,
 	                      Neuron<update_and_per_neuron_init>, Neuron<update_and_per_population_init>>);
 }
+
+struct stateless_synapse {
+	void deliver(stateful_neuron::neuron&) const {}
+};
+
+struct stateless_synapse_no_const {
+	void deliver(stateful_neuron::neuron&) {}
+};
+
+struct stateless_synapse_desc {
+	void deliver(stateful_neuron&) const {}
+};
+
+TEST(Concepts, StatelessSynapse) {
+	static_assert(all_of<StatelessSynapse<stateless_synapse, stateful_neuron>,
+	                     Synapse<stateless_synapse, stateful_neuron>>);
+	static_assert(none_of<StatelessSynapse<stateless_synapse_no_const, stateful_neuron>,
+	                      StatelessSynapse<stateless_synapse_desc, stateful_neuron>,
+	                      Synapse<stateless_synapse_no_const, stateful_neuron>,
+	                      Synapse<stateless_synapse_desc, stateful_neuron>>);
+	static_assert(!StatefulSynapse<stateless_synapse, stateful_neuron>);
+}
+
+struct stateful_synapse {
+	struct synapse {
+		float w;
+	};
+
+	void deliver(synapse const&, stateful_neuron::neuron&) const {}
+};
+
+struct stateful_synapse_no_const {
+	struct synapse {
+		float w;
+	};
+
+	void deliver(synapse const&, stateful_neuron::neuron&) {}
+};
+
+struct stateful_synapse_no_const2 {
+	struct synapse {
+		float w;
+	};
+
+	void deliver(synapse&, stateful_neuron::neuron&) const {}
+};
+
+TEST(Concepts, StatefulSynapse) {
+	static_assert(all_of<StatefulSynapse<stateful_synapse, stateful_neuron>,
+	                     Synapse<stateful_synapse, stateful_neuron>>);
+	static_assert(none_of<StatefulSynapse<stateful_synapse_no_const, stateful_neuron>,
+	                      Synapse<stateful_synapse_no_const, stateful_neuron>,
+	                      StatefulSynapse<stateful_synapse_no_const2, stateful_neuron>,
+	                      Synapse<stateful_synapse_no_const2, stateful_neuron>>);
+	static_assert(!StatelessSynapse<stateful_synapse, stateful_neuron>);
+}
+
+struct plastic_synapse : public stateful_synapse {
+	void update(synapse&, float, bool, bool) const {}
+	void skip(synapse&, float, Int) const {}
+};
+
+struct plastic_synapse_no_const : public stateful_synapse {
+	void update(synapse&, float, bool, bool) {}
+	void skip(synapse&, float, Int) const {}
+};
+
+struct plastic_synapse_no_const2 : public stateful_synapse {
+	void update(synapse&, float, bool, bool) const {}
+	void skip(synapse&, float, Int) {}
+};
+
+TEST(Concepts, PlasticSynapse) {
+	static_assert(
+	    all_of<PlasticSynapse<plastic_synapse, stateful_neuron>,
+	           StatefulSynapse<plastic_synapse, stateful_neuron>, Synapse<plastic_synapse, stateful_neuron>>);
+	static_assert(none_of<PlasticSynapse<plastic_synapse_no_const, stateful_neuron>,
+	                      PlasticSynapse<plastic_synapse_no_const2, stateful_neuron>,
+	                      StatelessSynapse<plastic_synapse_no_const, stateful_neuron>,
+	                      StatelessSynapse<plastic_synapse_no_const2, stateful_neuron>>);
+	static_assert(all_of<StatefulSynapse<plastic_synapse_no_const, stateful_neuron>,
+	                     Synapse<plastic_synapse_no_const, stateful_neuron>,
+	                     StatefulSynapse<plastic_synapse_no_const2, stateful_neuron>,
+	                     Synapse<plastic_synapse_no_const2, stateful_neuron>>);
+	static_assert(none_of<PlasticSynapse<stateless_synapse, stateful_neuron>,
+	                      PlasticSynapse<stateful_synapse, stateful_neuron>>);
+}
+
+struct per_synapse_init : public stateful_synapse {
+	void init(synapse&, Int, Int, auto&) const {}
+};
+
+struct per_synapse_init_no_const : public stateful_synapse {
+	void init(synapse&, Int, Int, auto&) {}
+};
+
+TEST(Concepts, PerSynapseInit) {
+	static_assert(all_of<PerSynapseInit<per_synapse_init, stateful_neuron>,
+	                     StatefulSynapse<per_synapse_init, stateful_neuron>,
+	                     Synapse<per_synapse_init, stateful_neuron>>);
+	static_assert(!PerSynapseInit<per_synapse_init_no_const, stateful_neuron>);
+	static_assert(all_of<StatefulSynapse<per_synapse_init_no_const, stateful_neuron>,
+	                     Synapse<per_synapse_init_no_const, stateful_neuron>>);
+}
