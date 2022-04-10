@@ -37,7 +37,7 @@ concept PerPopulationInit = requires(T t, std::span<typename T::neuron> n, std::
 template <class T>
 concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::vector<Int32>& out_spikes) {
 	requires std::default_initializable<T>;
-	{ t.size() } -> std::convertible_to<Int>;
+	requires std::copy_constructible<T> || std::move_constructible<T>;
 	t.update(dt, rng, out_spikes);
 };
 

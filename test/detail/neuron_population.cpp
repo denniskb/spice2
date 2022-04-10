@@ -8,189 +8,161 @@ using namespace spice::util;
 
 struct stateless_neuron {
 	static bool fire;
-	static bool update(float, sim_info&) { return fire; }
+	bool update(float, auto&) const { return fire; }
 };
 bool stateless_neuron::fire = false;
-
-struct stateful_neuron {
-	int i = 0;
-	stateful_neuron(sim_info = {}) {}
-	bool update(float dt, sim_info&) {
-		i++;
-		return dt >= 0.5f;
-	}
-};
-struct stateless_neuron_with_params {
-	static bool update(float, sim_info&, bool p) { return p; }
-};
-struct stateful_neuron_with_params {
-	int i = 0;
-	stateful_neuron_with_params(sim_info = {}, bool = false) {}
-	bool update(float, sim_info&, bool p) {
-		i++;
-		return p;
-	}
-};
+static_assert(StatelessNeuron<stateless_neuron>);
 
 TEST(NeuronPopulation, Stateless) {
-	sim_info info;
 	seed_seq seed{1337};
-	neuron_population<stateless_neuron> pop(seed, 5, 2);
+	xoroshiro64_128p rng(seed);
+	neuron_population<stateless_neuron> pop({}, 5, seed, 2);
 	pop.plastic();
-	stateless_neuron::fire = false;
-	pop.update(2, 0, info);
 
+	ASSERT_EQ(pop.size(), 5);
+
+	stateless_neuron::fire = false;
+	pop.update(2, 1, rng);
 	ASSERT_EQ(pop.spikes(0).size(), 0);
 
 	stateless_neuron::fire = true;
-	pop.update(2, 0, info);
-	ASSERT_EQ(pop.spikes(1).size(), 0);
+	pop.update(2, 1, rng);
 	ASSERT_EQ(pop.spikes(0).size(), 5);
-	for (Int i : range(5))
-		ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
-
-	for (Int i : range(5))
-		ASSERT_EQ(pop.history()[i], 1), (void)i;
-}
-
-TEST(NeuronPopulation, StatelessWithParams) {
-	sim_info info;
-	seed_seq seed{1337};
-	{
-		neuron_population<stateless_neuron_with_params, bool> pop(seed, 5, 1, false);
-		pop.plastic();
-		pop.update(1, 0, info);
-		ASSERT_EQ(pop.spikes(0).size(), 0);
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.history()[i], 0), (void)i;
-	}
-	{
-		neuron_population<stateless_neuron_with_params, bool> pop(seed, 5, 1, true);
-		pop.plastic();
-		pop.update(1, 0, info);
-		ASSERT_EQ(pop.spikes(0).size(), 5);
-		for (Int i : range(5))
-			ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.history()[i], 1), (void)i;
+	for (Int i : range(5)) {
+		ASSERT_EQ(pop.spikes(0)[i], i);
+		ASSERT_EQ(pop.history()[i], 1);
 	}
 }
+
+struct stateful_neuron {
+	struct neuron {
+		bool fired = false;
+		Int id     = 0;
+	};
+
+	bool update(neuron& n, float, auto&) const {
+		n.fired = true;
+		return n.id % 2;
+	}
+};
+static_assert(StatefulNeuron<stateful_neuron>);
 
 TEST(NeuronPopulation, Stateful) {
-	sim_info info;
 	seed_seq seed{1337};
-	neuron_population<stateful_neuron> pop(seed, 5, 1);
+	xoroshiro64_128p rng(seed);
+	neuron_population<stateful_neuron> pop({}, 5, seed, 1);
 	pop.plastic();
-	for (Int i : range(5))
-		ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
-	pop.update(1, 1, info);
-	ASSERT_EQ(pop.spikes(0).size(), 5);
-	for (Int i : range(5))
-		ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
+	ASSERT_EQ(pop.size(), 5);
+	for (auto& n : pop.get_neurons())
+		ASSERT_FALSE(n.fired);
 
-	for (Int i : range(5))
-		ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
+	pop.update(1, 1, rng);
 
-	pop.update(1, 0, info);
+	for (auto& n : pop.get_neurons())
+		ASSERT_TRUE(n.fired);
+
 	ASSERT_EQ(pop.spikes(0).size(), 0);
-
-	for (Int i : range(5))
-		ASSERT_EQ(pop.get_neurons()[i].i, 2), (void)i;
-
-	for (Int i : range(5))
-		ASSERT_EQ(pop.history()[i], 2), (void)i;
 }
 
-TEST(NeuronPopulation, StatefulWithParams) {
-	sim_info info;
+struct per_neuron_init : public stateful_neuron {
+	void init(neuron& n, Int id, auto&) const { n.id = id; }
+};
+static_assert(PerNeuronInit<per_neuron_init>);
+
+TEST(NeuronPopulation, PerNeuronInit) {
 	seed_seq seed{1337};
+	xoroshiro64_128p rng(seed);
+	neuron_population<per_neuron_init> pop({}, 5, seed, 1);
+	pop.plastic();
+
+	ASSERT_EQ(pop.size(), 5);
+	for (auto& n : pop.get_neurons())
+		ASSERT_FALSE(n.fired);
+
+	pop.update(1, 1, rng);
+
+	for (auto& n : pop.get_neurons())
+		ASSERT_TRUE(n.fired);
+
+	ASSERT_EQ(pop.spikes(0).size(), 2);
+
 	{
-		neuron_population<stateful_neuron_with_params, bool> pop(seed, 5, 1, false);
-		pop.plastic();
-		for (Int i : range(5))
-			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
-
-		pop.update(1, 0, info);
-		ASSERT_EQ(pop.spikes(0).size(), 0);
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.history()[i], 0), (void)i;
+		Int i = 1;
+		for (auto s : pop.spikes(0)) {
+			ASSERT_EQ(s, i);
+			i += 2;
+		}
 	}
-	{
-		neuron_population<stateful_neuron_with_params, bool> pop(seed, 5, 1, true);
-		pop.plastic();
-		for (Int i : range(5))
-			ASSERT_EQ(pop.get_neurons()[i].i, 0), (void)i;
 
-		pop.update(1, 0, info);
-		ASSERT_EQ(pop.spikes(0).size(), 5);
-		for (Int i : range(5))
-			ASSERT_EQ(pop.spikes(0)[i], i), (void)i;
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.get_neurons()[i].i, 1), (void)i;
-
-		for (Int i : range(5))
-			ASSERT_EQ(pop.history()[i], 1), (void)i;
-	}
+	for (Int i : range(5))
+		ASSERT_EQ(pop.history()[i], i % 2);
 }
 
-static_assert(!StatelessNeuronWithoutParams<int>);
-static_assert(!StatelessNeuronWithParams<int, any_t>);
-static_assert(!StatefulNeuronWithoutParams<int>);
-static_assert(!StatefulNeuronWithParams<int, any_t>);
-static_assert(!StatelessNeuron<int>);
-static_assert(!StatefulNeuron<int>);
-static_assert(!NeuronWithoutParams<int>);
-static_assert(!NeuronWithParams<int, any_t>);
-static_assert(!Neuron<int>);
+struct per_population_init : public stateful_neuron {
+	void init(std::span<neuron> neurons, auto&) {
+		for (Int i : range(neurons))
+			neurons[i].id = i;
+	}
+};
+static_assert(PerPopulationInit<per_population_init>);
 
-static_assert(StatelessNeuronWithoutParams<stateless_neuron>);
-static_assert(!StatelessNeuronWithParams<stateless_neuron, any_t>);
-static_assert(!StatefulNeuronWithoutParams<stateless_neuron>);
-static_assert(!StatefulNeuronWithParams<stateless_neuron, any_t>);
-static_assert(StatelessNeuron<stateless_neuron>);
-static_assert(!StatefulNeuron<stateless_neuron>);
-static_assert(NeuronWithoutParams<stateless_neuron>);
-static_assert(!NeuronWithParams<stateless_neuron, any_t>);
-static_assert(Neuron<stateless_neuron>);
+TEST(NeuronPopulation, PerPopulationInit) {
+	seed_seq seed{1337};
+	xoroshiro64_128p rng(seed);
+	neuron_population<per_population_init> pop({}, 5, seed, 1);
+	pop.plastic();
 
-static_assert(!StatelessNeuronWithoutParams<stateful_neuron>);
-static_assert(!StatelessNeuronWithParams<stateful_neuron, any_t>);
-static_assert(StatefulNeuronWithoutParams<stateful_neuron>);
-static_assert(!StatefulNeuronWithParams<stateful_neuron, any_t>);
-static_assert(!StatelessNeuron<stateful_neuron>);
-static_assert(StatefulNeuron<stateful_neuron>);
-static_assert(NeuronWithoutParams<stateful_neuron>);
-static_assert(!NeuronWithParams<stateful_neuron, any_t>);
-static_assert(Neuron<stateful_neuron>);
+	ASSERT_EQ(pop.size(), 5);
+	for (auto& n : pop.get_neurons())
+		ASSERT_FALSE(n.fired);
 
-static_assert(!StatelessNeuronWithoutParams<stateless_neuron_with_params>);
-static_assert(StatelessNeuronWithParams<stateless_neuron_with_params, any_t>);
-static_assert(StatelessNeuronWithParams<stateless_neuron_with_params, int>);
-static_assert(!StatefulNeuronWithoutParams<stateless_neuron_with_params>);
-static_assert(!StatefulNeuronWithParams<stateless_neuron_with_params, any_t>);
-static_assert(StatelessNeuron<stateless_neuron_with_params>);
-static_assert(!StatefulNeuron<stateless_neuron_with_params>);
-static_assert(!NeuronWithoutParams<stateless_neuron_with_params>);
-static_assert(NeuronWithParams<stateless_neuron_with_params, any_t>);
-static_assert(NeuronWithParams<stateless_neuron_with_params, int>);
-static_assert(Neuron<stateless_neuron_with_params>);
+	pop.update(1, 1, rng);
 
-static_assert(!StatelessNeuronWithoutParams<stateful_neuron_with_params>);
-static_assert(!StatelessNeuronWithParams<stateful_neuron_with_params, any_t>);
-static_assert(!StatefulNeuronWithoutParams<stateful_neuron_with_params>);
-static_assert(StatefulNeuronWithParams<stateful_neuron_with_params, any_t>);
-static_assert(StatefulNeuronWithParams<stateful_neuron_with_params, int>);
-static_assert(!StatelessNeuron<stateful_neuron_with_params>);
-static_assert(StatefulNeuron<stateful_neuron_with_params>);
-static_assert(!NeuronWithoutParams<stateful_neuron_with_params>);
-static_assert(NeuronWithParams<stateful_neuron_with_params, any_t>);
-static_assert(NeuronWithParams<stateful_neuron_with_params, int>);
-static_assert(Neuron<stateful_neuron_with_params>);
+	for (auto& n : pop.get_neurons())
+		ASSERT_TRUE(n.fired);
+
+	ASSERT_EQ(pop.spikes(0).size(), 2);
+
+	{
+		Int i = 1;
+		for (auto s : pop.spikes(0)) {
+			ASSERT_EQ(s, i);
+			i += 2;
+		}
+	}
+
+	for (Int i : range(5))
+		ASSERT_EQ(pop.history()[i], i % 2);
+}
+
+struct per_population_update {
+	void update(float, auto&, std::vector<Int32>& spikes) { spikes.insert(spikes.end(), {1, 3, 8}); }
+};
+static_assert(PerPopulationUpdate<per_population_update>);
+
+TEST(NeuronPopulation, PerPopulationUpdate) {
+	seed_seq seed{1337};
+	xoroshiro64_128p rng(seed);
+	neuron_population<per_population_update> pop({}, 10, seed, 1);
+	pop.plastic();
+
+	ASSERT_EQ(pop.size(), 10);
+
+	pop.update(1, 1, rng);
+	ASSERT_EQ(pop.spikes(0).size(), 3);
+	ASSERT_EQ(pop.spikes(0)[0], 1);
+	ASSERT_EQ(pop.spikes(0)[1], 3);
+	ASSERT_EQ(pop.spikes(0)[2], 8);
+
+	ASSERT_EQ(pop.history()[0], 0);
+	ASSERT_EQ(pop.history()[1], 1);
+	ASSERT_EQ(pop.history()[2], 0);
+	ASSERT_EQ(pop.history()[3], 1);
+	ASSERT_EQ(pop.history()[4], 0);
+	ASSERT_EQ(pop.history()[5], 0);
+	ASSERT_EQ(pop.history()[6], 0);
+	ASSERT_EQ(pop.history()[7], 0);
+	ASSERT_EQ(pop.history()[8], 1);
+	ASSERT_EQ(pop.history()[9], 0);
+}

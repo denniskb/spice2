@@ -21,7 +21,7 @@ public:
 	template <Neuron Neur>
 	detail::neuron_population<Neur>* add_population(Int const size, Neur neur = {}) {
 		_neurons.push_back(
-		    std::make_unique<detail::neuron_population<Neur>>(std::move(neur), _seed, size, _max_delay));
+		    std::make_unique<detail::neuron_population<Neur>>(std::move(neur), size, _seed, _max_delay));
 
 		return static_cast<detail::neuron_population<Neur>*>(_neurons.back().get());
 	}
