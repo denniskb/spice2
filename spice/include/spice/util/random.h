@@ -173,7 +173,7 @@ private:
 	constexpr explicit seed_seq(UInt128 const seed) : _seed(seed) {}
 };
 
-template <std::integral Integer, int Period, class Next>
+template <std::integral Integer, int Period>
 class xoroshiro {
 public:
 	using result_type = Integer;
@@ -182,9 +182,8 @@ public:
 
 	constexpr Integer min() { return 0; }
 	constexpr Integer max() { return std::numeric_limits<Integer>::max(); }
-	constexpr Integer operator()() { return Next()(_state); }
 
-private:
+protected:
 	struct state2 {
 		constexpr state2(UInt128 const s) : s0(s.lo), s1(s.hi) {}
 		Integer s0;
@@ -200,30 +199,38 @@ private:
 	std::conditional_t<Period / (sizeof(Integer) * 8) == 2, state2, state4> _state;
 };
 
-using xoroshiro32_128p = xoroshiro<UInt32, 128, decltype([](auto& state) {
-	                                   UInt32 const result = state.s0 + state.s3;
-	                                   UInt32 const t      = state.s1 << 9;
+struct xoroshiro32_128p : public xoroshiro<UInt32, 128> {
+	using xoroshiro::xoroshiro;
 
-	                                   state.s2 ^= state.s0;
-	                                   state.s3 ^= state.s1;
-	                                   state.s1 ^= state.s2;
-	                                   state.s0 ^= state.s3;
+	UInt32 operator()() {
+		UInt32 const result = _state.s0 + _state.s3;
+		UInt32 const t      = _state.s1 << 9;
 
-	                                   state.s2 ^= t;
-	                                   state.s3 = detail::rotl(state.s3, 11);
+		_state.s2 ^= _state.s0;
+		_state.s3 ^= _state.s1;
+		_state.s1 ^= _state.s2;
+		_state.s0 ^= _state.s3;
 
-	                                   return result;
-                                   })>;
+		_state.s2 ^= t;
+		_state.s3 = detail::rotl(_state.s3, 11);
 
-using xoroshiro64_128p = xoroshiro<UInt, 128, decltype([](auto& state) {
-	                                   UInt const result = state.s0 + state.s1;
+		return result;
+	}
+};
 
-	                                   UInt const tmp = state.s0 ^ state.s1;
-	                                   state.s0       = detail::rotl(state.s0, 24) ^ tmp ^ (tmp << 16);
-	                                   state.s1       = detail::rotl(tmp, 37);
+struct xoroshiro64_128p : public xoroshiro<UInt, 128> {
+	using xoroshiro::xoroshiro;
 
-	                                   return result;
-                                   })>;
+	UInt operator()() {
+		UInt const result = _state.s0 + _state.s1;
+
+		UInt const tmp = _state.s0 ^ _state.s1;
+		_state.s0      = detail::rotl(_state.s0, 24) ^ tmp ^ (tmp << 16);
+		_state.s1      = detail::rotl(tmp, 37);
+
+		return result;
+	}
+};
 
 template <std::floating_point Real, bool LeftOpen = false>
 constexpr Real generate_canonical(auto& rng) {

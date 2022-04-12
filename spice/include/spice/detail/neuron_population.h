@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <numeric>
 #include <span>
 #include <vector>
@@ -14,73 +15,134 @@
 
 namespace spice::detail {
 struct NeuronPopulation {
-	virtual ~NeuronPopulation()                                           = default;
-	virtual Int size() const                                              = 0;
-	virtual void update(Int delay, float dt, util::xoroshiro64_128p& rng) = 0;
-	virtual void* neurons()                                               = 0;
-	virtual std::span<Int32 const> spikes(Int age) const                  = 0;
-	virtual void plastic()                                                = 0;
-	virtual std::span<UInt const> history() const                         = 0;
+	virtual ~NeuronPopulation()                                               = default;
+	virtual Int size() const                                                  = 0;
+	virtual void update(Int max_delay, float dt, util::xoroshiro64_128p& rng) = 0;
+	virtual void* neurons()                                                   = 0;
+	virtual std::span<Int32 const> spikes(Int age) const                      = 0;
+	virtual void plastic()                                                    = 0;
+	virtual std::span<UInt const> history() const                             = 0;
 };
 
-template <Neuron Neur, class Params = util::empty_t>
-requires(util::is_empty_v<Params> ? NeuronWithoutParams<Neur> :
-                                    NeuronWithParams<Neur, Params>) class neuron_population :
-public NeuronPopulation {
+// The following adapters provide a unified interface (size(), update()) to a variety of neuron types
+
+template <Neuron Neur>
+class stateless_neuron_adapter {
 public:
-	neuron_population(Int const size, Int const delay, Params const params = {}) :
-	_size(size), _params(std::move(params)) {
+	stateless_neuron_adapter(Neur neuron, Int const size, util::seed_seq&) :
+	_neuron(std::move(neuron)), _size(size) {
+		SPICE_INV(StatelessNeuron<Neur>);
 		SPICE_INV(size >= 0);
-		SPICE_INV(delay >= 1);
-
-		_spike_counts.reserve(delay);
-		_spikes.reserve(size * delay / 100);
-
-		if constexpr (StatefulNeuron<Neur>)
-			_neurons.resize(size);
 	}
 
-	Int size() const override { return _size; }
+	Int size() const { return _size; }
 
-	void update(Int const delay, float const dt, util::xoroshiro64_128p& rng) override {
-		SPICE_INV(delay >= 1);
+	void update(float const dt, auto& rng, std::vector<Int32>& out_spikes) {
+		for (Int const i : util::range(size())) {
+			if (_neuron.update(dt, rng))
+				out_spikes.push_back(i);
+		}
+	}
 
-		if (_spike_counts.size() == delay) {
+private:
+	Neur _neuron;
+	Int _size;
+};
+
+template <Neuron Neur>
+class stateful_neuron_adapter {
+public:
+	stateful_neuron_adapter(Neur neuron, Int const size, util::seed_seq& seed) :
+	_neuron(std::move(neuron)), _neurons(size) {
+		SPICE_INV(StatefulNeuron<Neur>);
+		SPICE_INV(size >= 0);
+
+		util::xoroshiro64_128p rng(seed++);
+
+		if constexpr (PerNeuronInit<Neur>) {
+			Int id = 0;
+			for (auto& n : _neurons)
+				neuron.init(n, id++, rng);
+		} else if constexpr (PerPopulationInit<Neur>)
+			neuron.init(std::span<typename Neur::neuron>(_neurons), rng);
+	}
+
+	Int size() const { return _neurons.size(); }
+
+	void update(float const dt, auto& rng, std::vector<Int32>& out_spikes) {
+		for (Int const i : util::range(size())) {
+			if (_neuron.update(_neurons[i], dt, rng))
+				out_spikes.push_back(i);
+		}
+	}
+
+	std::span<typename Neur::neuron> neurons() { return _neurons; }
+
+private:
+	Neur _neuron;
+	std::vector<neuron_traits_t<Neur>> _neurons;
+};
+
+template <Neuron Neur>
+class per_pop_update_adapter : public Neur {
+public:
+	per_pop_update_adapter(Neur neuron, Int const size, util::seed_seq&) :
+	Neur(std::move(neuron)), _size(size) {
+		SPICE_INV(PerPopulationUpdate<Neur>);
+		SPICE_INV(size >= 0);
+	}
+
+	Int size() const { return _size; }
+
+	// using Neur::update()
+
+private:
+	Int _size;
+};
+
+template <Neuron Neur>
+class neuron_population : public NeuronPopulation {
+public:
+	neuron_population(Neur neuron, Int const size, util::seed_seq& seed, Int const max_delay) :
+	_neuron(std::move(neuron), size, seed) {
+		SPICE_INV(max_delay >= 1);
+
+		_spike_counts.reserve(max_delay);
+		_spikes.reserve(size * max_delay / 100);
+	}
+
+	Int size() const override { return _neuron.size(); }
+
+	void update(Int const max_delay, float const dt, util::xoroshiro64_128p& rng) override {
+		SPICE_INV(max_delay >= 1);
+
+		if (_spike_counts.size() == max_delay) {
 			_spikes.erase(_spikes.begin(), _spikes.begin() + _spike_counts.front());
 			_spike_counts.erase(_spike_counts.begin());
 		}
 
 		Int const spike_count = _spikes.size();
-		util::invoke(_plastic, [&]<bool Plastic>() {
-			for (Int const i : util::range(size())) {
-				bool spiked;
-				if constexpr (StatelessNeuronWithoutParams<Neur>)
-					spiked = Neur::update(dt, rng);
-				else if constexpr (StatelessNeuronWithParams<Neur, Params>)
-					spiked = Neur::update(dt, rng, _params);
-				else if constexpr (StatefulNeuronWithoutParams<Neur>)
-					spiked = _neurons[i].update(dt, rng);
-				else
-					spiked = _neurons[i].update(dt, rng, _params);
+		_neuron.update(dt, rng, _spikes);
+		if (_plastic) {
+			for (auto& hist : _history)
+				hist <<= 1;
 
-				if constexpr (Plastic)
-					_history[i] = (_history[i] << 1) | spiked;
-
-				if (spiked)
-					_spikes.push_back(i);
-			}
-		});
-
+			for (auto spike : util::range(_spikes.begin() + spike_count, _spikes.end()))
+				_history[spike] |= 1;
+		}
 		_spike_counts.push_back(_spikes.size() - spike_count);
 	}
 
 	void* neurons() override {
-		SPICE_PRE(StatefulNeuron<Neur> && "Can't return collection of stateless neurons.");
-		return _neurons.data();
+		SPICE_PRE(StatefulNeuron<Neur> && "Can only return collections of stateful neurons.");
+		if constexpr (StatefulNeuron<Neur>)
+			return get_neurons().data();
+		else
+			return nullptr;
 	}
-	std::span<Neur> get_neurons() {
-		static_assert(StatefulNeuron<Neur>, "Can't return collection of stateless neurons.");
-		return _neurons;
+	auto get_neurons() {
+		static_assert(StatefulNeuron<Neur>, "Can only return collections of stateful neurons.");
+		return _neuron.neurons();
 	}
 
 	std::span<Int32 const> spikes(Int age) const override {
@@ -98,12 +160,13 @@ public:
 	std::span<UInt const> history() const override { return _history; }
 
 private:
-	Int _size = 0;
-	std::vector<Neur> _neurons;
+	std::conditional_t<PerPopulationUpdate<Neur>, per_pop_update_adapter<Neur>,
+	                   std::conditional_t<StatelessNeuron<Neur>, stateless_neuron_adapter<Neur>,
+	                                      stateful_neuron_adapter<Neur>>>
+	    _neuron;
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;
 	std::vector<UInt> _history;
-	bool _plastic  = false;
-	Params _params = {};
+	bool _plastic = false;
 };
 }

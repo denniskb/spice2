@@ -14,7 +14,7 @@
 #include "spice/util/type_traits.h"
 
 namespace spice::detail {
-template <class T = util::empty_t>
+template <class T = void>
 class csr {
 public:
 	template <bool Const>
@@ -29,14 +29,19 @@ public:
 		constexpr iterator_t() = default;
 		constexpr iterator_t(const iterator_t<false>& other) : _dst(other._dst), _edge(other._edge) {}
 
-		constexpr value_type operator*() const { return {*_dst, _edge}; }
+		constexpr value_type operator*() const {
+			if constexpr (std::is_void_v<T>)
+				return {*_dst, nullptr};
+			else
+				return {*_dst, _edge};
+		}
 
 		constexpr bool operator==(const iterator_t& other) const { return _dst == other._dst; }
 		constexpr bool operator!=(const iterator_t& other) const { return _dst != other._dst; }
 
 		constexpr iterator_t& operator++() {
 			_dst++;
-			if constexpr (!std::is_empty_v<T>)
+			if constexpr (!std::is_void_v<T>)
 				_edge++;
 
 			return *this;
@@ -51,8 +56,10 @@ public:
 		friend class csr;
 
 		Int32 const* _dst = nullptr;
-		edge_t* _edge     = nullptr;
+		[[no_unique_address]] util::optional_t<edge_t*, !std::is_void_v<T>> _edge{};
 
+		constexpr iterator_t(Int32 const* dst) : _dst(dst) {}
+		template <class U = T, class = std::enable_if_t<!std::is_void_v<U>>>
 		constexpr iterator_t(Int32 const* dst, edge_t* edge) : _dst(dst), _edge(edge) {}
 	};
 	using iterator       = iterator_t<false>;
@@ -61,7 +68,7 @@ public:
 	csr(Connectivity& c, util::seed_seq const& seed) {
 		_offsets.resize(c.src_count > 0 ? c.src_count + 1 : 0);
 		_neighbors.resize(c.size());
-		if constexpr (!util::is_empty_v<T>)
+		if constexpr (!std::is_void_v<T>)
 			_edges.resize(_neighbors.size());
 
 		c.generate(_offsets, _neighbors, seed);
@@ -73,8 +80,11 @@ public:
 		Int const first = _offsets[src];
 		Int const last  = _offsets[src + 1];
 
-		return {{_neighbors.data() + first, _edges.data() + first},
-		        {_neighbors.data() + last, _edges.data() + last}};
+		if constexpr (std::is_void_v<T>)
+			return {_neighbors.data() + first, _neighbors.data() + last};
+		else
+			return {{_neighbors.data() + first, _edges.data() + first},
+			        {_neighbors.data() + last, _edges.data() + last}};
 	}
 
 	util::range_t<const_iterator> neighbors(Int const src) const {
@@ -84,6 +94,6 @@ public:
 private:
 	std::vector<Int> _offsets;
 	std::vector<Int32> _neighbors;
-	std::vector<T> _edges;
+	[[no_unique_address]] util::optional_t<std::vector<T>, !std::is_void_v<T>> _edges;
 };
 }

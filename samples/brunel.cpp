@@ -8,41 +8,47 @@ using namespace spice;
 using namespace spice::util;
 
 struct poisson {
-	static bool update(float const dt, util::xoroshiro64_128p& rng) {
+	bool update(float const dt, auto& rng) const {
 		float const firing_rate = 20; //Hz
 		return util::generate_canonical<float>(rng) < (firing_rate * dt);
 	}
 };
 
 struct lif {
-	float V   = 0;
-	int Twait = 0;
+	struct neuron {
+		float V   = 0;
+		int Twait = 0;
+	};
 
-	bool update(float const dt, util::xoroshiro64_128p&) {
+	bool update(neuron& n, float const dt, auto&) const {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
 		float const Vthres  = 0.02f;      // v
 
-		if (--Twait <= 0) {
-			if (V > Vthres) {
-				V     = Vrest;
-				Twait = Tref;
+		if (--n.Twait <= 0) {
+			if (n.V > Vthres) {
+				n.V     = Vrest;
+				n.Twait = Tref;
 				return true;
 			}
 
-			V += (Vrest - V) * (dt * TmemInv);
+			n.V += (Vrest - n.V) * (dt * TmemInv);
 		}
 		return false;
 	}
 };
 
 struct SynE {
-	static void deliver(lif& to, Int const N) { to.V += (0.0001f * 20'000) / N; }
+	Int N;
+
+	void deliver(lif::neuron& to) const { to.V += (0.0001f * 20'000) / N; }
 };
 
 struct SynI {
-	static void deliver(lif& to, Int const N) { to.V -= (0.0005f * 20'000) / N; }
+	Int N;
+
+	void deliver(lif::neuron& to) const { to.V -= (0.0005f * 20'000) / N; }
 };
 
 int main() {
@@ -56,12 +62,12 @@ int main() {
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
 
-	brunel.connect<SynE>(P, E, fixed_probability(0.1), delay, N);
-	brunel.connect<SynE>(P, I, fixed_probability(0.1), delay, N);
-	brunel.connect<SynE>(E, E, fixed_probability(0.1), delay, N);
-	brunel.connect<SynE>(E, I, fixed_probability(0.1), delay, N);
-	brunel.connect<SynI>(I, E, fixed_probability(0.1), delay, N);
-	brunel.connect<SynI>(I, I, fixed_probability(0.1), delay, N);
+	brunel.connect<SynE>(P, E, fixed_probability(0.1), delay, {N});
+	brunel.connect<SynE>(P, I, fixed_probability(0.1), delay, {N});
+	brunel.connect<SynE>(E, E, fixed_probability(0.1), delay, {N});
+	brunel.connect<SynE>(E, I, fixed_probability(0.1), delay, {N});
+	brunel.connect<SynI>(I, E, fixed_probability(0.1), delay, {N});
+	brunel.connect<SynI>(I, I, fixed_probability(0.1), delay, {N});
 
 	for (Int i : range(300)) {
 		brunel.step();

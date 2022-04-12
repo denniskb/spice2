@@ -22,17 +22,24 @@ struct SynapsePopulation {
 	virtual Int delay() const                                                                = 0;
 };
 
-template <class Syn, StatefulNeuron Neur, class Params = util::empty_t>
-requires(util::is_empty_v<Params> ? SynapseWithoutParams<Syn, Neur> :
-                                    SynapseWithParams<Syn, Neur, Params>) class synapse_population :
-public SynapsePopulation {
+template <class Syn, StatefulNeuron Neur>
+requires Synapse<Syn, Neur>
+class synapse_population : public SynapsePopulation {
 public:
-	synapse_population(Connectivity& c, util::seed_seq const& seed, Int const delay,
-	                   Params const params = {}) :
-	_graph(c, seed),
-	_delay(delay), _params(std::move(params)) {
+	synapse_population(Syn syn, Connectivity& c, util::seed_seq& seed, Int const delay) :
+	_syn(std::move(syn)), _graph(c, seed++), _delay(delay) {
 		SPICE_PRE(delay >= 1);
-		if constexpr (PlasticSynapse<Syn>)
+
+		if constexpr (PerSynapseInit<Syn, Neur>) {
+			util::xoroshiro64_128p rng(seed++);
+			for (auto src : util::range(c.src_count)) {
+				for (auto edge : _graph.neighbors(src)) {
+					_syn.init(*edge.second, src, edge.first, rng);
+				}
+			}
+		}
+
+		if constexpr (PlasticSynapse<Syn, Neur>)
 			_ages.resize(c.src_count);
 	}
 
@@ -41,70 +48,70 @@ public:
 		SPICE_INV(ptr);
 		SPICE_INV(size >= 0);
 
-		Neur* const dst_neurons = static_cast<Neur*>(ptr);
+		auto dst_neurons = static_cast<typename Neur::neuron*>(ptr);
 		_update<true>(time, dt, spikes, {dst_neurons, static_cast<UInt>(size)}, dst_history);
 	}
 
 	void update(Int const time, float const dt, Int const src_size,
 	            std::span<UInt const> dst_history) override {
-		if constexpr (PlasticSynapse<Syn>)
+		if constexpr (PlasticSynapse<Syn, Neur>)
 			_update<false>(time, dt, util::range(src_size), {}, dst_history);
 	}
 
 	Int delay() const override { return _delay; }
 
 private:
-	detail::csr<std::conditional_t<StatefulSynapse<Syn, Neur>, Syn, util::empty_t>> _graph;
-	std::vector<UInt> _ages;
+	Syn _syn;
+	detail::csr<synapse_traits_t<Syn, Neur>> _graph;
 	Int _delay;
-	Params _params;
+	[[no_unique_address]] util::optional_t<std::vector<UInt>, PlasticSynapse<Syn, Neur>> _ages;
 
 	template <bool Deliver>
-	void _update(Int const time, float const dt, auto spikes, std::span<Neur> dst_neurons,
+	void _update(Int const time, float const dt, auto spikes, std::span<typename Neur::neuron> dst_neurons,
 	             std::span<UInt const> dst_history) {
-		static_assert(Deliver || PlasticSynapse<Syn>);
+		static_assert(Deliver || PlasticSynapse<Syn, Neur>);
 
 		for (auto src : spikes) {
-			bool const pre   = PlasticSynapse<Syn> ? _ages[src] >> 63 : false;
-			Int const age    = PlasticSynapse<Syn> ? _ages[src] & ~(1_u64 << 63) : time + 1;
+			bool pre = false;
+			Int age  = time + 1;
+			if constexpr (PlasticSynapse<Syn, Neur>) {
+				pre = _ages[src] >> 63;
+				age = _ages[src] & ~(1_u64 << 63);
+			}
 			Int const prefix = 63 + pre - time + age;
 			UInt const mask  = ~0_u64 >> prefix;
 
 			util::invoke(pre, time >= age, [&]<bool Pre, bool Outdated>() {
 				for (auto edge : _graph.neighbors(src)) {
-					if constexpr (PlasticSynapse<Syn> && Outdated) {
+					if constexpr (PlasticSynapse<Syn, Neur> && Outdated) {
 						SPICE_INV(edge.first < dst_history.size());
 						UInt hist = dst_history[edge.first];
 						if constexpr (Pre)
-							edge.second->update(dt, true, hist & (1_u64 << (time - age)));
+							_syn.update(*edge.second, dt, true, hist & (1_u64 << (time - age)));
 
 						hist &= mask;
 						Int p = prefix;
 						while (hist) {
 							Int const lz = __builtin_clzl(hist);
-							edge.second->skip(dt, lz - p);
-							edge.second->update(dt, false, true);
+							_syn.skip(*edge.second, dt, lz - p);
+							_syn.update(*edge.second, dt, false, true);
 							hist ^= 1_u64 << (63 - lz);
 							p = lz + 1;
 						}
-						edge.second->skip(dt, 64 - p);
+						_syn.skip(*edge.second, dt, 64 - p);
 					}
 
 					if constexpr (Deliver) {
 						SPICE_INV(edge.first < dst_neurons.size());
-						if constexpr (StatelessSynapseWithoutParams<Syn, Neur>)
-							Syn::deliver(dst_neurons[edge.first]);
-						else if constexpr (StatelessSynapseWithParams<Syn, Neur, Params>)
-							Syn::deliver(dst_neurons[edge.first], _params);
-						else if constexpr (StatefulSynapseWithoutParams<Syn, Neur>)
-							edge.second->deliver(dst_neurons[edge.first]);
+						if constexpr (StatelessSynapse<Syn, Neur>)
+							_syn.deliver(dst_neurons[edge.first]);
 						else
-							edge.second->deliver(dst_neurons[edge.first], _params);
+							_syn.deliver(*edge.second, dst_neurons[edge.first]);
 					}
 				}
 			});
 
-			if constexpr (PlasticSynapse<Syn>)
+			if constexpr (PlasticSynapse<Syn, Neur>)
 				_ages[src] = (time + 1) | (UInt(Deliver) << 63);
 		}
 	}

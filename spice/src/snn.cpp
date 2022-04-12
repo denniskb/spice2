@@ -5,10 +5,11 @@
 using namespace spice;
 
 void snn::step() {
-	util::xoroshiro64_128p rng(_seed++);
 	float const dt = _simtime += _dt;
 	if (_simtime >= 1)
 		_simtime.reset();
+
+	util::xoroshiro64_128p rng(_seed++);
 
 	for (auto& pop : _neurons)
 		pop->update(_max_delay, dt, rng);

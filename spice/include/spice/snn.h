@@ -15,48 +15,41 @@
 namespace spice {
 class snn {
 public:
-	snn(float const dt, float const max_delay, util::seed_seq seq) :
-	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seq)) {}
+	snn(float const dt, float const max_delay, util::seed_seq seed) :
+	_dt(dt), _max_delay(std::round(max_delay / dt)), _seed(std::move(seed)) {}
 
-	template <Neuron Neur, class Params = util::empty_t>
-	detail::neuron_population<Neur, Params>* add_population(Int const size, Params const params = {}) {
+	template <Neuron Neur>
+	detail::neuron_population<Neur>* add_population(Int const size, Neur neur = {}) {
 		_neurons.push_back(
-		    std::make_unique<detail::neuron_population<Neur, Params>>(size, _max_delay, std::move(params)));
+		    std::make_unique<detail::neuron_population<Neur>>(std::move(neur), size, _seed, _max_delay));
 
-		return static_cast<detail::neuron_population<Neur, Params>*>(_neurons.back().get());
+		return static_cast<detail::neuron_population<Neur>*>(_neurons.back().get());
 	}
 
-	template <class Syn, class Params = util::empty_t, StatefulNeuron Neur, class NeurParams>
-	requires(util::is_empty_v<Params> ?
-	             SynapseWithoutParams<Syn, Neur> :
-                 SynapseWithParams<Syn, Neur,
-	                               Params>) void connect(detail::NeuronPopulation* source,
-	                                                     detail::neuron_population<Neur, NeurParams>* target,
-	                                                     Connectivity& c, float const delay,
-	                                                     Params const params = {}) {
-		static_assert(
-		    !requires { &Syn::update; } || PlasticSynapse<Syn>,
-		    "It looks like you're trying to define a plastic synapse (your synapse has an update() method). "
-		    "However, your synapse type does not conform to the PlasticSynapse concept.");
-
+	template <class Syn, StatefulNeuron Neur>
+	requires Synapse<Syn, Neur>
+	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity& c,
+	             float const delay, Syn syn = {}) {
 		Int const d = std::round(delay / _dt);
+		SPICE_PRE(d >= 1 && "The delay must be at least 1dt.");
 		SPICE_PRE(d <= _max_delay &&
 		          "The delay of a synapse population may not exceed the maximum delay of the network.");
 
 		_synapses.push_back(
-		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur, Params>(
-		        c(source->size(), target->size()), _seed++, d, std::move(params))));
+		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur>(
+		        std::move(syn), c(source->size(), target->size()), _seed, d)));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 
-		if constexpr (PlasticSynapse<Syn>)
+		if constexpr (PlasticSynapse<Syn, Neur>)
 			source->plastic();
 	}
 
-	template <class Syn, class Params = util::empty_t, StatefulNeuron Neur, class NeurParams>
-	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur, NeurParams>* target,
-	             Connectivity&& c, float const delay, Params const params = {}) {
-		connect<Syn, Params, Neur, NeurParams>(source, target, c, delay, std::move(params));
+	template <class Syn, StatefulNeuron Neur>
+	requires Synapse<Syn, Neur>
+	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity&& c,
+	             float const delay, Syn syn = {}) {
+		connect<Syn, Neur>(source, target, c, delay, std::move(syn));
 	}
 
 	void step();

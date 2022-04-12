@@ -8,12 +8,14 @@ using namespace spice;
 using namespace spice::util;
 
 struct lif {
-	float V     = -0.06;
-	float Gex   = 0;
-	float Gin   = 0;
-	Int32 Twait = 0;
+	struct neuron {
+		float V     = -0.06;
+		float Gex   = 0;
+		float Gin   = 0;
+		Int32 Twait = 0;
+	};
 
-	bool update(float const dt, util::xoroshiro64_128p&) {
+	bool update(neuron& n, float const dt, auto&) const {
 		Int32 const Tref    = 50;           // dt
 		float const Vrest   = -0.06f;       // v
 		float const Vthres  = -0.05f;       // v
@@ -26,32 +28,36 @@ struct lif {
 		float const TinInv = 1.0f / 0.01f;  // s
 
 		bool spiked = false;
-		if (--Twait <= 0) {
-			if (V > Vthres) {
-				V      = Vrest;
-				Twait  = Tref;
-				spiked = true;
+		if (--n.Twait <= 0) {
+			if (n.V > Vthres) {
+				n.V     = Vrest;
+				n.Twait = Tref;
+				spiked  = true;
 			} else
-				V += ((Vrest - V) + Gex * (Eex - V) + Gin * (Ein - V) + Ibg) * (dt * TmemInv);
+				n.V += ((Vrest - n.V) + n.Gex * (Eex - n.V) + n.Gin * (Ein - n.V) + Ibg) * (dt * TmemInv);
 		}
 
-		Gex -= Gex * (dt * TexInv);
-		Gin -= Gin * (dt * TinInv);
+		n.Gex -= n.Gex * (dt * TexInv);
+		n.Gin -= n.Gin * (dt * TinInv);
 
 		return spiked;
 	}
 };
 
 struct SynE {
-	static void deliver(lif& to, Int const N) {
-		float const W = (0.4f * 16'000'000) / (N * N); // siemens
+	Int N2;
+
+	void deliver(lif::neuron& to) const {
+		float const W = 0.4f * (16'000'000.0 / N2); // siemens
 		to.Gex += W;
 	}
 };
 
 struct SynI {
-	static void deliver(lif& to, Int const N) {
-		float const W = (5.1f * 16'000'000) / (N * N); // siemens
+	Int N2;
+
+	void deliver(lif::neuron& to) const {
+		float const W = 5.1f * (16'000'000.0 / N2); // siemens
 		to.Gin += W;
 	}
 };
@@ -66,10 +72,10 @@ int main() {
 	auto E = vogels.add_population<lif>(N * 8 / 10);
 	auto I = vogels.add_population<lif>(N * 2 / 10);
 
-	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay, N);
-	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay, N);
-	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, N);
-	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, N);
+	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay, {N * N});
+	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay, {N * N});
+	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, {N * N});
+	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, {N * N});
 
 	for (Int i : range(1500)) {
 		vogels.step();
