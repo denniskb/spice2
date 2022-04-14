@@ -1,4 +1,4 @@
-if(spice_build_samples)
+if(spice_use_matplot)
 	set(BUILD_EXAMPLES OFF CACHE BOOL "Do not build matplot samples" FORCE)
 	set(BUILD_HIGH_RESOLUTION_WORLD_MAP OFF CACHE BOOL "Disable matplot hires world map" FORCE)
 	set(BUILD_INSTALLER OFF CACHE BOOL "Do not install 3rd party dependencies" FORCE)

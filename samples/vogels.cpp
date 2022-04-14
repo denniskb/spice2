@@ -63,8 +63,6 @@ struct SynI {
 };
 
 int main() {
-	using namespace matplot;
-
 	int const N       = 4000;
 	float const delay = 8e-4;
 
@@ -77,10 +75,11 @@ int main() {
 	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, {N * N});
 	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, {N * N});
 
+	spike_output_stream s("Vogels", true);
 	for (Int i : range(1500)) {
 		vogels.step();
 
-		scatter_spikes({I, E}, true);
+		s << I << E << '\n';
 
 		(void)i;
 	}

@@ -52,8 +52,6 @@ struct SynI {
 };
 
 int main() {
-	using namespace matplot;
-
 	int const N       = 20000;
 	float const delay = 15e-4;
 
@@ -69,10 +67,11 @@ int main() {
 	brunel.connect<SynI>(I, E, fixed_probability(0.1), delay, {N});
 	brunel.connect<SynI>(I, I, fixed_probability(0.1), delay, {N});
 
+	spike_output_stream s("Brunel");
 	for (Int i : range(300)) {
 		brunel.step();
 
-		scatter_spikes({I, E, P});
+		s << I << E << P << '\n';
 
 		pause(0.05);
 		(void)i;

@@ -1,14 +1,26 @@
 #pragma once
 
-#pragma GCC system_header
-#include "matplot/matplot.h"
+#include <memory>
+#include <string>
 
 #include "spice/detail/neuron_population.h"
-#include "spice/snn.h"
 
-namespace matplot {
+#ifdef SPICE_USE_MATPLOT
+	#pragma GCC system_header
+	#include "matplot/matplot.h"
+#endif
+
 void pause(double s);
 
-void scatter_spikes(std::initializer_list<spice::detail::NeuronPopulation const*> neuron_population_list,
-                    bool skip_simulation_steps_without_spikes = false);
-}
+class spike_output_stream {
+public:
+	explicit spike_output_stream(std::string const& model_name, bool const skip_steps_without_spikes = false);
+	~spike_output_stream();
+
+	spike_output_stream& operator<<(spice::detail::NeuronPopulation const* population);
+	spike_output_stream& operator<<(char const c);
+
+private:
+	struct impl;
+	std::unique_ptr<impl> _impl;
+};

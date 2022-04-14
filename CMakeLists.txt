@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(spice_assert_preconditions TRUE CACHE BOOL "Assert preconditions in release mode (recommended)")
 set(spice_assert_invariants TRUE CACHE BOOL "Assert invariants in release mode (for developers only)")
-set(spice_build_samples FALSE CACHE BOOL "Build example SNN models and applications? (optional)")
+set(spice_use_matplot FALSE CACHE BOOL "Use matplotlib for visualization inside the samples. Alternatively, print json to the command line. (optional)")
 set(spice_build_tests FALSE CACHE BOOL "Build unit tests? (optional, for developers only)")
 set(spice_build_benchmarks FALSE CACHE BOOL "Build performance benchmarks? (optional, for developers only)")
 
@@ -59,9 +59,7 @@ add_subdirectory(third_party)
 add_subdirectory(spice)
 
 # samples
-if(spice_build_samples)
-	add_subdirectory(samples)
-endif()
+add_subdirectory(samples)
 
 # test (unit test suite)
 if(spice_build_tests)

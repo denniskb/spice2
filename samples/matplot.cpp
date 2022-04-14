@@ -1,20 +1,14 @@
 #include "matplot.h"
 
-#include <thread>
+#ifdef SPICE_USE_MATPLOT
+
+	#include <thread>
 
 using namespace matplot;
 
-static matplot::figure_handle _figure(void const* id) {
-	static std::map<void const*, matplot::figure_handle> map;
+void pause(double s) { std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(s * 1000))); }
 
-	auto result = map.find(id);
-	if (result != map.end())
-		return matplot::figure(result->second);
-	else
-		return map.emplace(id, matplot::figure(true)).first->second;
-}
-
-static void _scatter_spikes(spice::detail::NeuronPopulation const* pop, Int width, Int offset) {
+static void scatter_spikes(spice::detail::NeuronPopulation const* pop, Int const width, Int const offset) {
 	static std::vector<double> x;
 	static std::vector<double> y;
 
@@ -33,33 +27,103 @@ static void _scatter_spikes(spice::detail::NeuronPopulation const* pop, Int widt
 	l->marker_style(line_spec::marker_style::point);
 }
 
-namespace matplot {
-void pause(double s) { std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(s * 1000))); }
+struct spike_output_stream::impl {
+	bool skip = false;
 
-void scatter_spikes(std::initializer_list<spice::detail::NeuronPopulation const*> pops, bool skip) {
-	Int N = 0;
-	Int S = 0;
-	for (auto pop : pops) {
-		N += pop->size();
-		S += pop->spikes(0).size();
-	}
+	figure_handle figure;
+	std::vector<spice::detail::NeuronPopulation const*> pops;
+};
 
-	if (skip && S == 0)
-		return;
+spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) : _impl(new impl()) {
+	_impl->skip = skip;
 
-	Int const width = std::ceil(std::sqrt(N));
-
-	auto h = _figure(pops.begin());
-	cla();
+	_impl->figure = figure(true);
+	_impl->figure->name(model_name);
 	hold(true);
-	xlim({0, double(width)});
-	ylim({0, double(width)});
+}
 
-	Int offset = 0;
-	for (auto pop : pops) {
-		_scatter_spikes(pop, width, offset);
-		offset += pop->size();
+spike_output_stream::~spike_output_stream() = default;
+
+spike_output_stream& spike_output_stream::operator<<(spice::detail::NeuronPopulation const* pop) {
+	_impl->pops.push_back(pop);
+	return *this;
+}
+
+spike_output_stream& spike_output_stream::operator<<(char const c) {
+	if (c == '\n') {
+		Int N = 0;
+		Int S = 0;
+		for (auto pop : _impl->pops) {
+			N += pop->size();
+			S += pop->spikes(0).size();
+		}
+
+		if (!_impl->skip || S > 0) {
+			Int const width = std::ceil(std::sqrt(N));
+
+			figure(_impl->figure);
+			cla();
+			xlim({0, double(width)});
+			ylim({0, double(width)});
+
+			Int offset = 0;
+			for (auto pop : _impl->pops) {
+				scatter_spikes(pop, width, offset);
+				offset += pop->size();
+			}
+
+			_impl->figure->draw();
+		}
+
+		_impl->pops.clear();
 	}
-	h->draw();
+
+	return *this;
 }
+
+#else
+
+	#include <iostream>
+
+void pause(double) {}
+
+struct spike_output_stream::impl {
+	bool skip         = false;
+	Int offset        = 0;
+	std::string delim = "\t\t[";
+};
+
+spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) : _impl(new impl()) {
+	_impl->skip = skip;
+
+	std::cout << "{\n";
+	std::cout << "\t\"name\": \"" << model_name << "\",\n";
+	std::cout << "\t\"spikes\": [\n";
 }
+
+spike_output_stream::~spike_output_stream() { std::cout << "\n\t]\n}"; }
+
+spike_output_stream& spike_output_stream::operator<<(spice::detail::NeuronPopulation const* pop) {
+	if (!_impl->skip || pop->spikes(0).size() > 0) {
+		for (auto s : pop->spikes(0)) {
+			std::cout << _impl->delim << s + _impl->offset;
+			_impl->delim = ",";
+		}
+		_impl->offset += pop->size();
+	}
+
+	return *this;
+}
+
+spike_output_stream& spike_output_stream::operator<<(char const c) {
+	if (c == '\n') {
+		if (_impl->offset > 0) {
+			_impl->delim = ",\n\t\t[";
+			std::cout << "]";
+		}
+		_impl->offset = 0;
+	}
+	return *this;
+}
+
+#endif
