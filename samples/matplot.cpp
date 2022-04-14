@@ -101,7 +101,7 @@ spike_output_stream::spike_output_stream(std::string const& model_name, bool ski
 	std::cout << "\t\"spikes\": [\n";
 }
 
-spike_output_stream::~spike_output_stream() { std::cout << "\n\t]\n}"; }
+spike_output_stream::~spike_output_stream() { std::cout << "\n\t]\n}\n"; }
 
 spike_output_stream& spike_output_stream::operator<<(spice::detail::NeuronPopulation const* pop) {
 	if (!_impl->skip || pop->spikes(0).size() > 0) {
