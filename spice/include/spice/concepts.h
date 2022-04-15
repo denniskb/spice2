@@ -9,17 +9,13 @@
 
 namespace spice {
 template <class T>
-concept StatelessNeuron = requires(T const t, float dt, std::mt19937& rng) {
-	requires std::default_initializable<T>;
-	{ t.update(dt, rng) } -> std::same_as<bool>;
-};
+concept StatelessNeuron = std::default_initializable<T>;
 
 template <class T>
-concept StatefulNeuron = requires(T const t, typename T::neuron& n, float dt, std::mt19937& rng) {
+concept StatefulNeuron = requires {
 	requires std::default_initializable<T>;
 	typename T::neuron;
 	requires std::default_initializable<typename T::neuron>;
-	{ t.update(n, dt, rng) } -> std::same_as<bool>;
 };
 
 template <class T>
@@ -35,6 +31,17 @@ concept PerPopulationInit = requires(T t, std::span<typename T::neuron> n, std::
 };
 
 template <class T>
+concept PerNeuronUpdate = requires(T const t, float dt, std::mt19937& rng) {
+	requires(StatefulNeuron<T> ?
+	             requires(typename T::neuron & n) {
+		             { t.update(n, dt, rng) } -> std::same_as<bool>;
+	             } :
+                 requires {
+		             { t.update(dt, rng) } -> std::same_as<bool>;
+	             });
+};
+
+template <class T>
 concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::vector<Int32>& out_spikes) {
 	requires std::default_initializable<T>;
 	requires std::copy_constructible<T> || std::move_constructible<T>;
@@ -42,13 +49,12 @@ concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::ve
 };
 
 template <class T>
-concept Neuron = util::one_of<PerPopulationUpdate<T>, util::one_of<StatelessNeuron<T>, StatefulNeuron<T>> &&
-                              util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>>;
+concept Neuron =
+    util::one_of<PerPopulationUpdate<T>, (StatelessNeuron<T> || StatefulNeuron<T>)&& PerNeuronUpdate<T> &&
+                 util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>>;
 
 template <class T>
-concept StatelessSynapse = requires {
-	requires std::default_initializable<T>;
-};
+concept StatelessSynapse = std::default_initializable<T>;
 
 template <class T>
 concept StatefulSynapse = requires {
