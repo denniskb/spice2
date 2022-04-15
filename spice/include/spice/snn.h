@@ -26,30 +26,30 @@ public:
 		return static_cast<detail::neuron_population<Neur>*>(_neurons.back().get());
 	}
 
-	template <class Syn, StatefulNeuron Neur>
-	requires Synapse<Syn, Neur>
-	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity& c,
-	             float const delay, Syn syn = {}) {
+	template <class Syn, Neuron SrcNeur, StatefulNeuron DstNeur>
+	requires Synapse<Syn, SrcNeur, DstNeur>
+	void connect(detail::neuron_population<SrcNeur>* source, detail::neuron_population<DstNeur>* target,
+	             Connectivity& c, float const delay, Syn syn = {}) {
 		Int const d = std::round(delay / _dt);
 		SPICE_PRE(d >= 1 && "The delay must be at least 1dt.");
 		SPICE_PRE(d <= _max_delay &&
 		          "The delay of a synapse population may not exceed the maximum delay of the network.");
 
 		_synapses.push_back(
-		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, Neur>(
+		    std::unique_ptr<detail::SynapsePopulation>(new detail::synapse_population<Syn, SrcNeur, DstNeur>(
 		        std::move(syn), c(source->size(), target->size()), _seed, d)));
 
 		_connections.push_back({source, _synapses.back().get(), target});
 
-		if constexpr (PlasticSynapse<Syn, Neur>)
+		if constexpr (PlasticSynapse<Syn>)
 			source->plastic();
 	}
 
-	template <class Syn, StatefulNeuron Neur>
-	requires Synapse<Syn, Neur>
-	void connect(detail::NeuronPopulation* source, detail::neuron_population<Neur>* target, Connectivity&& c,
-	             float const delay, Syn syn = {}) {
-		connect<Syn, Neur>(source, target, c, delay, std::move(syn));
+	template <class Syn, Neuron SrcNeur, StatefulNeuron DstNeur>
+	requires Synapse<Syn, SrcNeur, DstNeur>
+	void connect(detail::neuron_population<SrcNeur>* source, detail::neuron_population<DstNeur>* target,
+	             Connectivity&& c, float const delay, Syn syn = {}) {
+		connect<Syn, SrcNeur, DstNeur>(source, target, c, delay, std::move(syn));
 	}
 
 	void step();

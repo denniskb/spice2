@@ -1,7 +1,9 @@
 #include "spice/snn.h"
 
+using namespace spice;
+
 //      3 2 3
-//   1.___*___.3
+//   1.---*---.3
 //  1/         \1
 // 0*           *4
 //  1\         /1
@@ -35,12 +37,13 @@ struct vertex {
 		neurons[src].fire     = true;
 	}
 
-	bool update(neuron& n, float, auto&) {
+	bool update(neuron& n, float, auto&) const {
 		bool const result = n.fire;
 		n.fire            = false;
 		return result;
 	}
 };
+static_assert(PerPopulationInit<vertex>);
 
 struct edge {
 	struct synapse {
@@ -49,11 +52,10 @@ struct edge {
 
 	void init(synapse& syn, Int src, Int dst, auto&) const { syn.weight = adj_matrix[src][dst]; }
 
-	void deliver(synapse const& syn, vertex::neuron& n) const {
+	void deliver(synapse const&, vertex::neuron const&, vertex::neuron&) const {
 		// TODO: Make source neuron available inside deliver!
 	}
-}
+};
+static_assert(StatefulSynapse<edge> && DeliverFromTo<edge, vertex, vertex>);
 
-int main() {
-	return 0;
-}
+int main() { return 0; }
