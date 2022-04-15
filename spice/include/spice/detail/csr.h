@@ -72,6 +72,7 @@ public:
 			_edges.resize(_neighbors.size());
 
 		c.generate(_offsets, _neighbors, seed);
+		SPICE_INV(std::is_sorted(_offsets.begin(), _offsets.end()));
 	}
 
 	util::range_t<iterator> neighbors(Int const src) {

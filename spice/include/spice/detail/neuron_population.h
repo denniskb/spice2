@@ -134,7 +134,6 @@ public:
 	}
 
 	void* neurons() override {
-		SPICE_PRE(StatefulNeuron<Neur> && "Can only return collections of stateful neurons.");
 		if constexpr (StatefulNeuron<Neur>)
 			return get_neurons().data();
 		else
