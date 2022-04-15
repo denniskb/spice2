@@ -17,7 +17,6 @@ public:
 private:
 	std::span<Int> _offsets;
 	std::span<Int32> _neighbors;
-	std::pair<Int32, Int32> _prev{-1, -1};
 	Int _src = 0;
 	Int _dst = 0;
 };
