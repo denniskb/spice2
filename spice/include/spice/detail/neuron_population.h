@@ -134,7 +134,6 @@ public:
 	}
 
 	void* neurons() override {
-		SPICE_PRE(StatefulNeuron<Neur> && "Can only return collections of stateful neurons.");
 		if constexpr (StatefulNeuron<Neur>)
 			return get_neurons().data();
 		else
@@ -161,8 +160,8 @@ public:
 
 private:
 	std::conditional_t<PerPopulationUpdate<Neur>, per_pop_update_adapter<Neur>,
-	                   std::conditional_t<StatelessNeuron<Neur>, stateless_neuron_adapter<Neur>,
-	                                      stateful_neuron_adapter<Neur>>>
+	                   std::conditional_t<StatefulNeuron<Neur>, stateful_neuron_adapter<Neur>,
+	                                      stateless_neuron_adapter<Neur>>>
 	    _neuron;
 	std::vector<Int32> _spikes;
 	std::vector<Int32> _spike_counts;

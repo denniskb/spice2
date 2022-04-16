@@ -1,213 +1,143 @@
 #include <gtest/gtest.h>
 
+#include "hana.h"
+
 #include "spice/concepts.h"
 #include "spice/util/type_traits.h"
 
+using namespace boost;
 using namespace spice;
 using namespace spice::util;
 
-// Dummy neurons
+template <int N>
+void cartesian(auto&& f) {
+	auto combos = hana::cartesian_product(hana::replicate<hana::tuple_tag>(
+	    hana::make_tuple(hana::bool_c<false>, hana::bool_c<true>), hana::size_c<N>));
 
-struct stateless_neuron {
-	bool update(float, auto&) const { return false; }
-};
-struct stateless_neuron_no_const {
-	bool update(float, auto&) { return false; }
-};
+	hana::for_each(combos, [&](auto combo) { hana::unpack(combo, f); });
+}
 
+struct stateless_neuron {};
 struct stateful_neuron {
-	struct neuron {
-		int i;
-	};
-
-	bool update(neuron&, float, auto&) const { return false; }
-};
-struct stateful_neuron_no_const {
-	struct neuron {
-		int i;
-	};
-
-	bool update(neuron&, float, auto&) { return false; }
+	struct neuron {};
 };
 
-struct per_neuron_init : public stateful_neuron {
-	void init(neuron&, Int, auto&) const {}
-};
-struct per_neuron_init_no_const : public stateful_neuron {
-	void init(neuron&, Int, auto&) {}
+template <bool stateful, bool per_neuron_init, bool per_neuron_update, bool per_pop_init, bool per_pop_update,
+          bool err>
+struct meta_neuron : public std::conditional_t<stateful, stateful_neuron, stateless_neuron> {
+	using neuron_t = stateful_neuron::neuron;
+
+	bool update(float, auto) const requires(per_neuron_update && !stateful && !err) { return false; }
+	void update(float, auto) const requires(per_neuron_update && !stateful && err) {}
+	bool update(float, auto) /* */ requires(per_neuron_update && !stateful && err) { return false; }
+
+	bool update(neuron_t&, float, auto) const requires(per_neuron_update&& stateful && !err) { return false; }
+	void update(neuron_t&, float, auto) const requires(per_neuron_update&& stateful&& err) {}
+	bool update(neuron_t&, float, auto) /* */ requires(per_neuron_update&& stateful&& err) { return false; }
+
+	void init(neuron_t&, Int, auto) const requires(stateful&& per_neuron_init && !err) {}
+	void init(neuron_t&, Int, auto) /* */ requires(stateful&& per_neuron_init&& err) {}
+
+	void init(std::span<neuron_t>, auto) /* */ requires(stateful&& per_pop_init && !err) {}
+	void init(std::span<neuron_t>, auto) const requires(stateful&& per_pop_init && !err) {}
+
+	void update(float, auto, std::vector<Int32>&) /* */ requires(per_pop_update && !err) {}
+	void update(float, auto, std::vector<Int32>&) const requires(per_pop_update && !err) {}
 };
 
-struct per_population_init : public stateful_neuron {
-	void init(std::span<neuron>, auto&) {}
-};
-struct per_population_init_const : public stateful_neuron {
-	void init(std::span<neuron>, auto&) const {}
-};
+TEST(Concepts, Neuron) {
+	cartesian<5>([](auto stateful, auto per_neuron_init, auto per_neuron_update, auto per_pop_init,
+	                auto per_pop_update) {
+		// Any neuron with any erroneous signature isn't a Neuron
+		static_assert(!Neuron<meta_neuron<stateful, per_neuron_init, per_neuron_update, per_pop_init,
+		                                  per_pop_update, true>>);
 
-struct per_population_update {
-	void update(float, auto&, std::vector<Int32>&) {}
-};
-struct per_population_update_const {
-	void update(float, auto&, std::vector<Int32>&) const {}
-};
+		// Any neuron lacking an update() method isn't a Neuron
+		static_assert(!Neuron<meta_neuron<stateful, per_neuron_init, false, per_pop_init, false, false>>);
 
-struct both_stateless_and_stateful : public stateless_neuron, public stateful_neuron {};
-struct both_inits : public per_neuron_init, public per_population_init {};
-struct update_and_stateless : public per_population_update, public stateless_neuron {};
-struct update_and_stateful : public per_population_update, public stateful_neuron {};
-struct update_and_per_neuron_init : public per_population_update, public per_neuron_init {};
-struct update_and_per_population_init : public per_population_update, public per_population_init {};
+		// Any neuron defining both flavors of init() isn't a Neuron
+		static_assert(!Neuron<meta_neuron<true, true, per_neuron_update, true, false, false>>);
 
-// Dummy synapses
+		// Any neuron defining a per-population update() method while also having traces of per-neuron update, isn't a Neuron
+		if constexpr (per_pop_update && any_of < stateful, stateful && (per_neuron_init || per_pop_init),
+		              per_neuron_update >)
+			static_assert(!Neuron<meta_neuron<stateful, per_neuron_init, per_neuron_update, per_pop_init,
+			                                  per_pop_update, false>>);
 
-struct stateless_synapse {
-	void deliver(stateful_neuron::neuron&) const {}
-};
+		// Only per-population update defined
+		static_assert(Neuron<meta_neuron<false, false, false, false, true, false>>);
 
-struct stateless_synapse_no_const {
-	void deliver(stateful_neuron::neuron&) {}
-};
+		// Valid neuron
+		if constexpr (stateful ? up_to_one_of<per_neuron_init, per_pop_init> :
+                                 none_of<per_neuron_init, per_pop_init>)
+			static_assert(Neuron<meta_neuron<stateful, per_neuron_init, true, per_pop_init, false, false>>);
+	});
+}
 
-struct stateless_synapse_desc {
-	void deliver(stateful_neuron&) const {}
-};
-
+struct stateless_synapse {};
 struct stateful_synapse {
-	struct synapse {
-		float w;
-	};
-
-	void deliver(synapse const&, stateful_neuron::neuron&) const {}
+	struct synapse {};
 };
 
-struct stateful_synapse_no_const {
-	struct synapse {
-		float w;
-	};
+template <bool stateful, bool deliver_to, bool deliver_from, bool plastic, bool per_syn_init, bool err>
+struct meta_synapse : public std::conditional_t<stateful, stateful_synapse, stateless_synapse> {
+	using neuron_t  = stateful_neuron::neuron;
+	using synapse_t = stateful_synapse::synapse;
 
-	void deliver(synapse const&, stateful_neuron::neuron&) {}
+	void deliver(neuron_t&) const requires(!stateful && deliver_to && !err) {}
+	void deliver(neuron_t&) /* */ requires(!stateful && deliver_to && err) {}
+
+	void deliver(neuron_t const&, neuron_t&) const requires(!stateful && deliver_from && !err) {}
+	void deliver(neuron_t const&, neuron_t&) /* */ requires(!stateful && deliver_from && err) {}
+
+	void deliver(synapse_t const&, neuron_t&) const requires(stateful&& deliver_to && !err) {}
+	void deliver(synapse_t const&, neuron_t&) /* */ requires(stateful&& deliver_to&& err) {}
+
+	void deliver(synapse_t const&, neuron_t const&, neuron_t&) const
+	    requires(stateful&& deliver_from && !err) {}
+	void deliver(synapse_t const&, neuron_t const&, neuron_t&) /* */ requires(stateful&& deliver_from&& err) {
+	}
+
+	void update(synapse_t&, float, bool, bool) const requires(stateful&& plastic && !err) {}
+	void update(synapse_t&, float, bool, bool) /* */ requires(stateful&& plastic&& err) {}
+	void skip(synapse_t&, float, Int) const requires(stateful&& plastic && !err) {}
+	void skip(synapse_t&, float, Int) /* */ requires(stateful&& plastic && !err) {}
+
+	void init(synapse_t&, Int, Int, auto) const requires(stateful&& per_syn_init && !err) {}
+	void init(synapse_t&, Int, Int, auto) /* */ requires(stateful&& per_syn_init&& err) {}
 };
 
-struct stateful_synapse_no_const2 {
-	struct synapse {
-		float w;
-	};
+TEST(Concepts, Synapse) {
+	cartesian<5>([](auto stateful, auto deliver_to, auto deliver_from, auto plastic, auto per_syn_init) {
+		// Any synapse with any errenous signature is not a Synapse
+		static_assert(!Synapse<meta_synapse<stateful, deliver_to, deliver_from, plastic, per_syn_init, true>,
+		                       stateful_neuron, stateful_neuron>);
 
-	void deliver(synapse&, stateful_neuron::neuron&) const {}
-};
+		// Any synapse without any deliver() method is not a Synapse
+		static_assert(!Synapse<meta_synapse<stateful, false, false, plastic, per_syn_init, false>,
+		                       stateful_neuron, stateful_neuron>);
 
-struct plastic_synapse : public stateful_synapse {
-	void update(synapse&, float, bool, bool) const {}
-	void skip(synapse&, float, Int) const {}
-};
+		// Any synapse with both deliver() methods is not a Synapse
+		static_assert(!Synapse<meta_synapse<stateful, true, true, plastic, per_syn_init, false>,
+		                       stateful_neuron, stateful_neuron>);
 
-struct plastic_synapse_no_const : public stateful_synapse {
-	void update(synapse&, float, bool, bool) {}
-	void skip(synapse&, float, Int) const {}
-};
+		// PerSynapseInit is independent of the rest
+		static_assert(PerSynapseInit<meta_synapse<true, deliver_to, deliver_from, plastic, true, false>>);
+		static_assert(!PerSynapseInit<meta_synapse<true, deliver_to, deliver_from, plastic, true, true>>);
+		static_assert(!PerSynapseInit<meta_synapse<true, deliver_to, deliver_from, plastic, false, false>>);
 
-struct plastic_synapse_no_const2 : public stateful_synapse {
-	void update(synapse&, float, bool, bool) const {}
-	void skip(synapse&, float, Int) {}
-};
+		// Valid synapse
+		if constexpr (one_of<deliver_to, deliver_from> && (!plastic || stateful) &&
+		              (!per_syn_init || stateful)) {
+			static_assert(
+			    Synapse<meta_synapse<stateful, deliver_to, deliver_from, plastic, per_syn_init, false>,
+			            stateful_neuron, stateful_neuron>);
 
-struct per_synapse_init : public stateful_synapse {
-	void init(synapse&, Int, Int, auto&) const {}
-};
+			static_assert(Synapse<meta_synapse<stateful, true, false, plastic, per_syn_init, false>,
+			                      stateless_neuron, stateful_neuron>);
 
-struct per_synapse_init_no_const : public stateful_synapse {
-	void init(synapse&, Int, Int, auto&) {}
-};
-
-struct both_stateless_and_stateful_syn : public stateless_synapse, public stateful_synapse {};
-
-TEST(Concepts, StatelessNeuron) {
-	static_assert(all_of<StatelessNeuron<stateless_neuron>, Neuron<stateless_neuron>>);
-	static_assert(none_of<StatefulNeuron<stateless_neuron>, PerNeuronInit<stateless_neuron>,
-	                      PerPopulationInit<stateless_neuron>, PerPopulationUpdate<stateless_neuron>>);
-	static_assert(none_of<StatelessNeuron<stateless_neuron_no_const>, Neuron<stateless_neuron_no_const>>);
+			static_assert(!Synapse<meta_synapse<stateful, false, true, plastic, per_syn_init, false>,
+			                       stateless_neuron, stateful_neuron>);
+		}
+	});
 }
-
-TEST(Concepts, StatefulNeuron) {
-	static_assert(all_of<StatefulNeuron<stateful_neuron>, Neuron<stateful_neuron>>);
-	static_assert(none_of<StatelessNeuron<stateful_neuron>, PerNeuronInit<stateful_neuron>,
-	                      PerPopulationInit<stateful_neuron>, PerPopulationUpdate<stateful_neuron>>);
-	static_assert(none_of<StatefulNeuron<stateful_neuron_no_const>, Neuron<stateful_neuron_no_const>>);
-}
-
-TEST(Concepts, PerNeuronInit) {
-	static_assert(
-	    all_of<PerNeuronInit<per_neuron_init>, StatefulNeuron<per_neuron_init>, Neuron<per_neuron_init>>);
-	static_assert(none_of<StatelessNeuron<per_neuron_init>, PerPopulationInit<per_neuron_init>,
-	                      PerPopulationUpdate<per_neuron_init>>);
-	static_assert(!PerNeuronInit<per_neuron_init_no_const>);
-}
-
-TEST(Concepts, PerPopulationInit) {
-	static_assert(all_of<PerPopulationInit<per_population_init>, StatefulNeuron<per_population_init>,
-	                     Neuron<per_population_init>>);
-	static_assert(all_of<PerPopulationInit<per_population_init_const>,
-	                     StatefulNeuron<per_population_init_const>, Neuron<per_population_init_const>>);
-	static_assert(none_of<StatelessNeuron<per_population_init>, PerNeuronInit<per_population_init>,
-	                      PerPopulationUpdate<per_population_init>>);
-}
-
-TEST(Concepts, PerPopulationUpdate) {
-	static_assert(PerPopulationUpdate<per_population_update>);
-	static_assert(PerPopulationUpdate<per_population_update_const>);
-	static_assert(none_of<StatelessNeuron<per_population_update>, StatefulNeuron<per_population_update>,
-	                      PerNeuronInit<per_population_update>, PerPopulationInit<per_population_update>>);
-}
-
-TEST(Concepts, InvalidNeurons) {
-	static_assert(none_of<Neuron<both_stateless_and_stateful>, Neuron<both_inits>,
-	                      Neuron<update_and_stateless>, Neuron<update_and_stateful>,
-	                      Neuron<update_and_per_neuron_init>, Neuron<update_and_per_population_init>>);
-}
-
-TEST(Concepts, StatelessSynapse) {
-	static_assert(all_of<StatelessSynapse<stateless_synapse, stateful_neuron>,
-	                     Synapse<stateless_synapse, stateful_neuron>>);
-	static_assert(none_of<StatelessSynapse<stateless_synapse_no_const, stateful_neuron>,
-	                      StatelessSynapse<stateless_synapse_desc, stateful_neuron>,
-	                      Synapse<stateless_synapse_no_const, stateful_neuron>,
-	                      Synapse<stateless_synapse_desc, stateful_neuron>>);
-	static_assert(!StatefulSynapse<stateless_synapse, stateful_neuron>);
-}
-
-TEST(Concepts, StatefulSynapse) {
-	static_assert(all_of<StatefulSynapse<stateful_synapse, stateful_neuron>,
-	                     Synapse<stateful_synapse, stateful_neuron>>);
-	static_assert(none_of<StatefulSynapse<stateful_synapse_no_const, stateful_neuron>,
-	                      Synapse<stateful_synapse_no_const, stateful_neuron>,
-	                      StatefulSynapse<stateful_synapse_no_const2, stateful_neuron>,
-	                      Synapse<stateful_synapse_no_const2, stateful_neuron>>);
-	static_assert(!StatelessSynapse<stateful_synapse, stateful_neuron>);
-}
-
-TEST(Concepts, PlasticSynapse) {
-	static_assert(
-	    all_of<PlasticSynapse<plastic_synapse, stateful_neuron>,
-	           StatefulSynapse<plastic_synapse, stateful_neuron>, Synapse<plastic_synapse, stateful_neuron>>);
-	static_assert(none_of<PlasticSynapse<plastic_synapse_no_const, stateful_neuron>,
-	                      PlasticSynapse<plastic_synapse_no_const2, stateful_neuron>,
-	                      StatelessSynapse<plastic_synapse_no_const, stateful_neuron>,
-	                      StatelessSynapse<plastic_synapse_no_const2, stateful_neuron>>);
-	static_assert(all_of<StatefulSynapse<plastic_synapse_no_const, stateful_neuron>,
-	                     Synapse<plastic_synapse_no_const, stateful_neuron>,
-	                     StatefulSynapse<plastic_synapse_no_const2, stateful_neuron>,
-	                     Synapse<plastic_synapse_no_const2, stateful_neuron>>);
-	static_assert(none_of<PlasticSynapse<stateless_synapse, stateful_neuron>,
-	                      PlasticSynapse<stateful_synapse, stateful_neuron>>);
-}
-
-TEST(Concepts, PerSynapseInit) {
-	static_assert(all_of<PerSynapseInit<per_synapse_init, stateful_neuron>,
-	                     StatefulSynapse<per_synapse_init, stateful_neuron>,
-	                     Synapse<per_synapse_init, stateful_neuron>>);
-	static_assert(!PerSynapseInit<per_synapse_init_no_const, stateful_neuron>);
-	static_assert(all_of<StatefulSynapse<per_synapse_init_no_const, stateful_neuron>,
-	                     Synapse<per_synapse_init_no_const, stateful_neuron>>);
-}
-
-TEST(Concepts, InvalidSynapses) { static_assert(!Synapse<both_stateless_and_stateful_syn, stateful_neuron>); }

@@ -16,6 +16,7 @@ endif()
 
 # Common compile options shared by multiple projects
 set(warning_flags
+-pedantic
 -Wall
 -Wextra
 -Wshadow

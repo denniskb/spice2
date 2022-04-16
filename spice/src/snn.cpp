@@ -20,8 +20,8 @@ void snn::step() {
 
 	for (auto& c : _connections)
 		if (_time >= c.synapse->delay() - 1)
-			c.synapse->deliver(_time, _dt, c.from->spikes(c.synapse->delay() - 1), c.to->neurons(),
-			                   c.to->size(), c.to->history());
+			c.synapse->deliver(_time, _dt, c.from->spikes(c.synapse->delay() - 1), c.from->neurons(),
+			                   c.from->size(), c.to->neurons(), c.to->size(), c.to->history());
 
 	_time++;
 }
