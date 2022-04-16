@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "hana.h"
+#include "boost/hana.hpp"
 
 #include "spice/concepts.h"
 #include "spice/util/type_traits.h"

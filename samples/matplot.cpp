@@ -2,6 +2,8 @@
 
 #ifdef SPICE_USE_MATPLOT
 
+	#include "matplot/matplot.h"
+
 	#include <thread>
 
 using namespace matplot;

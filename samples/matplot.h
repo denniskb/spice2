@@ -5,11 +5,6 @@
 
 #include "spice/detail/neuron_population.h"
 
-#ifdef SPICE_USE_MATPLOT
-	#pragma GCC system_header
-	#include "matplot/matplot.h"
-#endif
-
 void pause(double s);
 
 class spike_output_stream {

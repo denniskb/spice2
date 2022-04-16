@@ -10,7 +10,7 @@ foreach(sample brunel brunel+ external_input ping_pong sssp vogels)
 
 	if (spice_use_matplot)
 		target_compile_definitions(${sample} PRIVATE SPICE_USE_MATPLOT)
-		target_include_directories(${sample} PRIVATE ${CMAKE_SOURCE_DIR}/third_party/matplot/source)
+		target_include_directories(${sample} SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/third_party/matplot/source)
 		target_link_libraries(${sample} PRIVATE matplot)
 	endif()
 endforeach()
