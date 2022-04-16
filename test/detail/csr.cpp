@@ -31,14 +31,15 @@ TEST(CSR, Custom) {
 	adj.connect(0, 2);
 	adj.connect(0, 7);
 	adj.connect(0, 9);
-	adj.connect(1, 1);
-	adj.connect(1, 2);
-	adj(2, 10);
+	adj.connect(2, 1);
+	adj.connect(2, 2);
+	adj(3, 10);
 
 	csr c(adj, {1337});
 
 	ASSERT_EQ(c.neighbors(0).size(), 4);
-	ASSERT_EQ(c.neighbors(1).size(), 2);
+	ASSERT_EQ(c.neighbors(1).size(), 0);
+	ASSERT_EQ(c.neighbors(2).size(), 2);
 
 	{
 		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(0).begin(), c.neighbors(0).end());
@@ -49,7 +50,7 @@ TEST(CSR, Custom) {
 	}
 
 	{
-		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(1).begin(), c.neighbors(1).end());
+		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(2).begin(), c.neighbors(2).end());
 		ASSERT_EQ(neighbors[0].first, 1);
 		ASSERT_EQ(neighbors[1].first, 2);
 	}

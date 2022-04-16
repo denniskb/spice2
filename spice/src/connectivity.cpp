@@ -16,11 +16,9 @@ edge_stream& edge_stream::operator<<(std::pair<Int32, Int32> const edge) {
 	SPICE_PRE(_src < _offsets.size());
 	SPICE_PRE(_dst < _neighbors.size());
 	SPICE_PRE(edge.first < _offsets.size());
-	SPICE_PRE(_prev < edge && "adj_list must not contain duplicate edges");
 
-	_offsets[_src] = _dst;
-	_src += (edge.first != _prev.first);
-	_prev = edge;
+	while (_src <= edge.first)
+		_offsets[_src++] = _dst;
 
 	_neighbors[_dst++] = edge.second;
 

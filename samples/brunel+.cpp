@@ -80,7 +80,7 @@ struct SynPlast {
 		syn.Zpost *= std::pow(1 - dt * TstdpInv, n);
 	}
 };
-static_assert(PlasticSynapse<SynPlast, lif>);
+static_assert(PlasticSynapse<SynPlast> && DeliverTo<SynPlast, lif>);
 
 int main() {
 	int const N       = 20000;

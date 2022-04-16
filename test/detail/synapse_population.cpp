@@ -6,22 +6,28 @@ using namespace spice;
 using namespace spice::detail;
 using namespace spice::util;
 
+struct stateless_neuron {
+	bool update(float, auto) const { return false; }
+};
+static_assert(StatelessNeuron<stateless_neuron>);
+
 struct stateful_neuron {
 	struct neuron {
 		int received_count = 0;
 	};
 
-	bool update(neuron& n, float, auto&) const { return false; }
+	bool update(neuron& n, float, auto) const { return false; }
 };
 static_assert(StatefulNeuron<stateful_neuron>);
 
 struct stateless_synapse {
 	void deliver(stateful_neuron::neuron& n) const { n.received_count++; }
 };
-static_assert(StatelessSynapse<stateless_synapse, stateful_neuron>);
+static_assert(StatelessSynapse<stateless_synapse> && DeliverTo<stateless_synapse, stateful_neuron>);
 
 template <class Syn>
-requires Synapse<Syn, stateful_neuron> synapse_population<Syn, stateful_neuron> setup() {
+requires Synapse<Syn, stateless_neuron, stateful_neuron>
+    synapse_population<Syn, stateless_neuron, stateful_neuron> setup() {
 	seed_seq seed({1337});
 
 	adj_list adj;
@@ -33,7 +39,7 @@ requires Synapse<Syn, stateful_neuron> synapse_population<Syn, stateful_neuron> 
 	adj.connect(1, 3);
 	adj.connect(2, 4);
 
-	return synapse_population<Syn, stateful_neuron>({}, adj, seed, 1);
+	return synapse_population<Syn, stateless_neuron, stateful_neuron>({}, adj, seed, 1);
 }
 
 TEST(SynapsePopulation, DeliverStateless) {
@@ -41,7 +47,7 @@ TEST(SynapsePopulation, DeliverStateless) {
 	Int32 spikes[] = {0, 1};
 	auto syn       = setup<stateless_synapse>();
 
-	syn.deliver(0, 1, spikes, neurons, 10, {});
+	syn.deliver(0, 1, spikes, nullptr, 0, neurons, 5, {});
 
 	ASSERT_EQ(neurons[0].received_count, 1);
 	ASSERT_EQ(neurons[1].received_count, 1);
@@ -56,14 +62,14 @@ struct stateful_synapse {
 	};
 	void deliver(synapse const& syn, stateful_neuron::neuron& n) const { n.received_count += syn.w; }
 };
-static_assert(StatefulSynapse<stateful_synapse, stateful_neuron>);
+static_assert(StatefulSynapse<stateful_synapse> && DeliverTo<stateful_synapse, stateful_neuron>);
 
 TEST(SynapsePopulation, DeliverStateful) {
 	stateful_neuron::neuron neurons[5];
 	Int32 spikes[] = {0, 1};
 	auto syn       = setup<stateful_synapse>();
 
-	syn.deliver(0, 1, spikes, neurons, 10, {});
+	syn.deliver(0, 1, spikes, nullptr, 0, neurons, 5, {});
 
 	ASSERT_EQ(neurons[0].received_count, 2);
 	ASSERT_EQ(neurons[1].received_count, 2);
@@ -83,7 +89,7 @@ struct plastic_synapse {
 	void update(synapse& syn, float, bool, bool) const { syn.update_count++; }
 	void skip(synapse& syn, float, Int steps) const { syn.update_count += steps; }
 };
-static_assert(PlasticSynapse<plastic_synapse, stateful_neuron>);
+static_assert(PlasticSynapse<plastic_synapse> && DeliverTo<plastic_synapse, stateful_neuron>);
 
 TEST(SynapsePopulation, DeliverPlastic) {
 	{ // Deliver
@@ -92,7 +98,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 		Int32 spikes[] = {1, 2};
 		auto syn       = setup<plastic_synapse>();
 
-		syn.deliver(0, 1, spikes, neurons, 10, hist);
+		syn.deliver(0, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 1);
 		ASSERT_EQ(neurons[4].received_count, 1);
@@ -104,7 +110,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 		auto syn       = setup<plastic_synapse>();
 
 		syn.update(0, 1, 3, hist);
-		syn.deliver(0, 1, spikes, neurons, 10, hist);
+		syn.deliver(0, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 1);
 		ASSERT_EQ(neurons[4].received_count, 1);
@@ -117,7 +123,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 
 		syn.update(0, 1, 3, hist);
 		syn.update(0, 1, 3, hist);
-		syn.deliver(0, 1, spikes, neurons, 10, hist);
+		syn.deliver(0, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 1);
 		ASSERT_EQ(neurons[4].received_count, 1);
@@ -129,7 +135,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 		auto syn       = setup<plastic_synapse>();
 
 		syn.update(0, 1, 3, hist);
-		syn.deliver(1, 1, spikes, neurons, 10, hist);
+		syn.deliver(1, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 2);
 		ASSERT_EQ(neurons[4].received_count, 2);
@@ -140,7 +146,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 		Int32 spikes[] = {1, 2};
 		auto syn       = setup<plastic_synapse>();
 
-		syn.deliver(9, 1, spikes, neurons, 10, hist);
+		syn.deliver(9, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 10);
 		ASSERT_EQ(neurons[4].received_count, 10);
@@ -152,7 +158,7 @@ TEST(SynapsePopulation, DeliverPlastic) {
 		auto syn       = setup<plastic_synapse>();
 
 		syn.update(4, 1, 3, hist);
-		syn.deliver(9, 1, spikes, neurons, 10, hist);
+		syn.deliver(9, 1, spikes, nullptr, 0, neurons, 5, hist);
 
 		ASSERT_EQ(neurons[3].received_count, 10);
 		ASSERT_EQ(neurons[4].received_count, 10);
