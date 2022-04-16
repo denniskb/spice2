@@ -7,3 +7,6 @@
 [submodule "third_party/matplot"]
 	path = third_party/matplot
 	url = https://github.com/alandefreitas/matplotplusplus/
+[submodule "third_party/hana"]
+	path = third_party/hana
+	url = git@github.com:boostorg/hana.git

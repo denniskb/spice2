@@ -14,6 +14,7 @@ concept StatelessNeuron = std::default_initializable<T>;
 template <class T>
 concept StatefulNeuron = requires {
 	requires std::default_initializable<T>;
+	// TODO: Detect (and forbid) the case where T is called "neuron".
 	typename T::neuron;
 	requires std::default_initializable<typename T::neuron>;
 };
@@ -50,8 +51,10 @@ concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::ve
 
 template <class T>
 concept Neuron =
-    util::one_of<PerPopulationUpdate<T>, (StatelessNeuron<T> || StatefulNeuron<T>)&& PerNeuronUpdate<T> &&
-                 util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>>;
+    (PerPopulationUpdate<T> ?
+         util::none_of<StatefulNeuron<T>, PerNeuronUpdate<T>, PerNeuronInit<T>, PerPopulationInit<T>> :
+         (StatelessNeuron<T> || StatefulNeuron<T>)&&PerNeuronUpdate<T> &&
+             util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>);
 
 template <class T>
 concept StatelessSynapse = std::default_initializable<T>;
