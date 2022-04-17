@@ -196,15 +196,15 @@ Spice defines additional tasks specifically for devlopers:
 
 <kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;**Benchmarks**&rarr;*type the name of the benchmark (regex)*
 
-### Code formatting
+### Code & Commit Message Formatting
 Please use the `.clang-format` file provided in the root folder to format all your code.
+
+Please format/structure all your commit messages according to [this guide](https://cbea.ms/git-commit/).
 
 ### Branching Strategy
 1. Create an issue for the task you're working on if one doesn't exist already.
 2. Create a branch (off of master) with name `issue/[id]`.
 3. Use the `--no-ff` option when merging.
-4. Format all your code using the `.clang-format` file provided in the root folder.
-5. Format/structure all your commit messages according to [this guide](https://cbea.ms/git-commit/).
 6. Make sure all tests pass (if you added new functionality, write tests to check it.)
 7. Push your branch to the remote.
 8. Submit a pull request.
