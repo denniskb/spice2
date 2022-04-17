@@ -44,7 +44,6 @@ struct vertex {
 		return result;
 	}
 };
-static_assert(PerPopulationInit<vertex>);
 
 struct edge {
 	struct synapse {
@@ -61,7 +60,6 @@ struct edge {
 		}
 	}
 };
-static_assert(StatefulSynapse<edge> && DeliverFromTo<edge, vertex, vertex>);
 
 int main() {
 	snn sssp(1, 1, {1337});

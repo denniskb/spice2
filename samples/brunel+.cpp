@@ -24,7 +24,7 @@ struct lif {
 		float const TmemInv = 1.0 / 0.02; // s
 		float const Vrest   = 0.0;        // v
 		int const Tref      = 20;         // dt
-		float const Vthres  = 0.02f;      // v
+		float const Vthres  = 0.02;       // v
 
 		if (--n.Twait <= 0) {
 			if (n.V > Vthres) {

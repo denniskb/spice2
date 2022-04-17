@@ -16,16 +16,16 @@ struct lif {
 	};
 
 	bool update(neuron& n, float const dt, auto&) const {
-		Int32 const Tref    = 50;           // dt
-		float const Vrest   = -0.06f;       // v
-		float const Vthres  = -0.05f;       // v
-		float const TmemInv = 1.0f / 0.02f; // s
-		float const Eex     = 0.0f;         // v
-		float const Ein     = -0.08f;       // v
-		float const Ibg     = 0.02f;        // v
+		Int32 const Tref    = 50;          // dt
+		float const Vrest   = -0.06;       // v
+		float const Vthres  = -0.05;       // v
+		float const TmemInv = 1.0f / 0.02; // s
+		float const Eex     = 0.0;         // v
+		float const Ein     = -0.08;       // v
+		float const Ibg     = 0.02;        // v
 
-		float const TexInv = 1.0f / 0.005f; // s
-		float const TinInv = 1.0f / 0.01f;  // s
+		float const TexInv = 1.0f / 0.005; // s
+		float const TinInv = 1.0f / 0.01;  // s
 
 		bool spiked = false;
 		if (--n.Twait <= 0) {
@@ -45,36 +45,29 @@ struct lif {
 	}
 };
 
-struct SynE {
-	Int N2;
-
-	void deliver(lif::neuron& to) const {
-		float const W = 0.4f * (16'000'000.0 / N2); // siemens
-		to.Gex += W;
-	}
+struct excitatory {
+	float weight;
+	void deliver(lif::neuron& to) const { to.Gex += weight; }
 };
 
-struct SynI {
-	Int N2;
-
-	void deliver(lif::neuron& to) const {
-		float const W = 5.1f * (16'000'000.0 / N2); // siemens
-		to.Gin += W;
-	}
+struct inhibitory {
+	float weight;
+	void deliver(lif::neuron& to) const { to.Gin += weight; }
 };
 
 int main() {
 	int const N       = 4000;
+	float const dt    = 1e-4;
 	float const delay = 8e-4;
 
-	snn vogels(/*dt*/ 1e-4, delay, {1337});
+	snn vogels(dt, delay, {1337});
 	auto E = vogels.add_population<lif>(N * 8 / 10);
 	auto I = vogels.add_population<lif>(N * 2 / 10);
 
-	vogels.connect<SynE>(E, E, fixed_probability(0.02), delay, {N * N});
-	vogels.connect<SynE>(E, I, fixed_probability(0.02), delay, {N * N});
-	vogels.connect<SynI>(I, E, fixed_probability(0.02), delay, {N * N});
-	vogels.connect<SynI>(I, I, fixed_probability(0.02), delay, {N * N});
+	vogels.connect<excitatory>(E, E, fixed_probability(0.02), delay, {6.4e6 / (N * N)});
+	vogels.connect<excitatory>(E, I, fixed_probability(0.02), delay, {6.4e6 / (N * N)});
+	vogels.connect<inhibitory>(I, E, fixed_probability(0.02), delay, {8.16e7 / (N * N)});
+	vogels.connect<inhibitory>(I, I, fixed_probability(0.02), delay, {8.16e7 / (N * N)});
 
 	spike_output_stream s("Vogels", true);
 	for (Int i : range(1500)) {
