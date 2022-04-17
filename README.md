@@ -139,8 +139,11 @@ git submodule update --init --recursive
 ```
 
 <kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Configure&rarr;user \*
+
 <kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Build&rarr;release \*\*
+
 <small>\* only has to be run once</small>
+
 <small>\*\* has to be run every time you want to build, is invoked automatically when you try to run samples/tests/benchmarks after having made changes to the code</small>
 
 In order to run a sample:
@@ -188,7 +191,9 @@ followed by:
 Spice defines additional tasks specifically for devlopers:
 
 <kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Build&rarr;release/**debug**/**perf**
+
 <kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;**Unit Tests**
+
 <kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;**Benchmarks**&rarr;*type the name of the benchmark (regex)*
 
 ### Code formatting
