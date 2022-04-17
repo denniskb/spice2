@@ -18,61 +18,60 @@ Here is a simple SNN implemented in Spice to give you a taste of its API (`#incl
 
 ```c++
 struct poisson {
-	bool update(float dt, auto& rng) const {
-		return util::generate_canonical<float>(rng) < (20 * dt);
-	}
+  bool update(float dt, auto& rng) const {
+    return util::generate_canonical<float>(rng) < (20 * dt);
+  }
 };
 
 struct lif {
-	struct neuron {
-		float V  = 0;
-		int Tref = 0;
-	};
+  struct neuron {
+    float V  = 0;
+    int Tref = 0;
+  };
 
-	bool update(neuron& n, float dt, auto) const {
-		if (--n.Tref <= 0) {
-			if (n.V > 0.02) {
-				n.V     = 0;
-				n.Tref = 20;
-				return true;
-			}
-
-			n.V -= n.V * dt * 50;
-		}
-		return false;
-	}
+  bool update(neuron& n, float dt, auto) const {
+    if (--n.Tref <= 0) {
+      if (n.V > 0.02) {
+        n.V     = 0;
+        n.Tref = 20;
+        return true;
+      }
+      n.V -= n.V * dt * 50;
+    }
+    return false;
+  }
 };
 
 struct fixed_weight {
-	float weight;
-	void deliver(lif::neuron& to) const { to.V += weight; }
+  float weight;
+  void deliver(lif::neuron& to) const { to.V += weight; }
 };
 
 int main() {
-	int const N       = 20000;
-	float const dt    = 1e-4;
-	float const delay = 15e-4;
+  int const N       = 20000;
+  float const dt    = 1e-4;
+  float const delay = 15e-4;
 
-	snn brunel(dt, delay, {1337});
-	auto P = brunel.add_population<poisson>(N / 2);
-	auto E = brunel.add_population<lif>(N * 4 / 10);
-	auto I = brunel.add_population<lif>(N / 10);
+  snn brunel(dt, delay, {1337});
+  auto P = brunel.add_population<poisson>(N / 2);
+  auto E = brunel.add_population<lif>(N * 4 / 10);
+  auto I = brunel.add_population<lif>(N / 10);
 
-	brunel.connect<fixed_weight>(P, E, fixed_probability(0.1), delay, {2.0 / N});
-	brunel.connect<fixed_weight>(P, I, fixed_probability(0.1), delay, {2.0 / N});
-	brunel.connect<fixed_weight>(E, E, fixed_probability(0.1), delay, {2.0 / N});
-	brunel.connect<fixed_weight>(E, I, fixed_probability(0.1), delay, {2.0 / N});
-	brunel.connect<fixed_weight>(I, E, fixed_probability(0.1), delay, {-10.0 / N});
-	brunel.connect<fixed_weight>(I, I, fixed_probability(0.1), delay, {-10.0 / N});
+  brunel.connect<fixed_weight>(P, E, fixed_probability(0.1), delay, {2.0 / N});
+  brunel.connect<fixed_weight>(P, I, fixed_probability(0.1), delay, {2.0 / N});
+  brunel.connect<fixed_weight>(E, E, fixed_probability(0.1), delay, {2.0 / N});
+  brunel.connect<fixed_weight>(E, I, fixed_probability(0.1), delay, {2.0 / N});
+  brunel.connect<fixed_weight>(I, E, fixed_probability(0.1), delay, {-10.0 / N});
+  brunel.connect<fixed_weight>(I, I, fixed_probability(0.1), delay, {-10.0 / N});
 
-	for (int i = 0; i < 300; i++) {
-		brunel.step();
+  for (int i = 0; i < 300; i++) {
+    brunel.step();
 		
-		for (auto spike : brunel.spikes(0))
-			printf("%d ", spike);
+    for (auto spike : brunel.spikes(0))
+      printf("%d ", spike);
 		
-		printf("\n");
-	}
+    printf("\n");
+  }
 }
 ```
 
