@@ -186,15 +186,13 @@ git submodule update --init --recursive
 
 followed by:
 
-<kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Configure&rarr;developer
+<kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Configure&rarr;**developer**
 
-Spice defines additional tasks specifically for devlopers:
+Spice defines additional tasks specifically for developers:
 
 <kbd>F1</kbd>&rarr;Tasks: Run Build Task&rarr;Build&rarr;release/**debug**/**perf**
 
-<kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;**Unit Tests**
-
-<kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;**Benchmarks**&rarr;*type the name of the benchmark (regex)*
+<kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;Samples/**Unit Tests**/**Benchmarks**
 
 ### Code & Commit Message Formatting
 Please use the `.clang-format` file provided in the root folder to format all your code.
