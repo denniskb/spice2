@@ -39,21 +39,14 @@ struct lif {
 	}
 };
 
-struct SynE {
-	Int N;
-
-	void deliver(lif::neuron& to) const { to.V += (0.0001f * 20'000) / N; }
+struct fixed_weight {
+	float weight;
+	void deliver(lif::neuron& to) const { to.V += weight; }
 };
 
-struct SynI {
-	Int N;
-
-	void deliver(lif::neuron& to) const { to.V -= (0.0005f * 20'000) / N; }
-};
-
-struct SynPlast {
+struct plastic {
 	struct synapse {
-		float W     = 0.0001f;
+		float W     = 1e-4;
 		float Zpre  = 0;
 		float Zpost = 0;
 	};
@@ -80,23 +73,23 @@ struct SynPlast {
 		syn.Zpost *= std::pow(1 - dt * TstdpInv, n);
 	}
 };
-static_assert(PlasticSynapse<SynPlast> && DeliverTo<SynPlast, lif>);
 
 int main() {
 	int const N       = 20000;
+	float const dt    = 1e-4;
 	float const delay = 15e-4;
 
-	snn brunel(/*dt*/ 1e-4, delay, {1337});
+	snn brunel(dt, delay, {1337});
 	auto P = brunel.add_population<poisson>(N / 2);
 	auto E = brunel.add_population<lif>(N * 4 / 10);
 	auto I = brunel.add_population<lif>(N / 10);
 
-	brunel.connect<SynE>(P, E, fixed_probability(0.1), delay, {N});
-	brunel.connect<SynE>(P, I, fixed_probability(0.1), delay, {N});
-	brunel.connect<SynPlast>(E, E, fixed_probability(0.1), delay);
-	brunel.connect<SynE>(E, I, fixed_probability(0.1), delay, {N});
-	brunel.connect<SynI>(I, E, fixed_probability(0.1), delay, {N});
-	brunel.connect<SynI>(I, I, fixed_probability(0.1), delay, {N});
+	brunel.connect<fixed_weight>(P, E, fixed_probability(0.1), delay, {2.0 / N});
+	brunel.connect<fixed_weight>(P, I, fixed_probability(0.1), delay, {2.0 / N});
+	brunel.connect<plastic>(E, E, fixed_probability(0.1), delay);
+	brunel.connect<fixed_weight>(E, I, fixed_probability(0.1), delay, {2.0 / N});
+	brunel.connect<fixed_weight>(I, E, fixed_probability(0.1), delay, {-10.0 / N});
+	brunel.connect<fixed_weight>(I, I, fixed_probability(0.1), delay, {-10.0 / N});
 
 	spike_output_stream s("Brunel+");
 	for (Int i : range(300)) {
