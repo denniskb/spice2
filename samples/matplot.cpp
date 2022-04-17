@@ -8,9 +8,12 @@
 
 using namespace matplot;
 
-void pause(double s) { std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(s * 1000))); }
+void pause(double s) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(s * 1000)));
+}
 
-static void scatter_spikes(spice::detail::NeuronPopulation const* pop, Int const width, Int const offset) {
+static void scatter_spikes(spice::detail::NeuronPopulation const* pop, Int const width,
+                           Int const offset) {
 	static std::vector<double> x;
 	static std::vector<double> y;
 
@@ -36,7 +39,8 @@ struct spike_output_stream::impl {
 	std::vector<spice::detail::NeuronPopulation const*> pops;
 };
 
-spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) : _impl(new impl()) {
+spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) :
+_impl(new impl()) {
 	_impl->skip = skip;
 
 	_impl->figure = figure(true);
@@ -95,7 +99,8 @@ struct spike_output_stream::impl {
 	std::string delim = "\t\t[";
 };
 
-spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) : _impl(new impl()) {
+spike_output_stream::spike_output_stream(std::string const& model_name, bool skip) :
+_impl(new impl()) {
 	_impl->skip = skip;
 
 	std::cout << "{\n";

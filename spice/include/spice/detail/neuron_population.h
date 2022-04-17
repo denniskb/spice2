@@ -148,7 +148,8 @@ public:
 		SPICE_PRE(0 <= age && age < _spike_counts.size());
 
 		Int const offset = std::accumulate(_spike_counts.end() - 1 - age, _spike_counts.end(), 0);
-		return {_spikes.data() + _spikes.size() - offset, static_cast<UInt>(_spike_counts.rbegin()[age])};
+		return {_spikes.data() + _spikes.size() - offset,
+		        static_cast<UInt>(_spike_counts.rbegin()[age])};
 	}
 
 	void plastic() {

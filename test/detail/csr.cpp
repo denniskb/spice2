@@ -42,7 +42,8 @@ TEST(CSR, Custom) {
 	ASSERT_EQ(c.neighbors(2).size(), 2);
 
 	{
-		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(0).begin(), c.neighbors(0).end());
+		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(0).begin(),
+		                                               c.neighbors(0).end());
 		ASSERT_EQ(neighbors[0].first, 0);
 		ASSERT_EQ(neighbors[1].first, 2);
 		ASSERT_EQ(neighbors[2].first, 7);
@@ -50,7 +51,8 @@ TEST(CSR, Custom) {
 	}
 
 	{
-		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(2).begin(), c.neighbors(2).end());
+		std::vector<std::pair<Int32, void*>> neighbors(c.neighbors(2).begin(),
+		                                               c.neighbors(2).end());
 		ASSERT_EQ(neighbors[0].first, 1);
 		ASSERT_EQ(neighbors[1].first, 2);
 	}

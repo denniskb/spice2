@@ -43,7 +43,8 @@ Connectivity& Connectivity::operator()(Int const src_count_, Int const dst_count
 void Connectivity::generate(edge_stream&, util::seed_seq const&) {
 	SPICE_PRE(false && "Connectivity subclasses must implement generate(edge_stream, seed_seq)");
 }
-void Connectivity::generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed) {
+void Connectivity::generate(std::span<Int> offsets, std::span<Int32> neighbors,
+                            util::seed_seq const& seed) {
 	SPICE_PRE(offsets.size() > src_count);
 	SPICE_PRE(neighbors.size() >= size());
 

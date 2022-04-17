@@ -27,7 +27,8 @@ public:
 		using value_type        = std::pair<Int32, edge_t*>;
 
 		constexpr iterator_t() = default;
-		constexpr iterator_t(const iterator_t<false>& other) : _dst(other._dst), _edge(other._edge) {}
+		constexpr iterator_t(const iterator_t<false>& other) :
+		_dst(other._dst), _edge(other._edge) {}
 
 		constexpr value_type operator*() const {
 			if constexpr (std::is_void_v<T>)

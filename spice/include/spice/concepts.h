@@ -43,18 +43,19 @@ concept PerNeuronUpdate = requires(T const t, float dt, std::mt19937& rng) {
 };
 
 template <class T>
-concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng, std::vector<Int32>& out_spikes) {
+concept PerPopulationUpdate = requires(T t, float dt, std::mt19937& rng,
+                                       std::vector<Int32>& out_spikes) {
 	requires std::default_initializable<T>;
 	requires std::copy_constructible<T> || std::move_constructible<T>;
 	t.update(dt, rng, out_spikes);
 };
 
 template <class T>
-concept Neuron =
-    (PerPopulationUpdate<T> ?
-         util::none_of<StatefulNeuron<T>, PerNeuronUpdate<T>, PerNeuronInit<T>, PerPopulationInit<T>> :
-         (StatelessNeuron<T> || StatefulNeuron<T>)&&PerNeuronUpdate<T> &&
-             util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>);
+concept Neuron = (PerPopulationUpdate<T> ?
+                      util::none_of<StatefulNeuron<T>, PerNeuronUpdate<T>, PerNeuronInit<T>,
+                                    PerPopulationInit<T>> :
+                      (StatelessNeuron<T> || StatefulNeuron<T>)&&PerNeuronUpdate<T> &&
+                          util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>);
 
 template <class T>
 concept StatelessSynapse = std::default_initializable<T>;
@@ -78,19 +79,22 @@ concept DeliverFromTo = requires(T const t, typename SrcNeur::neuron const& src,
                                  typename DstNeur::neuron& dst) {
 	requires StatefulNeuron<SrcNeur>;
 	requires StatefulNeuron<DstNeur>;
-	requires(StatefulSynapse<T> ? requires(typename T::synapse const& syn) { t.deliver(syn, src, dst); } :
-                                  requires { t.deliver(src, dst); });
+	requires(StatefulSynapse<T> ?
+	             requires(typename T::synapse const& syn) { t.deliver(syn, src, dst); } :
+                 requires { t.deliver(src, dst); });
 };
 
 template <class T>
-concept PlasticSynapse = requires(T const t, typename T::synapse& syn, float dt, bool pre, bool post, Int n) {
+concept PlasticSynapse = requires(T const t, typename T::synapse& syn, float dt, bool pre,
+                                  bool post, Int n) {
 	requires StatefulSynapse<T>;
 	t.update(syn, dt, pre, post);
 	t.skip(syn, dt, n);
 };
 
 template <class T>
-concept PerSynapseInit = requires(T const t, typename T::synapse& syn, Int src, Int dst, std::mt19937& rng) {
+concept PerSynapseInit = requires(T const t, typename T::synapse& syn, Int src, Int dst,
+                                  std::mt19937& rng) {
 	requires StatefulSynapse<T>;
 	t.init(syn, src, dst, rng);
 };

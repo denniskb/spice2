@@ -34,7 +34,8 @@ struct lif {
 				n.Twait = Tref;
 				spiked  = true;
 			} else
-				n.V += ((Vrest - n.V) + n.Gex * (Eex - n.V) + n.Gin * (Ein - n.V) + Ibg) * (dt * TmemInv);
+				n.V += ((Vrest - n.V) + n.Gex * (Eex - n.V) + n.Gin * (Ein - n.V) + Ibg) *
+				       (dt * TmemInv);
 		}
 
 		n.Gex -= n.Gex * (dt * TexInv);

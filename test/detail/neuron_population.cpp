@@ -137,7 +137,9 @@ TEST(NeuronPopulation, PerPopulationInit) {
 }
 
 struct per_population_update {
-	void update(float, auto&, std::vector<Int32>& spikes) { spikes.insert(spikes.end(), {1, 3, 8}); }
+	void update(float, auto&, std::vector<Int32>& spikes) {
+		spikes.insert(spikes.end(), {1, 3, 8});
+	}
 };
 static_assert(PerPopulationUpdate<per_population_update>);
 

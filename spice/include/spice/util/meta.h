@@ -23,7 +23,8 @@ constexpr auto invoke(bool const a, bool const b, F&& callable, Args&&... args) 
 		if (b)
 			std::forward<F>(callable).template operator()<false, true>(std::forward<Args>(args)...);
 		else
-			std::forward<F>(callable).template operator()<false, false>(std::forward<Args>(args)...);
+			std::forward<F>(callable).template operator()<false, false>(
+			    std::forward<Args>(args)...);
 	}
 }
 }

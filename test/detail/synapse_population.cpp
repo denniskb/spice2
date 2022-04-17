@@ -60,7 +60,9 @@ struct stateful_synapse {
 	struct synapse {
 		int w = 2;
 	};
-	void deliver(synapse const& syn, stateful_neuron::neuron& n) const { n.received_count += syn.w; }
+	void deliver(synapse const& syn, stateful_neuron::neuron& n) const {
+		n.received_count += syn.w;
+	}
 };
 static_assert(StatefulSynapse<stateful_synapse> && DeliverTo<stateful_synapse, stateful_neuron>);
 

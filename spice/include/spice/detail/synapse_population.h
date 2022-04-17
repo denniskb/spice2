@@ -15,10 +15,10 @@
 
 namespace spice::detail {
 struct SynapsePopulation {
-	virtual ~SynapsePopulation()                                                             = default;
+	virtual ~SynapsePopulation()                            = default;
 	virtual void deliver(Int time, float dt, std::span<Int32 const> spikes, void const* src_neurons,
 	                     Int src_size, void* dst_neurons, Int dst_size,
-	                     std::span<UInt const> dst_history)                                  = 0;
+	                     std::span<UInt const> dst_history) = 0;
 	virtual void update(Int time, float dt, Int src_size, std::span<UInt const> dst_history) = 0;
 	virtual Int delay() const                                                                = 0;
 };
@@ -44,23 +44,23 @@ public:
 			_ages.resize(c.src_count);
 	}
 
-	void deliver(Int const time, float const dt, std::span<Int32 const> spikes, void const* const src_neurons,
-	             Int const src_size, void* const dst_neurons, Int const dst_size,
-	             std::span<UInt const> dst_history) override {
+	void deliver(Int const time, float const dt, std::span<Int32 const> spikes,
+	             void const* const src_neurons, Int const src_size, void* const dst_neurons,
+	             Int const dst_size, std::span<UInt const> dst_history) override {
 		SPICE_INV(src_size >= 0);
 		SPICE_INV(dst_neurons);
 		SPICE_INV(dst_size >= 0);
 
-		std::span<typename DstNeur::neuron> dst_span{static_cast<typename DstNeur::neuron*>(dst_neurons),
-		                                             static_cast<UInt>(dst_size)};
+		std::span<typename DstNeur::neuron> dst_span{
+		    static_cast<typename DstNeur::neuron*>(dst_neurons), static_cast<UInt>(dst_size)};
 
 		if constexpr (StatefulNeuron<SrcNeur>) {
 			SPICE_INV(src_neurons);
-			_update<true>(
-			    time, dt, spikes,
-			    std::span<typename SrcNeur::neuron const>{
-			        static_cast<typename SrcNeur::neuron const*>(src_neurons), static_cast<UInt>(src_size)},
-			    dst_span, dst_history);
+			_update<true>(time, dt, spikes,
+			              std::span<typename SrcNeur::neuron const>{
+			                  static_cast<typename SrcNeur::neuron const*>(src_neurons),
+			                  static_cast<UInt>(src_size)},
+			              dst_span, dst_history);
 		} else
 			_update<true>(time, dt, spikes, util::empty_t{}, dst_span, dst_history);
 	}
@@ -81,7 +81,8 @@ private:
 
 	template <bool Deliver>
 	void _update(Int const time, float const dt, auto spikes, auto src_neurons,
-	             std::span<typename DstNeur::neuron> dst_neurons, std::span<UInt const> dst_history) {
+	             std::span<typename DstNeur::neuron> dst_neurons,
+	             std::span<UInt const> dst_history) {
 		static_assert(Deliver || PlasticSynapse<Syn>);
 
 		for (auto src : spikes) {
@@ -124,7 +125,8 @@ private:
 						} else {
 							SPICE_INV(src < src_neurons.size());
 							if constexpr (StatefulSynapse<Syn>)
-								_syn.deliver(*edge.second, src_neurons[src], dst_neurons[edge.first]);
+								_syn.deliver(*edge.second, src_neurons[src],
+								             dst_neurons[edge.first]);
 							else
 								_syn.deliver(src_neurons[src], dst_neurons[edge.first]);
 						}

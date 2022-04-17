@@ -9,7 +9,8 @@ void pause(double s);
 
 class spike_output_stream {
 public:
-	explicit spike_output_stream(std::string const& model_name, bool const skip_steps_without_spikes = false);
+	explicit spike_output_stream(std::string const& model_name,
+	                             bool const skip_steps_without_spikes = false);
 	~spike_output_stream();
 
 	spike_output_stream& operator<<(spice::detail::NeuronPopulation const* population);

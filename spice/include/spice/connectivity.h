@@ -30,7 +30,8 @@ struct Connectivity {
 
 	virtual Int size() const = 0;
 	virtual void generate(edge_stream& stream, util::seed_seq const& seed);
-	virtual void generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed);
+	virtual void generate(std::span<Int> offsets, std::span<Int32> neighbors,
+	                      util::seed_seq const& seed);
 };
 
 class adj_list : public Connectivity {
@@ -49,7 +50,8 @@ public:
 	explicit fixed_probability(double const p);
 
 	Int size() const override;
-	void generate(std::span<Int> offsets, std::span<Int32> neighbors, util::seed_seq const& seed) override;
+	void generate(std::span<Int> offsets, std::span<Int32> neighbors,
+	              util::seed_seq const& seed) override;
 
 private:
 	double const _p;

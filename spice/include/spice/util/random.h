@@ -146,7 +146,8 @@ public:
 		Int32* const data = reinterpret_cast<Int32*>(&_seed);
 		seq.generate(data, data + 4);
 	}
-	constexpr seed_seq(std::initializer_list<UInt32> il) : _seed(detail::murmur3(il.begin(), 4 * il.size())) {
+	constexpr seed_seq(std::initializer_list<UInt32> il) :
+	_seed(detail::murmur3(il.begin(), 4 * il.size())) {
 		SPICE_PRE(il.size() > 0 && "Please provide at least 1 seed to seed_seq");
 	}
 
@@ -241,7 +242,8 @@ constexpr Real generate_canonical(auto& rng) {
 	if constexpr (rng_size < sizeof(Real))
 		iid = (iid << (8 * rng_size)) | rng();
 
-	return ((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) / Real(1_u64 << digits);
+	return ((iid >> (8 * std::max(rng_size, sizeof(Real)) - digits)) + LeftOpen) /
+	       Real(1_u64 << digits);
 }
 
 template <std::floating_point Real, bool LeftOpen = false>
@@ -276,7 +278,8 @@ private:
 template <std::floating_point Real>
 class normal_distribution {
 public:
-	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) : _mu(mu), _sigma(sigma) {
+	constexpr explicit normal_distribution(Real const mu = 0, Real const sigma = 1) :
+	_mu(mu), _sigma(sigma) {
 		SPICE_PRE(sigma >= 0);
 	}
 
