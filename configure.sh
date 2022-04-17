@@ -22,5 +22,5 @@ if [ "$1" = "developer" ]; then
 	cd "$BASE_FOLDER"
 	mkdir -p build/perf
 	cd build/perf
-	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2 -ggdb" -Dspice_build_benchmarks:BOOL=TRUE -Dspice_build_tests:BOOL=FALSE -Dspice_build_samples:BOOL=FALSE -Dspice_assert_preconditions:BOOL=FALSE -Dspice_assert_invariants:BOOL=FALSE ../..
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2 -ggdb" -Dspice_build_benchmarks:BOOL=TRUE -Dspice_build_tests:BOOL=FALSE -Dspice_assert_preconditions:BOOL=FALSE -Dspice_assert_invariants:BOOL=FALSE ../..
 fi
