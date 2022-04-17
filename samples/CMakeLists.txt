@@ -4,7 +4,7 @@ foreach(sample brunel brunel+ external_input ping_pong sssp vogels)
 	matplot.cpp
 	${sample}.cpp)
 	
-	target_compile_options(${sample} PRIVATE ${warning_flags} ${math_flags})
+	target_compile_options(${sample} PRIVATE ${spice_warning_flags} ${spice_math_flags})
 	target_include_directories(${sample} PRIVATE ${CMAKE_SOURCE_DIR}/spice/include)
 	target_link_libraries(${sample} PRIVATE spice)
 

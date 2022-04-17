@@ -15,7 +15,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Common compile options shared by multiple projects
-set(warning_flags
+set(spice_warning_flags
 -pedantic
 -Wall
 -Wextra
@@ -39,7 +39,7 @@ set(warning_flags
 -fconcepts-diagnostics-depth=2
 )
 
-set(math_flags
+set(spice_math_flags
 -ffast-math # Enables: -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -fno-rounding-math -fno-signaling-nans -fcx-limited-range -fexcess-precision=fast
 -fassociative-math
 -freciprocal-math

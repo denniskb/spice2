@@ -22,7 +22,7 @@ src/util/assert.cpp
 src/connectivity.cpp
 src/snn.cpp)
 
-target_compile_options(spice PRIVATE ${warning_flags} ${math_flags})
+target_compile_options(spice PRIVATE ${spice_warning_flags} ${spice_math_flags})
 target_include_directories(spice PRIVATE ${CMAKE_SOURCE_DIR}/spice/include)
 target_link_libraries(spice PUBLIC Threads::Threads)
 
