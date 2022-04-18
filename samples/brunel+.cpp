@@ -13,6 +13,7 @@ struct poisson {
 		return util::generate_canonical<float>(rng) < (firing_rate * dt);
 	}
 };
+static_assert(CheckNeuron<poisson>());
 
 struct lif {
 	struct neuron {
@@ -38,6 +39,7 @@ struct lif {
 		return false;
 	}
 };
+static_assert(CheckNeuron<lif>());
 
 struct fixed_weight {
 	float weight;

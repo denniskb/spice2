@@ -44,6 +44,7 @@ struct vertex {
 		return result;
 	}
 };
+static_assert(CheckNeuron<vertex>());
 
 struct edge {
 	struct synapse {
@@ -60,6 +61,7 @@ struct edge {
 		}
 	}
 };
+//static_assert(CheckNeuron<vertex>());
 
 int main() {
 	snn sssp(1, 1, {1337});

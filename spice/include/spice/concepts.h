@@ -14,7 +14,6 @@ concept StatelessNeuron = std::default_initializable<T>;
 template <class T>
 concept StatefulNeuron = requires {
 	requires std::default_initializable<T>;
-	// TODO: Detect (and forbid) the case where T is called "neuron".
 	typename T::neuron;
 	requires std::default_initializable<typename T::neuron>;
 };
@@ -136,5 +135,45 @@ struct synapse_traits<T, true> {
 
 template <class T>
 using synapse_traits_t = typename synapse_traits<T>::type;
+}
+
+namespace detail {
+template <class T>
+constexpr bool HasUpdate(auto... args) {
+	return requires(T t) { t.update(args...); };
+}
+template <class T>
+constexpr bool HasInit(auto... args) {
+	return requires(T t) { t.init(args...); };
+}
+}
+
+template <class T>
+constexpr std::true_type CheckNeuron() {
+	// TODO: Make the Has*() calls generic
+	util::any_t any;
+
+	static_assert(StatelessNeuron<T>, "Every neuron must at least conform to StatelessNeuron.");
+
+	constexpr bool has_update =
+	    detail::HasUpdate<T>(any, any) || detail::HasUpdate<T>(any, any, any);
+	static_assert(has_update, "Every neuron must have an update() method.");
+	static_assert(!has_update || (PerNeuronUpdate<T> || PerPopulationUpdate<T>),
+	              "Your update() method has the wrong signautre.");
+	static_assert(
+	    !PerPopulationUpdate<T> || util::none_of<StatefulNeuron<T>, PerNeuronUpdate<T>,
+	                                             PerNeuronInit<T>, PerPopulationInit<T>>,
+	    "Defining a per-population update() method prohibits you from defining any of the following: "
+	    "per-neuron update(), per-neuron init(), per-population init(), making your neuron stateful.");
+
+	constexpr bool has_init = detail::HasInit<T>(any, any) || detail::HasInit<T>(any, any, any);
+	static_assert(!has_init || StatefulNeuron<T>,
+	              "You defined an init() method but your neuron has no state.");
+	static_assert(!has_init || (PerNeuronInit<T> || PerPopulationInit<T>),
+	              "Your init() method has the wrong signature.");
+	static_assert(util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>,
+	              "Your neuron must define at most 1 init() method.");
+
+	return {};
 }
 }

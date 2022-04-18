@@ -20,6 +20,7 @@ struct neuron_desc {
 		return result;
 	}
 };
+static_assert(CheckNeuron<neuron_desc>());
 
 struct synapse_desc {
 	void deliver(neuron_desc::neuron& n) const { n.should_i_spike = true; }

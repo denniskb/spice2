@@ -44,6 +44,7 @@ struct lif {
 		return spiked;
 	}
 };
+static_assert(CheckNeuron<lif>());
 
 struct excitatory {
 	float weight;

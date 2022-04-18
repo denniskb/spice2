@@ -15,6 +15,7 @@ struct input {
 		i = (i + 1) % 4;
 	}
 };
+static_assert(CheckNeuron<input>());
 
 int main() {
 	snn single_pop(1, 1, {1337});
