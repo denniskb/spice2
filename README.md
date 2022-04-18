@@ -203,9 +203,10 @@ Please format/structure all your commit messages according to [this guide](https
 1. Create an issue for the task you're working on if one doesn't exist already.
 2. Create a branch (off of master) with name `issue/[id]`.
 3. Use the `--no-ff` option when merging.
-6. Make sure all tests pass (if you added new functionality, write tests to check it.)
-7. Push your branch to the remote.
-8. Submit a pull request.
+6. Make sure all tests pass (if you added new functionality, write tests to check it).
+7. Updat the project version according to [Semantic Versioning 2.0.0](https://semver.org/)
+8. Push your branch to the remote.
+9. Submit a pull request.
 
 ### Documentation
 
