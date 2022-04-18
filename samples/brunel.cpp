@@ -45,6 +45,7 @@ struct fixed_weight {
 	float weight;
 	void deliver(lif::neuron& to) const { to.V += weight; }
 };
+static_assert(CheckSynapse<fixed_weight>());
 
 int main() {
 	int const N       = 20000;

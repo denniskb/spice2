@@ -45,6 +45,7 @@ struct fixed_weight {
 	float weight;
 	void deliver(lif::neuron& to) const { to.V += weight; }
 };
+static_assert(CheckSynapse<fixed_weight>());
 
 struct plastic {
 	struct synapse {
@@ -75,6 +76,7 @@ struct plastic {
 		syn.Zpost *= std::pow(1 - dt * TstdpInv, n);
 	}
 };
+static_assert(CheckSynapse<plastic>());
 
 int main() {
 	int const N       = 20000;

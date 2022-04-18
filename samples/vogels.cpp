@@ -50,11 +50,13 @@ struct excitatory {
 	float weight;
 	void deliver(lif::neuron& to) const { to.Gex += weight; }
 };
+static_assert(CheckSynapse<excitatory>());
 
 struct inhibitory {
 	float weight;
 	void deliver(lif::neuron& to) const { to.Gin += weight; }
 };
+static_assert(CheckSynapse<inhibitory>());
 
 int main() {
 	int const N       = 4000;

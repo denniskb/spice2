@@ -25,6 +25,7 @@ static_assert(CheckNeuron<neuron_desc>());
 struct synapse_desc {
 	void deliver(neuron_desc::neuron& n) const { n.should_i_spike = true; }
 };
+static_assert(CheckSynapse<synapse_desc>());
 
 int main() {
 	Int const N = 10'000;

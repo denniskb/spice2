@@ -146,18 +146,31 @@ template <class T>
 constexpr bool HasInit(auto... args) {
 	return requires(T t) { t.init(args...); };
 }
+template <class T>
+constexpr bool HasDeliver(auto... args) {
+	return requires(T t) { t.deliver(args...); };
+}
+template <class T>
+constexpr bool HasSkip(auto... args) {
+	return requires(T t) { t.skip(args...); };
+}
+
+struct any_neuron_t {
+	using neuron = util::any_t;
+};
 }
 
 template <class T>
-constexpr std::true_type CheckNeuron() {
+constexpr bool CheckNeuron() {
 	// TODO: Make the Has*() calls generic
 	util::any_t any;
 
-	static_assert(StatelessNeuron<T>, "Every neuron must at least conform to StatelessNeuron.");
+	static_assert(StatelessNeuron<T>,
+	              "Every neuron must at least conform to the StatelessNeuron concept.");
 
 	constexpr bool has_update =
 	    detail::HasUpdate<T>(any, any) || detail::HasUpdate<T>(any, any, any);
-	static_assert(has_update, "Every neuron must have an update() method.");
+	static_assert(has_update, "Every neuron must define an update() method.");
 	static_assert(!has_update || (PerNeuronUpdate<T> || PerPopulationUpdate<T>),
 	              "Your update() method has the wrong signautre.");
 	static_assert(
@@ -170,10 +183,44 @@ constexpr std::true_type CheckNeuron() {
 	static_assert(!has_init || StatefulNeuron<T>,
 	              "You defined an init() method but your neuron has no state.");
 	static_assert(!has_init || (PerNeuronInit<T> || PerPopulationInit<T>),
-	              "Your init() method has the wrong signature.");
+	              "Your neuron's init() method has the wrong signature.");
 	static_assert(util::up_to_one_of<PerNeuronInit<T>, PerPopulationInit<T>>,
 	              "Your neuron must define at most 1 init() method.");
 
-	return {};
+	return true;
+}
+
+template <class T>
+constexpr bool CheckSynapse() {
+	util::any_t any;
+
+	static_assert(StatelessSynapse<T>,
+	              "Every synapse must at least conform to the StatelessSynapse concept.");
+
+	constexpr bool has_deliver = detail::HasDeliver<T>(any) || detail::HasDeliver<T>(any, any) ||
+	                             detail::HasDeliver<T>(any, any, any);
+	static_assert(has_deliver, "Every synapse must define a deliver() method.");
+	static_assert(!has_deliver || (DeliverTo<T, detail::any_neuron_t> ||
+	                               DeliverFromTo<T, detail::any_neuron_t, detail::any_neuron_t>),
+	              "Your deliver() method has the wrong signature.");
+
+	constexpr bool has_update = detail::HasUpdate<T>(any, any, any, any);
+	constexpr bool has_skip   = detail::HasSkip<T>(any, any, any);
+	static_assert(!has_update || has_skip,
+	              "Your synapse defines an update() method but no skip() method.");
+	static_assert(!has_skip || has_update,
+	              "Your synapse defines a skip() method but no update() method.");
+	static_assert(!has_update || StatefulSynapse<T>,
+	              "You defined an update() method but your synapse has no state.");
+	static_assert(!has_update || PlasticSynapse<T>,
+	              "Your synapse defines an update() method, "
+	              "suggesting you intend to write a plastic synapse. "
+	              "But your synapse does not conform to the PlasticSynapse concept. "
+	              "Probably your update() or skip() method have the wrong signature.");
+
+	static_assert(!detail::HasInit<T>(any, any, any, any) || PerSynapseInit<T>,
+	              "Your synapse's init() method has the wrong signature.");
+
+	return true;
 }
 }

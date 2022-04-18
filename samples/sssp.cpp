@@ -61,7 +61,7 @@ struct edge {
 		}
 	}
 };
-//static_assert(CheckNeuron<vertex>());
+static_assert(CheckSynapse<edge>());
 
 int main() {
 	snn sssp(1, 1, {1337});
