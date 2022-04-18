@@ -218,7 +218,10 @@ constexpr bool CheckSynapse() {
 	              "But your synapse does not conform to the PlasticSynapse concept. "
 	              "Probably your update() or skip() method have the wrong signature.");
 
-	static_assert(!detail::HasInit<T>(any, any, any, any) || PerSynapseInit<T>,
+	constexpr bool has_init = detail::HasInit<T>(any, any, any, any);
+	static_assert(!has_init || StatefulSynapse<T>,
+	              "You defined an init() method but your synapse has no state.");
+	static_assert(!has_init || PerSynapseInit<T>,
 	              "Your synapse's init() method has the wrong signature.");
 
 	return true;
