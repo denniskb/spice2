@@ -3,7 +3,7 @@
 
 # Spice
 
-Spice (/spaIk/) is a state of the art spiking neural network (SNN) simulator. It features:
+Spice (/spaɪs/) is a state of the art spiking neural network (SNN) simulator. It features:
 
 - User-defined models
 - High performance
@@ -84,7 +84,8 @@ int main() {
 ### Build Spice for the purpose of trying it out, hacking the samples...
 #### Using the command line
 ```bash
-git clone git@github.com:denniskb/spice2.git # or https://github.com/denniskb/spice2.git
+git clone https://github.com/denniskb/spice2.git
+cd spice2
 git submodule update --init --recursive
 mkdir build
 cd build
@@ -134,7 +135,8 @@ If you re-run brunel now you should see an animation similar to:
 Spice comes with a bunch of pre-defined vscode tasks to simplify building it and running samples/tests/benchmarks...
 
 ```bash
-git clone git@github.com:denniskb/spice2.git # or https://github.com/denniskb/spice2.git
+git clone https://github.com/denniskb/spice2.git
+cd spice2
 git submodule update --init --recursive
 ```
 
@@ -169,7 +171,8 @@ In reverse chronological order:
 Developers will additionally want to turn on the `spice_build_tests` and `spice_build_benchmarks` options inside cmake:
 
 ```bash
-git clone git@github.com:denniskb/spice2.git # or https://github.com/denniskb/spice2.git
+git clone https://github.com/denniskb/spice2.git
+cd spice2
 git submodule update --init --recursive
 mkdir build
 cd build
@@ -180,7 +183,8 @@ make -j 8
 Or, using vscode instead:
 
 ```bash
-git clone git@github.com:denniskb/spice2.git # or https://github.com/denniskb/spice2.git
+git clone https://github.com/denniskb/spice2.git
+cd spice2
 git submodule update --init --recursive
 ```
 
