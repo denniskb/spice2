@@ -117,7 +117,7 @@ which should print the SNN's firing pattern as JSON-formatted output to the term
 If you'd like the samples to produce visual instead of text-based output, you should turn on the `spice_use_matplot` option, either by ticking the box inside cmake-gui, or via the command line (still inside `build`):
 
 ```bash
-cmake -Dspice_use_matplot=ON
+cmake -Dspice_use_matplot=ON ..
 make -j 8
 ```
 
