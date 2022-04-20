@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "matplot.h"
 
 #include "spice/snn.h"
