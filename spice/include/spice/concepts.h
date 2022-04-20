@@ -206,12 +206,12 @@ constexpr bool CheckSynapse() {
 
 	constexpr bool has_update = detail::HasUpdate<T>(any, any, any, any);
 	constexpr bool has_skip   = detail::HasSkip<T>(any, any, any);
+	static_assert(!has_update || StatefulSynapse<T>,
+	              "You defined an update() method but your synapse has no state.");
 	static_assert(!has_update || has_skip,
 	              "Your synapse defines an update() method but no skip() method.");
 	static_assert(!has_skip || has_update,
 	              "Your synapse defines a skip() method but no update() method.");
-	static_assert(!has_update || StatefulSynapse<T>,
-	              "You defined an update() method but your synapse has no state.");
 	static_assert(!has_update || PlasticSynapse<T>,
 	              "Your synapse defines an update() method, "
 	              "suggesting you intend to write a plastic synapse. "
