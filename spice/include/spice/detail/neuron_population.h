@@ -80,7 +80,7 @@ public:
 
 private:
 	Neur _neuron;
-	std::vector<neuron_traits_t<Neur>> _neurons;
+	std::vector<typename Neur::neuron> _neurons;
 };
 
 template <Neuron Neur>

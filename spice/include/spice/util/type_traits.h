@@ -8,6 +8,11 @@ struct empty_t {};
 template <class T>
 constexpr bool is_empty_v = std::is_same_v<T, empty_t>;
 
+struct any_t {
+	template <class T>
+	constexpr operator T&() const;
+};
+
 template <class T, bool HasValue>
 struct optional;
 
