@@ -7,6 +7,13 @@
 using namespace spice;
 using namespace spice::util;
 
+/*
+Bruenl+ is the "plastic" version of Brunel. Meaning, some of its synaptic connections
+undergo state changes over time, just like neurons. To be specific, Brunel+ is identical
+with Brunel, except for its E->E connection, which uses plastic synapses (please study
+the Brunel sample as a primer).
+*/
+
 struct poisson {
 	bool update(float const dt, auto& rng) const {
 		float const firing_rate = 20; //Hz
@@ -47,14 +54,23 @@ struct fixed_weight {
 };
 static_assert(CheckSynapse<fixed_weight>());
 
+// A plastic synapse is a stateful synapse that additionally can change its state over time,
+// represented in code by the update() and skip() methods.
 struct plastic {
+	// Just like stateful neurons, stateful synapses must define a nested type "synapse"
+	// with the synapse's attributes.
 	struct synapse {
 		float W     = 1e-4;
 		float Zpre  = 0;
 		float Zpost = 0;
 	};
 
+	// The deliver() method takes an additional first parameter of type synapse& so
+	// it can use the synapse's state to update the target neuron.
 	void deliver(synapse const& syn, lif::neuron& to) const { to.V += syn.W; }
+
+	// The update() method is called at every simulation step. 'pre' and 'post' are flags
+	// that indicate whether the synapse's source or target neuron fired in the respective step.
 	void update(synapse& syn, float const dt, bool const pre, bool const post) const {
 		float const TstdpInv = 1.0f / 0.02f;
 		float const dtInv    = 1.0f / dt;
@@ -69,6 +85,11 @@ struct plastic {
 		syn.Zpre -= syn.Zpre * dt * TstdpInv;
 		syn.Zpost -= syn.Zpost * dt * TstdpInv;
 	}
+	// The skip() method is used to advance the synapse 'n' steps at once when there is no
+	// network activity (no pre- or post-synaptic spikes).
+	// Many dynamics have closed from solutions, allowing them to 'jump' ahead arbitrary
+	// amounts of time in a single computational step.
+	// Alternatively, you can simply call update() 'n' times inside your skip() method.
 	void skip(synapse& syn, float const dt, Int const n) const {
 		float const TstdpInv = 1.0f / 0.02f;
 
