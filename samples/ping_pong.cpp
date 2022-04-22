@@ -5,6 +5,11 @@
 using namespace spice;
 using namespace spice::util;
 
+/*
+ping-pong is a simple SNN consisting of two neuron popualtions that alternate
+exciting each other. It illustrates arbitrary topologies.
+*/
+
 struct neuron_desc {
 	bool initial_spike;
 
@@ -34,8 +39,13 @@ int main() {
 	auto ping = ping_pong.add_population<neuron_desc>(N / 2, {true});
 	auto pong = ping_pong.add_population<neuron_desc>(N / 2, {false});
 
+	// Spice ships with a number of parametric topologies such as
+	// 'fixed_probability', 'fixed_indegree'[TODO], 'fixed_connection_count'[TODO], etc.
+	// Sometimes these are not enough. For that purpose, the user can create an 'adj_list'
+	// and define an arbitrary topology by calling connect(int source, int target) on it.
 	adj_list adj;
 	for (Int i : range(N / 2)) {
+		// In this case we create a simple 1:1 connection between the neurons in 'ping' and 'pong'.
 		adj.connect(i, i);
 	}
 	ping_pong.connect<synapse_desc>(ping, pong, adj, 1);
