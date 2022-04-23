@@ -35,8 +35,11 @@ static Int adj_matrix[7][7] = {
 // clang-format on
 
 struct vertex {
+	// The ID of the user-chosen source vertex.
 	Int src;
 
+	// Every vertex stores a distance from the source, its predecessor, and a flag
+	// whether it should fire or not, initialized to the following constatns:
 	struct neuron {
 		Int distance           = std::numeric_limits<Int>::max();
 		neuron const* previous = nullptr;
@@ -50,12 +53,15 @@ struct vertex {
 	// open the same file and seek to the neuron's offset inside the population. Not only would
 	// this be slow, it would also be combersome to write.
 	void init(std::span<neuron> neurons, auto&) {
+		// Except for the source itself, which is initialized to the following values:
 		neurons[src].distance = 0;
 		neurons[src].previous = &neurons[src];
 		neurons[src].fire     = true;
 	}
 
 	bool update(neuron& n, float, auto&) const {
+		// A vertex fires whenever its 'fire' flag is set (which is set after it has
+		// discovered a shorter path), allowing its neighbors to discover shorter paths in turn.
 		bool const result = n.fire;
 		n.fire            = false;
 		return result;
@@ -76,6 +82,9 @@ struct edge {
 	// Once again, the user simply defines a different 'flavor' (a different signature) of deliver()
 	// and Spice adapts the simulation accordingly (aka design by introspection).
 	void deliver(synapse const& syn, vertex::neuron const& src, vertex::neuron& dst) const {
+		// Whenever a vertex receives a spike, it checks whether it can find a shorter path to
+		// itself from the source via the delivering synapse. If so, it updates itself and
+		// spikes in the next iteration.
 		if (src.distance + syn.weight < dst.distance) {
 			dst.distance = src.distance + syn.weight;
 			dst.previous = &src;
