@@ -198,19 +198,21 @@ Spice defines additional tasks specifically for developers:
 
 <kbd>F1</kbd>&rarr;Tasks: Run Test Task&rarr;Samples/**Unit Tests**/**Benchmarks**
 
-### Code & Commit Message Formatting
+### Code/Commit message formatting & Versioning
 Please use the `.clang-format` file provided in the root folder to format all your code.
 
 Please format/structure all your commit messages according to [this guide](https://cbea.ms/git-commit/).
 
+Spice uses [Semantic Versioning 2.0.0](https://semver.org/). Please update the project version whenever you make changes to the code.
+
 ### Branching Strategy
 1. Create an issue for the task you're working on if one doesn't exist already.
 2. Create a branch (off of master) with name `issue/[id]`.
-3. Use the `--no-ff` option when merging.
-6. Make sure all tests pass (if you added new functionality, write tests to check it).
-7. Update the project version according to [Semantic Versioning 2.0.0](https://semver.org/)
-8. Push your branch to the remote.
-9. Submit a pull request.
+3. Make sure all tests pass (if you added new functionality, write tests to check it).
+4. Push your branch to the remote.
+5. Submit a pull request.
+
+Use the `--no-ff` option when merging.
 
 ### Documentation
 
