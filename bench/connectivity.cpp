@@ -1,6 +1,6 @@
 #include "benchmark/benchmark.h"
 
-#include "spice/connectivity.h"
+#include "spice/topology.h"
 #include "spice/util/range.h"
 
 using namespace spice;
@@ -16,7 +16,7 @@ static void adjlist(benchmark::State& state) {
 	std::vector<Int32> neighbors(adj.size());
 
 	for (auto _ : state) {
-		static_cast<Connectivity&>(adj).generate(offsets, neighbors, {1337});
+		static_cast<Topology&>(adj).generate(offsets, neighbors, {1337});
 	}
 }
 BENCHMARK(adjlist)->Unit(benchmark::kMillisecond);

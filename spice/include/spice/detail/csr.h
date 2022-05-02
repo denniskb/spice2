@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "spice/connectivity.h"
+#include "spice/topology.h"
 #include "spice/util/assert.h"
 #include "spice/util/random.h"
 #include "spice/util/range.h"
@@ -66,7 +66,7 @@ public:
 	using iterator       = iterator_t<false>;
 	using const_iterator = iterator_t<true>;
 
-	csr(Connectivity& c, util::seed_seq const& seed) {
+	csr(Topology& c, util::seed_seq const& seed) {
 		_offsets.resize(c.src_count > 0 ? c.src_count + 1 : 0);
 		_neighbors.resize(c.size());
 		if constexpr (!std::is_void_v<T>)

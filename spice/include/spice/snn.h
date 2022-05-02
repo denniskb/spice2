@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "spice/concepts.h"
-#include "spice/connectivity.h"
 #include "spice/detail/neuron_population.h"
 #include "spice/detail/synapse_population.h"
+#include "spice/topology.h"
 #include "spice/util/numeric.h"
 #include "spice/util/random.h"
 #include "spice/util/stdint.h"
@@ -29,7 +29,7 @@ public:
 	template <class Syn, Neuron SrcNeur, StatefulNeuron DstNeur>
 	requires Synapse<Syn, SrcNeur, DstNeur>
 	void connect(detail::neuron_population<SrcNeur>* source,
-	             detail::neuron_population<DstNeur>* target, Connectivity& c, float const delay,
+	             detail::neuron_population<DstNeur>* target, Topology& c, float const delay,
 	             Syn syn = {}) {
 		Int const d = std::round(delay / _dt);
 		SPICE_PRE(d >= 1 && "The delay must be at least 1dt.");
@@ -50,7 +50,7 @@ public:
 	template <class Syn, Neuron SrcNeur, StatefulNeuron DstNeur>
 	requires Synapse<Syn, SrcNeur, DstNeur>
 	void connect(detail::neuron_population<SrcNeur>* source,
-	             detail::neuron_population<DstNeur>* target, Connectivity&& c, float const delay,
+	             detail::neuron_population<DstNeur>* target, Topology&& c, float const delay,
 	             Syn syn = {}) {
 		connect<Syn, SrcNeur, DstNeur>(source, target, c, delay, std::move(syn));
 	}

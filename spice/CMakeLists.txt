@@ -15,11 +15,11 @@ include/spice/util/scope.h
 include/spice/util/stdint.h
 include/spice/util/type_traits.h
 include/spice/concepts.h
-include/spice/connectivity.h
+include/spice/topology.h
 include/spice/snn.h
 
 src/util/assert.cpp
-src/connectivity.cpp
+src/topology.cpp
 src/snn.cpp)
 
 target_compile_options(spice PRIVATE ${spice_warning_flags} ${spice_math_flags})

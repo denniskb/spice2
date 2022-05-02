@@ -4,8 +4,8 @@
 #include <type_traits>
 
 #include "spice/concepts.h"
-#include "spice/connectivity.h"
 #include "spice/detail/csr.h"
+#include "spice/topology.h"
 #include "spice/util/assert.h"
 #include "spice/util/meta.h"
 #include "spice/util/random.h"
@@ -27,7 +27,7 @@ template <class Syn, Neuron SrcNeur, StatefulNeuron DstNeur>
 requires Synapse<Syn, SrcNeur, DstNeur>
 class synapse_population : public SynapsePopulation {
 public:
-	synapse_population(Syn syn, Connectivity& c, util::seed_seq& seed, Int const delay) :
+	synapse_population(Syn syn, Topology& c, util::seed_seq& seed, Int const delay) :
 	_syn(std::move(syn)), _graph(c, seed++), _delay(delay) {
 		SPICE_PRE(delay >= 1);
 

@@ -1,4 +1,4 @@
-#include "spice/connectivity.h"
+#include "spice/topology.h"
 
 #include <algorithm>
 #include <limits>
@@ -31,7 +31,7 @@ void edge_stream::flush() {
 	*this          = edge_stream(std::move(_offsets), std::move(_neighbors));
 }
 
-Connectivity& Connectivity::operator()(Int const src_count_, Int const dst_count_) {
+Topology& Topology::operator()(Int const src_count_, Int const dst_count_) {
 	SPICE_INV(0 <= src_count_ && src_count_ < std::numeric_limits<Int32>::max());
 	SPICE_INV(0 <= dst_count_ && dst_count_ < std::numeric_limits<Int32>::max());
 
@@ -40,11 +40,11 @@ Connectivity& Connectivity::operator()(Int const src_count_, Int const dst_count
 	return *this;
 }
 
-void Connectivity::generate(edge_stream&, util::seed_seq const&) {
-	SPICE_PRE(false && "Connectivity subclasses must implement generate(edge_stream, seed_seq)");
+void Topology::generate(edge_stream&, util::seed_seq const&) {
+	SPICE_PRE(false && "Topology subclasses must implement generate(edge_stream, seed_seq)");
 }
-void Connectivity::generate(std::span<Int> offsets, std::span<Int32> neighbors,
-                            util::seed_seq const& seed) {
+void Topology::generate(std::span<Int> offsets, std::span<Int32> neighbors,
+                        util::seed_seq const& seed) {
 	SPICE_PRE(offsets.size() > src_count);
 	SPICE_PRE(neighbors.size() >= size());
 

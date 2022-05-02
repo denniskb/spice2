@@ -21,12 +21,12 @@ private:
 	Int _dst = 0;
 };
 
-struct Connectivity {
+struct Topology {
 	Int src_count = 0;
 	Int dst_count = 0;
 
-	virtual ~Connectivity() = default;
-	Connectivity& operator()(Int src_count_, Int dst_count_);
+	virtual ~Topology() = default;
+	Topology& operator()(Int src_count_, Int dst_count_);
 
 	virtual Int size() const = 0;
 	virtual void generate(edge_stream& stream, util::seed_seq const& seed);
@@ -34,7 +34,7 @@ struct Connectivity {
 	                      util::seed_seq const& seed);
 };
 
-class adj_list : public Connectivity {
+class adj_list : public Topology {
 public:
 	void connect(Int const src, Int const dst);
 
@@ -45,7 +45,7 @@ private:
 	std::vector<UInt> _connections;
 };
 
-class fixed_probability : public Connectivity {
+class fixed_probability : public Topology {
 public:
 	explicit fixed_probability(double const p);
 
