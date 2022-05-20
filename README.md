@@ -162,6 +162,7 @@ For a thorough guide on how to use Spice, including samples, tutorials, and an A
 ## <a name="pubs"></a>Publications
 In reverse chronological order:
 
+- [Simulating Spiking Neural Networks on Multiple GPUs - When a Microsecond is an Eternity](https://drive.google.com/file/d/1ftypv2WZ3i_SgCv21HU4AMklg3-70tkE/view?usp=sharing) (Unpublished PhD thesis)
 - [Even Faster SNN Simulation with Lazy Event-driven Plasticity and Shared Atomics](https://bautembach.de/#hpec2021) (HPEC 2021)
 - [Multi-GPU SNN Simulation with Static Load Balancing](https://bautembach.de/#ijcnn2021) (IJCNN 2021)
 - [Faster and Simpler SNN Simulation with Work Queues](https://bautembach.de/#ijcnn2020) (IJCNN 2020)
