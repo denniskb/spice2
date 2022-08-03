@@ -1,3 +1,5 @@
+(This is a clean re-write of [Spice](https://github.com/denniskb/spice) - the SNN simulator I developed for my PhD. It is work in progress. It is feature-complete but so far only supports single-core CPU simulation.)
+
 ![A photo of spices spread across a table](spices.jpg)
 <small>[Photo](https://pixabay.com/photos/spices-spoons-salt-pepper-1914130/) by Daria Yakovleva</small>
 
