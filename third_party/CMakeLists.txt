@@ -24,3 +24,5 @@ if(spice_build_benchmarks)
 	set(BENCHMARK_ENABLE_WERROR OFF CACHE BOOL "Disable -werror inside gbench" FORCE)
 	add_subdirectory(benchmark)
 endif()
+
+add_subdirectory(hana)
