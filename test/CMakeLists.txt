@@ -1,4 +1,4 @@
-include(${CMAKE_SOURCE_DIR}/target_link_libraries_system.cmake)
+include(../target_link_libraries_system.cmake)
 
 add_executable(test ${test_sources}
 detail/csr.cpp
