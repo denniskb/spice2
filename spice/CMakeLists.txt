@@ -23,7 +23,7 @@ src/topology.cpp
 src/snn.cpp)
 
 target_compile_options(spice PRIVATE ${spice_warning_flags} ${spice_math_flags})
-target_include_directories(spice PRIVATE ${CMAKE_SOURCE_DIR}/spice/include)
+target_include_directories(spice PUBLIC include)
 target_link_libraries(spice PUBLIC Threads::Threads)
 
 if(spice_assert_preconditions)

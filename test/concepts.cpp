@@ -76,7 +76,7 @@ TEST(Concepts, Neuron) {
 
 		// Valid neuron
 		if constexpr (stateful ? up_to_one_of<per_neuron_init, per_pop_init> :
-                                 none_of<per_neuron_init, per_pop_init>)
+		                         none_of<per_neuron_init, per_pop_init>)
 			static_assert(
 			    Neuron<meta_neuron<stateful, per_neuron_init, true, per_pop_init, false, false>>);
 	});
